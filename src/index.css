@@ -2228,3 +2228,60 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   .main-dashboard-layout { display: block; }
   .dashboard-main, .dashboard-sidebar { gap: 17px; }
 }
+
+/* Below desktop, sidebar modules become normal full-width content cards. */
+@media (max-width: 1439px) {
+  .main-dashboard-layout { display: block; }
+  .dashboard-sidebar {
+    position: static;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    margin-top: 24px;
+    gap: 16px;
+  }
+  .dashboard-sidebar > .entity-card {
+    width: 100%;
+    min-width: 0;
+    padding: 24px;
+    border-radius: 16px;
+  }
+  .dashboard-sidebar > .entity-card .section-title {
+    min-width: 0;
+    margin-bottom: 16px;
+  }
+  .dashboard-sidebar > .entity-card .section-title h2 {
+    white-space: nowrap;
+    word-break: keep-all;
+  }
+  .dashboard-sidebar .funnel {
+    gap: 0;
+  }
+  .dashboard-sidebar .funnel div {
+    min-height: 52px;
+    padding: 10px 0;
+  }
+  .dashboard-sidebar .wait-row {
+    min-height: 52px;
+    padding: 10px 0;
+  }
+  .dashboard-sidebar .empty-small {
+    min-height: 0;
+    padding: 18px 0;
+  }
+  .dashboard-sidebar .focus-list {
+    min-height: 120px;
+    align-content: start;
+    gap: 10px;
+  }
+  .dashboard-sidebar .focus-list label {
+    min-height: 32px;
+  }
+}
+@media (max-width: 760px) {
+  .career-app .workspace {
+    padding-bottom: calc(112px + env(safe-area-inset-bottom) + 24px);
+  }
+  .dashboard-sidebar { margin-top: 20px; }
+  .dashboard-sidebar > .entity-card { margin-bottom: 0; }
+}
