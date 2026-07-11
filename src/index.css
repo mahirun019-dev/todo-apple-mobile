@@ -2347,3 +2347,56 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
     font-size: 16px !important;
   }
 }
+
+@media (max-width: 767px) {
+  html,
+  body,
+  #root {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  .modal-layer,
+  .modal-layer .drawer,
+  .modal-layer .drawer > form,
+  .form-grid,
+  .form-grid label,
+  .form-actions {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .modal-layer .drawer {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  .modal-layer .drawer > form {
+    width: 100%;
+    overflow-x: hidden;
+  }
+  .form-grid {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .form-grid .wide { grid-column: auto; }
+  .form-grid input,
+  .form-grid select,
+  .form-grid textarea,
+  .form-grid input[type="datetime-local"] {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .color-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    width: 100%;
+    max-width: 100%;
+  }
+  .form-actions {
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
