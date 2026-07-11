@@ -1,7 +1,7 @@
-const CACHE_NAME = "todo-apple-v1";
+const CACHE_NAME = "todo-apple-v2";
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(["./", "./index.html", "./manifest.webmanifest", "./icon.svg"])));
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(["./manifest.webmanifest", "./icon.svg"])));
   self.skipWaiting();
 });
 
@@ -14,6 +14,18 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET" || new URL(event.request.url).origin !== self.location.origin) return;
+
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          caches.open(CACHE_NAME).then((cache) => cache.put("./", response.clone()));
+          return response;
+        })
+        .catch(() => caches.match("./")),
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
