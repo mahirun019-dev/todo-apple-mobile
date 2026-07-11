@@ -1,167 +1,110 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent, type KeyboardEvent } from "react";
-import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
-import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import Papa from "papaparse";
 import {
-  BarChart3, CalendarDays, Check, ChevronDown, ChevronRight, Circle, Download, GripVertical, Languages,
-  ListTodo, Monitor, Moon, Pencil, Plus, RotateCcw, Settings, Sun, Tag, Trash2, Upload, X,
+  BarChart3, BookOpen, CalendarDays, Check, ChevronRight, Clock3, Download, FileJson,
+  GraduationCap, Home, Languages, ListTodo, Menu, Monitor, Moon, MoreHorizontal,
+  Plus, RotateCcw, Settings, Sun, Target, Timer, Trash2, Upload, X,
 } from "lucide-react";
 
-type Locale = "zh" | "ja" | "en";
+type View = "home" | "schedule" | "tasks" | "stats";
 type Theme = "light" | "dark" | "system";
-type Filter = "all" | "active" | "completed";
-type View = "list" | "calendar" | "stats";
-type Repeat = "none" | "daily" | "weekly" | "monthly";
+type Locale = "zh" | "ja" | "en";
+type TaskType = "assignment" | "report" | "exam" | "preview" | "review" | "general";
+type Priority = "low" | "medium" | "high";
 type Subtask = { id: string; title: string; completed: boolean };
-type Task = {
-  id: string; title: string; completed: boolean; createdAt: number; subtasks: Subtask[];
-  tags: string[]; project: string; dueDate: string; repeat: Repeat; repeatSpawned?: boolean;
-};
+type CourseSchedule = { id: string; weekday: number; startTime: string; endTime: string; room?: string };
+type Course = { id: string; name: string; teacher: string; room: string; color: string; credits: number; notes: string; schedule: CourseSchedule[]; createdAt: number };
+type StudyTask = { id: string; title: string; courseId?: string; type: TaskType; dueAt?: string; priority: Priority; tags: string[]; subtasks: Subtask[]; notes: string; repeat: "none" | "daily" | "weekly" | "monthly"; completed: boolean; completedAt?: number; isDailyFocus: boolean; createdAt: number; updatedAt: number };
+type FocusSession = { id: string; courseId?: string; taskId?: string; startedAt: number; durationMinutes: number };
+type AppData = { schemaVersion: 3; courses: Course[]; tasks: StudyTask[]; focusSessions: FocusSession[] };
 
-const TASKS_KEY = "todo-apple-tasks-v2";
-const OLD_TASKS_KEY = "todo-apple-tasks";
+const DATA_KEY = "student-focus-data-v3";
+const OLD_KEY = "todo-apple-tasks-v2";
+const BACKUP_KEY = "todo-apple-pre-v3-backup";
 const THEME_KEY = "todo-apple-theme";
 const LOCALE_KEY = "todo-apple-locale";
 const ICON_KEY = "todo-apple-custom-icon";
+const uid = () => crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+const iso = (days: number, hour = 23) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(hour, 0, 0, 0); return d.toISOString().slice(0, 16); };
 
 const copy = {
-  zh: { app: "Focus Glass", today: "任务中心", add: "添加任务", first: "添加第一个任务", settings: "设置", language: "语言", appearance: "外观", light: "浅色", dark: "深色", system: "跟随系统", icon: "自定义 App 图标", selected: "已选择", placeholder: "今天想完成什么？", all: "全部", active: "未完成", completed: "已完成", list: "清单", calendar: "日历", stats: "统计", empty: "还没有任务", emptyHint: "从一件小事开始安排今天。", remaining: "项待完成", clear: "清除已完成", project: "项目", tags: "标签，用逗号分隔", due: "截止日期", repeat: "重复", none: "不重复", daily: "每天", weekly: "每周", monthly: "每月", subtask: "添加子任务", completeRate: "完成率", done: "已完成", total: "总任务", import: "导入 CSV", export: "导出 CSV", auto: "自动保存至此设备", edit: "编辑任务", remove: "删除任务", theme: "深色模式", noDue: "未设置日期" },
-  ja: { app: "Focus Glass", today: "タスクセンター", add: "タスクを追加", first: "最初のタスクを追加", settings: "設定", language: "言語", appearance: "表示", light: "ライト", dark: "ダーク", system: "システム", icon: "Appアイコン", selected: "選択中", placeholder: "今日は何を終わらせますか？", all: "すべて", active: "未完了", completed: "完了", list: "リスト", calendar: "カレンダー", stats: "統計", empty: "タスクはありません", emptyHint: "小さなことから今日を始めましょう。", remaining: "件 未完了", clear: "完了を削除", project: "プロジェクト", tags: "タグ（カンマ区切り）", due: "期限", repeat: "繰り返し", none: "なし", daily: "毎日", weekly: "毎週", monthly: "毎月", subtask: "サブタスクを追加", completeRate: "完了率", done: "完了", total: "全タスク", import: "CSV 読込", export: "CSV 書出", auto: "この端末に自動保存", edit: "編集", remove: "削除", theme: "ダークモード", noDue: "日付なし" },
-  en: { app: "Focus Glass", today: "Task Center", add: "Add task", first: "Add your first task", settings: "Settings", language: "Language", appearance: "Appearance", light: "Light", dark: "Dark", system: "System", icon: "Custom app icon", selected: "Selected", placeholder: "What would you like to finish?", all: "All", active: "Incomplete", completed: "Completed", list: "List", calendar: "Calendar", stats: "Insights", empty: "No tasks yet", emptyHint: "Start today with one small thing.", remaining: "left", clear: "Clear completed", project: "Project", tags: "Tags, comma separated", due: "Due date", repeat: "Repeat", none: "No repeat", daily: "Daily", weekly: "Weekly", monthly: "Monthly", subtask: "Add subtask", completeRate: "Completion", done: "Completed", total: "Total tasks", import: "Import CSV", export: "Export CSV", auto: "Saved automatically on this device", edit: "Edit task", remove: "Delete task", theme: "Dark mode", noDue: "No date" },
+  zh: { home:"首页", schedule:"课表", tasks:"任务", stats:"统计", settings:"设置", today:"今日学习", subtitle:"课程、截止事项与专注进度", courses:"今日课程", pending:"待完成", overdue:"已逾期", next:"下一节课", weekly:"本周要交什么", exams:"最近考试", focus3:"今日三件事", addTask:"新建任务", addCourse:"添加课程", empty:"暂无事项", teacher:"教师", room:"教室", credits:"学分", details:"课程详情", assignment:"作业", report:"报告", exam:"考试", preview:"预习", review:"复习", general:"普通事项", all:"全部", incomplete:"未完成", completed:"已完成", high:"高", medium:"中", low:"低", due:"截止时间", course:"课程", type:"类型", priority:"优先级", tags:"标签", notes:"备注", repeat:"重复", title:"标题", save:"保存", cancel:"取消", monday:"周一", tuesday:"周二", wednesday:"周三", thursday:"周四", friday:"周五", saturday:"周六", sunday:"周日", completion:"本周完成率", distribution:"任务类型分布", trend:"近 7 天完成", focusTime:"专注时长", streak:"连续完成", days:"天", minutes:"分钟", backup:"完整备份", restore:"恢复备份", importCsv:"导入 CSV", exportCsv:"导出 CSV", language:"语言", appearance:"外观", light:"浅色", dark:"深色", system:"跟随系统", icon:"自定义图标", overdueLabel:"已逾期", urgent:"24 小时内", data:"数据管理" },
+  ja: { home:"ホーム", schedule:"時間割", tasks:"タスク", stats:"統計", settings:"設定", today:"今日の学習", subtitle:"授業、締切、集中の進捗", courses:"今日の授業", pending:"未完了", overdue:"期限切れ", next:"次の授業", weekly:"今週の締切", exams:"試験予定", focus3:"今日の3つ", addTask:"タスク追加", addCourse:"授業追加", empty:"予定なし", teacher:"担当", room:"教室", credits:"単位", details:"授業詳細", assignment:"課題", report:"レポート", exam:"試験", preview:"予習", review:"復習", general:"その他", all:"すべて", incomplete:"未完了", completed:"完了", high:"高", medium:"中", low:"低", due:"期限", course:"授業", type:"種類", priority:"優先度", tags:"タグ", notes:"メモ", repeat:"繰り返し", title:"タイトル", save:"保存", cancel:"キャンセル", monday:"月", tuesday:"火", wednesday:"水", thursday:"木", friday:"金", saturday:"土", sunday:"日", completion:"今週の完了率", distribution:"種類別", trend:"7日間の完了", focusTime:"集中時間", streak:"連続達成", days:"日", minutes:"分", backup:"完全バックアップ", restore:"復元", importCsv:"CSV読込", exportCsv:"CSV書出", language:"言語", appearance:"表示", light:"ライト", dark:"ダーク", system:"システム", icon:"アイコン", overdueLabel:"期限切れ", urgent:"24時間以内", data:"データ管理" },
+  en: { home:"Home", schedule:"Schedule", tasks:"Tasks", stats:"Insights", settings:"Settings", today:"Today's study", subtitle:"Classes, deadlines and focus progress", courses:"Classes today", pending:"To do", overdue:"Overdue", next:"Next class", weekly:"Due this week", exams:"Upcoming exams", focus3:"Today's three", addTask:"New task", addCourse:"Add course", empty:"Nothing scheduled", teacher:"Teacher", room:"Room", credits:"Credits", details:"Course details", assignment:"Assignment", report:"Report", exam:"Exam", preview:"Preview", review:"Review", general:"General", all:"All", incomplete:"Incomplete", completed:"Completed", high:"High", medium:"Medium", low:"Low", due:"Due", course:"Course", type:"Type", priority:"Priority", tags:"Tags", notes:"Notes", repeat:"Repeat", title:"Title", save:"Save", cancel:"Cancel", monday:"Mon", tuesday:"Tue", wednesday:"Wed", thursday:"Thu", friday:"Fri", saturday:"Sat", sunday:"Sun", completion:"Weekly completion", distribution:"Task mix", trend:"7-day trend", focusTime:"Focus time", streak:"Streak", days:"days", minutes:"min", backup:"Full backup", restore:"Restore", importCsv:"Import CSV", exportCsv:"Export CSV", language:"Language", appearance:"Appearance", light:"Light", dark:"Dark", system:"System", icon:"Custom icon", overdueLabel:"Overdue", urgent:"Due in 24h", data:"Data" },
 };
 
-const id = () => typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-const normalize = (task: Partial<Task>): Task => ({
-  id: task.id || id(), title: task.title || "", completed: Boolean(task.completed), createdAt: task.createdAt || Date.now(),
-  subtasks: Array.isArray(task.subtasks) ? task.subtasks : [], tags: Array.isArray(task.tags) ? task.tags : [],
-  project: task.project || "Personal", dueDate: task.dueDate || "", repeat: task.repeat || "none", repeatSpawned: task.repeatSpawned,
-});
-const readTasks = () => { try { const raw = localStorage.getItem(TASKS_KEY) || localStorage.getItem(OLD_TASKS_KEY); return raw ? JSON.parse(raw).map(normalize) : []; } catch { return []; } };
-const nextDate = (date: string, repeat: Repeat) => { const value = date ? new Date(`${date}T12:00:00`) : new Date(); if (repeat === "daily") value.setDate(value.getDate() + 1); if (repeat === "weekly") value.setDate(value.getDate() + 7); if (repeat === "monthly") value.setMonth(value.getMonth() + 1); return value.toISOString().slice(0, 10); };
+const seed = (): AppData => {
+  const c1 = uid(), c2 = uid(), c3 = uid();
+  return { schemaVersion:3, courses:[
+    { id:c1,name:"数据结构",teacher:"陈老师",room:"理科楼 302",color:"#2878e3",credits:4,notes:"",createdAt:Date.now(),schedule:[{id:uid(),weekday:1,startTime:"09:00",endTime:"10:30",room:"理科楼 302"},{id:uid(),weekday:4,startTime:"09:00",endTime:"10:30",room:"理科楼 302"}] },
+    { id:c2,name:"学术英语",teacher:"田中老师",room:"文科楼 205",color:"#16a085",credits:2,notes:"",createdAt:Date.now(),schedule:[{id:uid(),weekday:2,startTime:"13:00",endTime:"14:30",room:"文科楼 205"}] },
+    { id:c3,name:"微观经济学",teacher:"李老师",room:"经管楼 108",color:"#8854d0",credits:3,notes:"",createdAt:Date.now(),schedule:[{id:uid(),weekday:3,startTime:"10:45",endTime:"12:15",room:"经管楼 108"}] },
+  ], tasks:[
+    {id:uid(),title:"完成链表实验",courseId:c1,type:"assignment",dueAt:iso(1,18),priority:"high",tags:["实验"],subtasks:[],notes:"",repeat:"none",completed:false,isDailyFocus:true,createdAt:Date.now(),updatedAt:Date.now()},
+    {id:uid(),title:"阅读 Chapter 6",courseId:c2,type:"preview",dueAt:iso(3),priority:"medium",tags:[],subtasks:[],notes:"",repeat:"none",completed:false,isDailyFocus:true,createdAt:Date.now(),updatedAt:Date.now()},
+    {id:uid(),title:"期中考试",courseId:c3,type:"exam",dueAt:iso(12,10),priority:"high",tags:[],subtasks:[],notes:"闭卷",repeat:"none",completed:false,isDailyFocus:false,createdAt:Date.now(),updatedAt:Date.now()},
+  ], focusSessions:[{id:uid(),courseId:c1,startedAt:Date.now()-86400000,durationMinutes:45}] };
+};
 
-function SortableTask({ task, locale, onToggle, onDelete, onUpdate }: { task: Task; locale: Locale; onToggle: () => void; onDelete: () => void; onUpdate: (task: Task) => void }) {
-  const t = copy[locale];
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [editValue, setEditValue] = useState(task.title);
-  const [subtask, setSubtask] = useState("");
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
-  const style = { transform: CSS.Transform.toString(transform), transition };
-  const saveEdit = () => { const title = editValue.trim(); if (title) onUpdate({ ...task, title }); setEditing(false); };
-  const addSubtask = (event: FormEvent) => { event.preventDefault(); if (!subtask.trim()) return; onUpdate({ ...task, subtasks: [...task.subtasks, { id: id(), title: subtask.trim(), completed: false }] }); setSubtask(""); };
-  return (
-    <article ref={setNodeRef} style={style} className={`glass task-card ${isDragging ? "is-dragging" : ""}`}>
-      <div className="task-row">
-        <button className="drag-handle" aria-label="Drag" {...attributes} {...listeners}><GripVertical size={18} /></button>
-        <button className={`check ${task.completed ? "is-checked" : ""}`} onClick={onToggle} aria-label={task.completed ? t.completed : t.active}><Check size={15} /></button>
-        <div className="task-main" onClick={() => setOpen(!open)}>
-          {editing ? <input autoFocus className="inline-edit" value={editValue} onClick={(e) => e.stopPropagation()} onChange={(e) => setEditValue(e.target.value)} onBlur={saveEdit} onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") saveEdit(); }} /> : <h3 className={task.completed ? "completed-title" : ""}>{task.title}</h3>}
-          <div className="task-meta">
-            {task.project && <span className="project-pill">{task.project}</span>}
-            {task.dueDate && <span><CalendarDays size={13} />{task.dueDate}</span>}
-            {task.repeat !== "none" && <span><RotateCcw size={13} />{t[task.repeat]}</span>}
-            {task.tags.map((tag) => <span className="tag-pill" key={tag}>#{tag}</span>)}
-          </div>
-        </div>
-        <button className="icon-button" onClick={() => setEditing(true)} aria-label={t.edit}><Pencil size={16} /></button>
-        <button className="icon-button danger" onClick={onDelete} aria-label={t.remove}><Trash2 size={16} /></button>
-        <button className={`icon-button disclosure ${open ? "open" : ""}`} onClick={() => setOpen(!open)}><ChevronDown size={17} /></button>
-      </div>
-      {open && <div className="task-details">
-        <div className="subtasks">
-          {task.subtasks.map((sub) => <div className="subtask" key={sub.id}>
-            <button className={`mini-check ${sub.completed ? "is-checked" : ""}`} onClick={() => onUpdate({ ...task, subtasks: task.subtasks.map((item) => item.id === sub.id ? { ...item, completed: !item.completed } : item) })}><Check size={11} /></button>
-            <span className={sub.completed ? "completed-title" : ""}>{sub.title}</span>
-            <button onClick={() => onUpdate({ ...task, subtasks: task.subtasks.filter((item) => item.id !== sub.id) })}><X size={14} /></button>
-          </div>)}
-          <form className="subtask-form" onSubmit={addSubtask}><Plus size={15} /><input value={subtask} onChange={(e) => setSubtask(e.target.value)} placeholder={t.subtask} /></form>
-        </div>
-      </div>}
-    </article>
-  );
+function loadData(): AppData {
+  try { const current=localStorage.getItem(DATA_KEY); if(current) return JSON.parse(current); const old=localStorage.getItem(OLD_KEY); if(!old) return seed(); localStorage.setItem(BACKUP_KEY,old); const oldTasks=JSON.parse(old); return {schemaVersion:3,courses:[],focusSessions:[],tasks:oldTasks.map((x:any)=>({id:x.id||uid(),title:x.title,courseId:undefined,type:"general",dueAt:x.dueDate?`${x.dueDate}T23:59`:undefined,priority:"medium",tags:x.tags||[],subtasks:x.subtasks||[],notes:"",repeat:x.repeat||"none",completed:!!x.completed,completedAt:x.completed?Date.now():undefined,isDailyFocus:false,createdAt:x.createdAt||Date.now(),updatedAt:Date.now()}))}; } catch { return seed(); }
 }
 
-function App() {
-  const [tasks, setTasks] = useState<Task[]>(readTasks);
-  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(THEME_KEY) as Theme) || "system");
-  const [locale, setLocale] = useState<Locale>(() => (localStorage.getItem(LOCALE_KEY) as Locale) || "zh");
-  const [view, setView] = useState<View>("list");
-  const [filter, setFilter] = useState<Filter>("all");
-  const [draft, setDraft] = useState(""); const [project, setProject] = useState("Personal"); const [tags, setTags] = useState("");
-  const [dueDate, setDueDate] = useState(""); const [repeat, setRepeat] = useState<Repeat>("none"); const [advanced, setAdvanced] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsClosing, setSettingsClosing] = useState(false);
-  const [languageOpen, setLanguageOpen] = useState(false);
-  const [customIcon, setCustomIcon] = useState(() => localStorage.getItem(ICON_KEY) || "");
-  const fileRef = useRef<HTMLInputElement>(null);
-  const iconRef = useRef<HTMLInputElement>(null);
-  const draftRef = useRef<HTMLInputElement>(null);
-  const settingsButtonRef = useRef<HTMLButtonElement>(null);
-  const settingsPanelRef = useRef<HTMLDivElement>(null);
-  const t = copy[locale];
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
-  useEffect(() => localStorage.setItem(TASKS_KEY, JSON.stringify(tasks)), [tasks]);
-  useEffect(() => { const media = matchMedia("(prefers-color-scheme: dark)"); const apply = () => document.documentElement.classList.toggle("dark", theme === "dark" || (theme === "system" && media.matches)); apply(); localStorage.setItem(THEME_KEY, theme); media.addEventListener("change", apply); return () => media.removeEventListener("change", apply); }, [theme]);
-  useEffect(() => localStorage.setItem(LOCALE_KEY, locale), [locale]);
-  useEffect(() => { if (!settingsOpen) return; settingsPanelRef.current?.focus(); const close = (event: globalThis.KeyboardEvent) => { if (event.key === "Escape") closeSettings(); }; document.addEventListener("keydown", close); return () => document.removeEventListener("keydown", close); }, [settingsOpen]);
-  const visible = useMemo(() => tasks.filter((task) => filter === "all" || (filter === "active" ? !task.completed : task.completed)), [tasks, filter]);
-  const completed = tasks.filter((task) => task.completed).length;
-  const rate = tasks.length ? Math.round(completed / tasks.length * 100) : 0;
-  const projects = [...new Set(tasks.map((task) => task.project).filter(Boolean))];
-  const addTask = (event: FormEvent) => { event.preventDefault(); if (!draft.trim()) return; setTasks([{ id: id(), title: draft.trim(), completed: false, createdAt: Date.now(), subtasks: [], tags: tags.split(",").map((x) => x.trim()).filter(Boolean), project: project.trim() || "Personal", dueDate, repeat }, ...tasks]); setDraft(""); setTags(""); setDueDate(""); setRepeat("none"); };
-  const toggleTask = (task: Task) => { const completing = !task.completed; let next = tasks.map((item) => item.id === task.id ? { ...item, completed: completing, repeatSpawned: completing && item.repeat !== "none" ? true : item.repeatSpawned } : item); if (completing && task.repeat !== "none" && !task.repeatSpawned) next = [{ ...task, id: id(), completed: false, createdAt: Date.now(), dueDate: nextDate(task.dueDate, task.repeat), repeatSpawned: false, subtasks: task.subtasks.map((sub) => ({ ...sub, id: id(), completed: false })) }, ...next]; setTasks(next); };
-  const dragEnd = ({ active, over }: DragEndEvent) => { if (!over || active.id === over.id) return; const oldIndex = tasks.findIndex((task) => task.id === active.id); const newIndex = tasks.findIndex((task) => task.id === over.id); setTasks(arrayMove(tasks, oldIndex, newIndex)); };
-  const exportCsv = () => { const csv = Papa.unparse(tasks.map((task) => ({ title: task.title, completed: task.completed, project: task.project, tags: task.tags.join("|"), dueDate: task.dueDate, repeat: task.repeat, subtasks: task.subtasks.map((sub) => `${sub.completed ? "1" : "0"}:${sub.title}`).join("|") }))); const url = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" })); const link = document.createElement("a"); link.href = url; link.download = "focus-glass-tasks.csv"; link.click(); URL.revokeObjectURL(url); };
-  const importCsv = (event: ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (!file) return; Papa.parse<Record<string, string>>(file, { header: true, skipEmptyLines: true, complete: ({ data }) => setTasks((current) => [...data.map((row) => normalize({ title: row.title, completed: row.completed === "true", project: row.project, tags: row.tags?.split("|").filter(Boolean), dueDate: row.dueDate, repeat: (row.repeat as Repeat) || "none", subtasks: row.subtasks?.split("|").filter(Boolean).map((value) => { const [done, ...title] = value.split(":"); return { id: id(), completed: done === "1", title: title.join(":") }; }) })), ...current]) }); event.target.value = ""; };
-  const updateIcon = (event: ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (!file || !file.type.startsWith("image/")) return; const reader = new FileReader(); reader.onload = () => { const value = String(reader.result || ""); setCustomIcon(value); localStorage.setItem(ICON_KEY, value); }; reader.readAsDataURL(file); event.target.value = ""; };
-  function closeSettings() { setSettingsClosing(true); setTimeout(() => { setSettingsOpen(false); setSettingsClosing(false); setLanguageOpen(false); settingsButtonRef.current?.focus(); }, 160); }
-  const visibleCount = visible.length;
-  const calendarDays = useMemo(() => { const now = new Date(); const first = new Date(now.getFullYear(), now.getMonth(), 1); const count = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(); return [...Array(first.getDay()).fill(null), ...Array.from({ length: count }, (_, i) => i + 1)]; }, []);
+const dayKeys=["monday","tuesday","wednesday","thursday","friday","saturday","sunday"] as const;
+const typeKeys:TaskType[]=["assignment","report","exam","preview","review","general"];
 
-  return <div className="app-shell">
-    <main className="app-container">
-      <header className="topbar glass">
-        <div className="brand"><div className="brand-icon">{customIcon ? <img src={customIcon} alt="" /> : <Check size={22} strokeWidth={3} />}</div><div><span>{t.app}</span><h1>{t.today}</h1></div></div>
-        <div className="header-actions"><button ref={settingsButtonRef} className="glass-button" aria-label={t.settings} aria-haspopup="dialog" aria-expanded={settingsOpen} onClick={() => settingsOpen ? closeSettings() : (setSettingsClosing(false), setSettingsOpen(true))}><Settings /></button></div>
-      </header>
-      {settingsOpen && <><button className={`settings-backdrop ${settingsClosing ? "closing" : ""}`} aria-label="Close settings" onClick={closeSettings} /><div ref={settingsPanelRef} className={`settings-menu ${settingsClosing ? "closing" : ""}`} role="dialog" aria-modal="true" aria-labelledby="settings-title" tabIndex={-1} style={{ "--anchor-right": `${Math.max(10, innerWidth - (settingsButtonRef.current?.getBoundingClientRect().right || innerWidth - 10))}px` } as CSSProperties}>
-        <div className="settings-title"><strong id="settings-title">{t.settings}</strong><button aria-label="Close settings" onClick={closeSettings}><X /></button></div>
-        <button className="settings-row" aria-expanded={languageOpen} onClick={() => setLanguageOpen(!languageOpen)}><span><Languages />{t.language}</span><span>{locale === "zh" ? "中文" : locale === "ja" ? "日本語" : "English"}<ChevronRight className={languageOpen ? "rotated" : ""} /></span></button>
-        {languageOpen && <div className="language-list" role="listbox" aria-label={t.language}>{([['zh','中文'],['ja','日本語'],['en','English']] as [Locale,string][]).map(([value,label]) => <button role="option" aria-selected={locale === value} key={value} onClick={() => { setLocale(value); setLanguageOpen(false); }}><span>{label}</span>{locale === value && <><Check /><span className="sr-only">{t.selected}</span></>}</button>)}</div>}
-        <div className="settings-group"><span>{t.appearance}</span><div className="theme-options">{(["light", "dark", "system"] as Theme[]).map((item) => <button className={theme === item ? "active" : ""} aria-pressed={theme === item} onClick={() => setTheme(item)} key={item}>{item === "light" ? <Sun /> : item === "dark" ? <Moon /> : <Monitor />}<span>{t[item]}</span></button>)}</div></div>
-        <button className="settings-row" onClick={() => iconRef.current?.click()}><span><div className="mini-app-icon">{customIcon ? <img src={customIcon} alt="" /> : <Check />}</div>{t.icon}</span><ChevronRight /></button>
-        <button className="settings-row" onClick={() => fileRef.current?.click()}><span><Upload />{t.import}</span></button>
-        <button className="settings-row" onClick={exportCsv}><span><Download />{t.export}</span></button>
-        <div className="settings-note"><Circle size={6} fill="currentColor" />{t.auto}</div>
-        <input ref={fileRef} hidden type="file" accept=".csv,text/csv" onChange={importCsv} /><input ref={iconRef} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={updateIcon} />
-      </div></>}
-      <nav className="view-switch">{(["list", "calendar", "stats"] as View[]).map((item) => <button className={view === item ? "active" : ""} onClick={() => setView(item)} key={item}>{item === "list" ? <ListTodo /> : item === "calendar" ? <CalendarDays /> : <BarChart3 />}<span>{t[item]}</span></button>)}</nav>
+export default function App(){
+  const [data,setData]=useState<AppData>(loadData); const [view,setView]=useState<View>("home");
+  const [theme,setTheme]=useState<Theme>(()=>(localStorage.getItem(THEME_KEY) as Theme)||"system"); const [locale,setLocale]=useState<Locale>(()=>(localStorage.getItem(LOCALE_KEY) as Locale)||"zh");
+  const [settings,setSettings]=useState(false); const [taskForm,setTaskForm]=useState(false); const [courseForm,setCourseForm]=useState(false); const [selectedCourse,setSelectedCourse]=useState<string>(); const [filter,setFilter]=useState("all");
+  const [customIcon,setCustomIcon]=useState(()=>localStorage.getItem(ICON_KEY)||""); const fileRef=useRef<HTMLInputElement>(null); const jsonRef=useRef<HTMLInputElement>(null); const iconRef=useRef<HTMLInputElement>(null);
+  const t=copy[locale]; const now=new Date(); const weekday=now.getDay()||7;
+  useEffect(()=>localStorage.setItem(DATA_KEY,JSON.stringify(data)),[data]); useEffect(()=>localStorage.setItem(LOCALE_KEY,locale),[locale]);
+  useEffect(()=>{const m=matchMedia("(prefers-color-scheme:dark)");const apply=()=>document.documentElement.classList.toggle("dark",theme==="dark"||(theme==="system"&&m.matches));apply();localStorage.setItem(THEME_KEY,theme);m.addEventListener("change",apply);return()=>m.removeEventListener("change",apply)},[theme]);
+  const courseMap=useMemo(()=>Object.fromEntries(data.courses.map(c=>[c.id,c])),[data.courses]);
+  const pending=data.tasks.filter(x=>!x.completed), overdue=pending.filter(x=>x.dueAt&&new Date(x.dueAt)<now), todayCourses=data.courses.filter(c=>c.schedule.some(s=>s.weekday===weekday));
+  const dueWeek=pending.filter(x=>x.dueAt&&new Date(x.dueAt).getTime()<Date.now()+7*86400000).sort((a,b)=>String(a.dueAt).localeCompare(String(b.dueAt)));
+  const exams=pending.filter(x=>x.type==="exam"&&x.dueAt).sort((a,b)=>String(a.dueAt).localeCompare(String(b.dueAt))).slice(0,4); const focus3=data.tasks.filter(x=>x.isDailyFocus).slice(0,3);
+  const nextClass=useMemo(()=>{const options=todayCourses.flatMap(c=>c.schedule.filter(s=>s.weekday===weekday).map(s=>({c,s}))).sort((a,b)=>a.s.startTime.localeCompare(b.s.startTime));return options.find(x=>x.s.endTime>now.toTimeString().slice(0,5))||options[0]},[data.courses,weekday]);
+  const completion=data.tasks.length?Math.round(data.tasks.filter(x=>x.completed).length/data.tasks.length*100):0;
+  const toggle=(id:string)=>setData(d=>({...d,tasks:d.tasks.map(x=>x.id===id?{...x,completed:!x.completed,completedAt:!x.completed?Date.now():undefined,updatedAt:Date.now()}:x)}));
+  const setFocus=(id:string)=>setData(d=>({...d,tasks:d.tasks.map(x=>x.id===id?{...x,isDailyFocus:!x.isDailyFocus}:x)}));
+  const addTask=(e:FormEvent<HTMLFormElement>)=>{e.preventDefault();const f=new FormData(e.currentTarget);const task:StudyTask={id:uid(),title:String(f.get("title")),courseId:String(f.get("course")||"")||undefined,type:f.get("type") as TaskType,dueAt:String(f.get("due")||"")||undefined,priority:f.get("priority") as Priority,tags:String(f.get("tags")||"").split(",").filter(Boolean),subtasks:[],notes:String(f.get("notes")||""),repeat:"none",completed:false,isDailyFocus:false,createdAt:Date.now(),updatedAt:Date.now()};setData(d=>({...d,tasks:[task,...d.tasks]}));setTaskForm(false)};
+  const addCourse=(e:FormEvent<HTMLFormElement>)=>{e.preventDefault();const f=new FormData(e.currentTarget);const c:Course={id:uid(),name:String(f.get("name")),teacher:String(f.get("teacher")),room:String(f.get("room")),color:String(f.get("color")),credits:Number(f.get("credits")),notes:String(f.get("notes")),createdAt:Date.now(),schedule:[{id:uid(),weekday:Number(f.get("weekday")),startTime:String(f.get("start")),endTime:String(f.get("end")),room:String(f.get("room"))}]};setData(d=>({...d,courses:[...d.courses,c]}));setCourseForm(false)};
+  const exportJson=()=>download("student-focus-backup.json",JSON.stringify(data,null,2),"application/json"); const exportCsv=()=>download("student-tasks.csv",Papa.unparse(data.tasks.map(x=>({...x,tags:x.tags.join("|"),subtasks:JSON.stringify(x.subtasks)}))),"text/csv");
+  const importJson=(e:ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(String(r.result));if(x.schemaVersion===3&&Array.isArray(x.tasks))setData(x)}catch{}};r.readAsText(f)};
+  const importCsv=(e:ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;Papa.parse<any>(f,{header:true,complete:({data:rows})=>setData(d=>({...d,tasks:[...rows.filter((r:any)=>r.title).map((r:any)=>({...r,id:r.id||uid(),completed:r.completed==="true",tags:String(r.tags||"").split("|").filter(Boolean),subtasks:[],createdAt:Number(r.createdAt)||Date.now(),updatedAt:Date.now()})),...d.tasks]}))})};
+  const updateIcon=(e:ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{const v=String(r.result);setCustomIcon(v);localStorage.setItem(ICON_KEY,v)};r.readAsDataURL(f)};
+  function download(name:string,body:string,type:string){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff",body],{type}));a.download=name;a.click();URL.revokeObjectURL(a.href)}
 
-      <section className="composer glass">
-        <form onSubmit={addTask}>
-          <div className="composer-main"><input ref={draftRef} aria-label={t.add} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={t.placeholder} /><button type="button" className={`options-button ${advanced ? "active" : ""}`} onClick={() => setAdvanced(!advanced)}><Tag size={18} /></button><button className="add-button" aria-label={t.add}><Plus size={22} /></button></div>
-          {advanced && <div className="advanced-grid">
-            <label><span>{t.project}</span><input list="projects" value={project} onChange={(e) => setProject(e.target.value)} /><datalist id="projects">{projects.map((item) => <option key={item} value={item} />)}</datalist></label>
-            <label><span>{t.tags}</span><input value={tags} onChange={(e) => setTags(e.target.value)} /></label>
-            <label><span>{t.due}</span><input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></label>
-            <label><span>{t.repeat}</span><select value={repeat} onChange={(e) => setRepeat(e.target.value as Repeat)}>{(["none", "daily", "weekly", "monthly"] as Repeat[]).map((item) => <option key={item} value={item}>{t[item]}</option>)}</select></label>
-          </div>}
-        </form>
-      </section>
-
-      {view === "list" && <>
-        <div className="toolbar"><div className="segmented">{(["all", "active", "completed"] as Filter[]).map((item) => <button className={filter === item ? "active" : ""} onClick={() => setFilter(item)} key={item}>{t[item]}</button>)}</div><div className="toolbar-actions"><span>{visibleCount} {t[filter]}</span>{completed > 0 && <button onClick={() => setTasks(tasks.filter((task) => !task.completed))}>{t.clear}</button>}</div></div>
-        <DndContext sensors={sensors} onDragEnd={dragEnd}><SortableContext items={visible.map((task) => task.id)} strategy={verticalListSortingStrategy}><div className="task-list">{visible.map((task) => <SortableTask key={task.id} task={task} locale={locale} onToggle={() => toggleTask(task)} onDelete={() => setTasks(tasks.filter((item) => item.id !== task.id))} onUpdate={(updated) => setTasks(tasks.map((item) => item.id === updated.id ? updated : item))} />)}</div></SortableContext></DndContext>
-        {!visible.length && <div className="empty glass"><div className="empty-icon"><ListTodo /></div><h2>{t.empty}</h2><p>{t.emptyHint}</p><button className="empty-action" onClick={() => { setView("list"); setFilter("all"); draftRef.current?.focus(); }}>{t.first}</button></div>}
-      </>}
-
-      {view === "calendar" && <section className="calendar-view glass"><div className="calendar-heading"><CalendarDays /><h2>{new Intl.DateTimeFormat(locale === "zh" ? "zh-CN" : locale === "ja" ? "ja-JP" : "en-US", { month: "long", year: "numeric" }).format(new Date())}</h2></div><div className="calendar-grid">{calendarDays.map((day, index) => <div className={`calendar-day ${day ? "" : "blank"}`} key={index}>{day && <><strong>{day}</strong><div>{tasks.filter((task) => task.dueDate && new Date(`${task.dueDate}T12:00:00`).getMonth() === new Date().getMonth() && Number(task.dueDate.slice(-2)) === day).map((task) => <span className={task.completed ? "done" : ""} key={task.id}>{task.title}</span>)}</div></>}</div>)}</div></section>}
-
-      {view === "stats" && <section className="stats-grid"><article className="stat-card glass hero-stat"><div className="progress-ring" style={{ "--progress": `${rate * 3.6}deg` } as React.CSSProperties}><div>{rate}%</div></div><div><span>{t.completeRate}</span><h2>{completed} / {tasks.length}</h2></div></article><article className="stat-card glass"><Check /><span>{t.done}</span><strong>{completed}</strong></article><article className="stat-card glass"><ListTodo /><span>{t.total}</span><strong>{tasks.length}</strong></article><article className="stat-card glass project-stat"><Tag /><span>{t.project}</span><div>{projects.map((item) => <p key={item}><span>{item}</span><strong>{tasks.filter((task) => task.project === item).length}</strong></p>)}</div></article></section>}
-
+  return <div className="app-shell"><div className="student-app">
+    <aside className="sidebar panel"><Brand icon={customIcon}/><Nav view={view} setView={setView} t={t}/><div className="course-nav"><div><span>{t.course}</span><button onClick={()=>setCourseForm(true)} aria-label={t.addCourse}><Plus/></button></div>{data.courses.map(c=><button key={c.id} onClick={()=>{setSelectedCourse(c.id);setView("schedule")}}><i style={{background:c.color}}/>{c.name}</button>)}</div><button className="settings-link" onClick={()=>setSettings(true)}><Settings/>{t.settings}</button></aside>
+    <header className="mobile-header glass-lite"><Brand icon={customIcon}/><button onClick={()=>setSettings(true)} aria-label={t.settings}><Settings/></button></header>
+    <main className="workspace">
+      {view==="home"&&<HomeView {...{t,data,todayCourses,pending,overdue,nextClass,dueWeek,exams,focus3,courseMap,toggle,setFocus,setTaskForm,completion}}/>}
+      {view==="schedule"&&<ScheduleView {...{t,data,weekday,selectedCourse,setSelectedCourse,setTaskForm,setCourseForm,courseMap}}/>}
+      {view==="tasks"&&<TasksView {...{t,data,courseMap,filter,setFilter,toggle,setFocus,setTaskForm,setData}}/>}
+      {view==="stats"&&<StatsView {...{t,data,courseMap,completion}}/>}
     </main>
-  </div>;
+    <nav className="mobile-nav glass-lite"><Nav view={view} setView={setView} t={t}/></nav>
+    {settings&&<SettingsPanel {...{t,theme,setTheme,locale,setLocale,setSettings,customIcon,fileRef,jsonRef,iconRef,exportCsv,exportJson,importCsv,importJson,updateIcon}}/>}
+    {taskForm && <TaskDrawer t={t} courses={data.courses} addTask={addTask} close={() => setTaskForm(false)} defaultCourse={selectedCourse} />}
+    {courseForm && <CourseDrawer t={t} addCourse={addCourse} close={() => setCourseForm(false)} />}
+  </div></div>
 }
 
-export default App;
+function Brand({icon}:{icon:string}){return <div className="brand"><div className="brand-mark">{icon?<img src={icon} alt=""/>:<GraduationCap/>}</div><div><strong>StudyFlow</strong><span>Student workspace</span></div></div>}
+function Nav({view,setView,t}:{view:View;setView:(v:View)=>void;t:any}){const items:[View,any,any][]=[["home",Home,t.home],["schedule",CalendarDays,t.schedule],["tasks",ListTodo,t.tasks],["stats",BarChart3,t.stats]];return <div className="nav-list">{items.map(([v,I,label])=><button className={view===v?"active":""} onClick={()=>setView(v)} key={v}><I/><span>{label}</span></button>)}</div>}
+function SectionTitle({title,action}:{title:string;action?:ReactNode}){return <div className="section-title"><h2>{title}</h2>{action}</div>}
+function HomeView(p:any){const {t,data,todayCourses,pending,overdue,nextClass,dueWeek,exams,focus3,courseMap,toggle,setFocus,setTaskForm,completion}=p;return <><div className="page-head"><div><span>{new Intl.DateTimeFormat(undefined,{month:"long",day:"numeric",weekday:"long"}).format(new Date())}</span><h1>{t.today}</h1><p>{t.subtitle}</p></div><button className="primary" onClick={()=>setTaskForm(true)}><Plus/>{t.addTask}</button></div><div className="desktop-grid"><div className="main-column"><div className="overview-grid"><Metric label={t.courses} value={todayCourses.length} icon={BookOpen}/><Metric label={t.pending} value={pending.length} icon={ListTodo}/><Metric label={t.overdue} value={overdue.length} icon={Clock3} danger={overdue.length>0}/></div><section className="entity-card next-class"><SectionTitle title={t.next}/>{nextClass?<div><i style={{background:nextClass.c.color}}/><div><h3>{nextClass.c.name}</h3><p>{nextClass.s.startTime}–{nextClass.s.endTime} · {nextClass.s.room}</p><span>{nextClass.c.teacher}</span></div></div>:<Empty t={t}/>}</section><section><SectionTitle title={t.weekly} action={<button className="text-button" onClick={()=>setTaskForm(true)}><Plus/>{t.addTask}</button>}/><div className="deadline-list">{dueWeek.length?dueWeek.map((x:any)=><TaskRow key={x.id} task={x} course={courseMap[x.courseId]} t={t} toggle={toggle} setFocus={setFocus}/>):<Empty t={t}/>}</div></section></div><aside className="right-column"><section className="entity-card"><SectionTitle title={t.exams}/>{exams.length?exams.map((x:any)=><ExamRow key={x.id} task={x} course={courseMap[x.courseId]} t={t}/>):<Empty t={t}/>}</section><section className="entity-card"><SectionTitle title={t.focus3} action={<span className="progress-label">{focus3.filter((x:any)=>x.completed).length}/3</span>}/><div className="focus-list">{focus3.map((x:any)=><label key={x.id}><button className={x.completed?"done":""} onClick={()=>toggle(x.id)}><Check/></button><span>{x.title}</span><button onClick={()=>setFocus(x.id)}><X/></button></label>)}{focus3.length<3&&<p>{3-focus3.length} slots available</p>}</div><div className="mini-progress"><i style={{width:`${focus3.length?focus3.filter((x:any)=>x.completed).length/focus3.length*100:0}%`}}/></div></section><section className="entity-card summary"><span>{t.completion}</span><strong>{completion}%</strong><div className="mini-progress"><i style={{width:`${completion}%`}}/></div></section></aside></div></>}
+function Metric({label,value,icon:Icon,danger}:{label:string;value:number;icon:any;danger?:boolean}){return <div className={`metric entity-card ${danger?"danger":""}`}><Icon/><div><strong>{value}</strong><span>{label}</span></div></div>}
+function TaskRow({task,course,t,toggle,setFocus}:{task:StudyTask;course?:Course;t:any;toggle:(x:string)=>void;setFocus:(x:string)=>void}){const due=task.dueAt?new Date(task.dueAt):null;const diff=due?due.getTime()-Date.now():0;return <article className={`task-row-card entity-card ${diff<0?"overdue":diff<86400000?"urgent":""}`}><button className={`task-check ${task.completed?"done":""}`} onClick={()=>toggle(task.id)}><Check/></button><div><h3>{task.title}</h3><p>{course?.name||t.general} · {t[task.type]}</p></div><div className="task-due"><span>{due?new Intl.DateTimeFormat(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}).format(due):"—"}</span>{diff<0&&<b>{t.overdueLabel}</b>}{diff>=0&&diff<86400000&&<b>{t.urgent}</b>}</div><button className={`focus-star ${task.isDailyFocus?"active":""}`} onClick={()=>setFocus(task.id)}><Target/></button></article>}
+function ExamRow({task,course,t}:{task:StudyTask;course?:Course;t:any}){const days=Math.max(0,Math.ceil((new Date(task.dueAt!).getTime()-Date.now())/86400000));return <div className="exam-row"><div><strong>{task.title}</strong><span>{course?.name||t.general}</span></div><b>{days}<small>{t.days}</small></b></div>}
+function ScheduleView({t,data,weekday,selectedCourse,setSelectedCourse,setTaskForm,setCourseForm,courseMap}:any){if(selectedCourse){const c=courseMap[selectedCourse];const tasks=data.tasks.filter((x:any)=>x.courseId===c.id);return <><div className="page-head"><div><button className="back" onClick={()=>setSelectedCourse(undefined)}>‹ {t.schedule}</button><h1>{c.name}</h1><p>{c.teacher} · {c.room} · {c.credits} {t.credits}</p></div><button className="primary" onClick={()=>setTaskForm(true)}><Plus/>{t.addTask}</button></div><div className="course-detail"><section className="entity-card course-profile"><i style={{background:c.color}}/><h2>{c.name}</h2><p>{c.notes||t.empty}</p><strong>{tasks.length?Math.round(tasks.filter((x:any)=>x.completed).length/tasks.length*100):0}%</strong></section><section><SectionTitle title={t.tasks}/><div className="deadline-list">{tasks.map((x:any)=><TaskRow key={x.id} task={x} course={c} t={t} toggle={()=>{}} setFocus={()=>{}}/>)}</div></section></div></>};return <><div className="page-head"><div><h1>{t.schedule}</h1><p>{t.subtitle}</p></div><button className="primary" onClick={()=>setCourseForm(true)}><Plus/>{t.addCourse}</button></div><div className="week-board entity-card">{dayKeys.map((d,i)=><div className={`day-column ${weekday===i+1?"today":""}`} key={d}><header><span>{t[d]}</span><b>{i+1}</b></header><div>{data.courses.flatMap((c:any)=>c.schedule.filter((s:any)=>s.weekday===i+1).map((s:any)=><button className="class-block" style={{borderColor:c.color}} key={s.id} onClick={()=>setSelectedCourse(c.id)}><i style={{background:c.color}}/><strong>{c.name}</strong><span>{s.startTime}–{s.endTime}</span><small>{s.room}</small></button>))}</div></div>)}</div><div className="mobile-agenda">{dayKeys.map((d,i)=><section key={d}><h3>{t[d]}</h3>{data.courses.flatMap((c:any)=>c.schedule.filter((s:any)=>s.weekday===i+1).map((s:any)=><button className="agenda-row entity-card" key={s.id} onClick={()=>setSelectedCourse(c.id)}><i style={{background:c.color}}/><span>{s.startTime}</span><div><strong>{c.name}</strong><small>{s.room}</small></div><ChevronRight/></button>))}</section>)}</div></>}
+function TasksView({t,data,courseMap,filter,setFilter,toggle,setFocus,setTaskForm,setData}:any){const tasks=data.tasks.filter((x:any)=>filter==="all"||(filter==="completed"?x.completed:filter==="incomplete"?!x.completed:x.type===filter));return <><div className="page-head"><div><h1>{t.tasks}</h1><p>{tasks.length} {t[filter]||t.tasks}</p></div><button className="primary" onClick={()=>setTaskForm(true)}><Plus/>{t.addTask}</button></div><div className="filter-bar entity-card">{["all","incomplete","completed",...typeKeys].map(x=><button className={filter===x?"active":""} onClick={()=>setFilter(x)} key={x}>{t[x]}</button>)}</div><div className="deadline-list">{tasks.map((x:any)=><div className="task-wrap" key={x.id}><TaskRow task={x} course={courseMap[x.courseId]} t={t} toggle={toggle} setFocus={setFocus}/><button className="delete" onClick={()=>setData((d:AppData)=>({...d,tasks:d.tasks.filter(y=>y.id!==x.id)}))}><Trash2/></button></div>)}</div></>}
+function StatsView({t,data,courseMap,completion}:any){const focus=data.focusSessions.reduce((a:number,b:any)=>a+b.durationMinutes,0);const types=typeKeys.map(k=>({k,n:data.tasks.filter((x:any)=>x.type===k).length}));return <><div className="page-head"><div><h1>{t.stats}</h1><p>{t.subtitle}</p></div></div><div className="stats-layout"><section className="entity-card stat-large"><span>{t.completion}</span><strong>{completion}%</strong><div className="bar"><i style={{width:`${completion}%`}}/></div></section><Metric label={t.focusTime} value={focus} icon={Timer}/><Metric label={t.streak} value={3} icon={RotateCcw}/><section className="entity-card chart-card"><SectionTitle title={t.distribution}/><div className="type-bars">{types.map((x:any)=><div key={x.k}><span>{t[x.k]}</span><i><b style={{width:`${data.tasks.length?x.n/data.tasks.length*100:0}%`}}/></i><strong>{x.n}</strong></div>)}</div></section><section className="entity-card chart-card"><SectionTitle title={t.course}/>{data.courses.map((c:any)=>{const a=data.tasks.filter((x:any)=>x.courseId===c.id);const r=a.length?Math.round(a.filter((x:any)=>x.completed).length/a.length*100):0;return <div className="course-stat" key={c.id}><i style={{background:c.color}}/><span>{c.name}</span><div className="bar"><b style={{width:`${r}%`,background:c.color}}/></div><strong>{r}%</strong></div>})}</section></div></>}
+function Empty({t}:{t:any}){return <div className="empty-small">{t.empty}</div>}
+function ModalShell({title,close,children}:{title:string;close:()=>void;children:ReactNode}){return <div className="modal-layer"><button className="modal-backdrop" onClick={close} aria-label="Close"/><section className="drawer entity-card" role="dialog" aria-modal="true"><header><h2>{title}</h2><button onClick={close}><X/></button></header>{children}</section></div>}
+function TaskDrawer({t,courses,addTask,close,defaultCourse}:{t:any;courses:Course[];addTask:any;close:()=>void;defaultCourse?:string}){return <ModalShell title={t.addTask} close={close}><form className="form-grid" onSubmit={addTask}><label className="wide"><span>{t.title}</span><input name="title" required autoFocus/></label><label><span>{t.course}</span><select name="course" defaultValue={defaultCourse||""}><option value="">—</option>{courses.map(c=><option value={c.id} key={c.id}>{c.name}</option>)}</select></label><label><span>{t.type}</span><select name="type">{typeKeys.map(x=><option value={x} key={x}>{t[x]}</option>)}</select></label><label><span>{t.due}</span><input type="datetime-local" name="due"/></label><label><span>{t.priority}</span><select name="priority"><option value="high">{t.high}</option><option value="medium">{t.medium}</option><option value="low">{t.low}</option></select></label><label><span>{t.tags}</span><input name="tags" placeholder="lab, reading"/></label><label className="wide"><span>{t.notes}</span><textarea name="notes"/></label><div className="form-actions wide"><button type="button" onClick={close}>{t.cancel}</button><button className="primary">{t.save}</button></div></form></ModalShell>}
+function CourseDrawer({t,addCourse,close}:{t:any;addCourse:any;close:()=>void}){return <ModalShell title={t.addCourse} close={close}><form className="form-grid" onSubmit={addCourse}><label><span>{t.title}</span><input name="name" required autoFocus/></label><label><span>{t.teacher}</span><input name="teacher"/></label><label><span>{t.room}</span><input name="room"/></label><label><span>{t.credits}</span><input name="credits" type="number" min="0" defaultValue="2"/></label><label><span>{t.monday}</span><select name="weekday">{dayKeys.map((x,i)=><option value={i+1} key={x}>{t[x]}</option>)}</select></label><label><span>Color</span><input name="color" type="color" defaultValue="#2878e3"/></label><label><span>Start</span><input name="start" type="time" defaultValue="09:00"/></label><label><span>End</span><input name="end" type="time" defaultValue="10:30"/></label><label className="wide"><span>{t.notes}</span><textarea name="notes"/></label><div className="form-actions wide"><button type="button" onClick={close}>{t.cancel}</button><button className="primary">{t.save}</button></div></form></ModalShell>}
+function SettingsPanel(p:any){const {t,theme,setTheme,locale,setLocale,setSettings,customIcon,fileRef,jsonRef,iconRef,exportCsv,exportJson,importCsv,importJson,updateIcon}=p;return <ModalShell title={t.settings} close={()=>setSettings(false)}><div className="settings-content"><span>{t.appearance}</span><div className="choice-row">{(["light","dark","system"] as Theme[]).map((x,i)=>{const I=[Sun,Moon,Monitor][i];return <button className={theme===x?"active":""} onClick={()=>setTheme(x)} key={x}><I/>{t[x]}</button>})}</div><span>{t.language}</span><div className="choice-row">{(["zh","ja","en"] as Locale[]).map(x=><button className={locale===x?"active":""} onClick={()=>setLocale(x)} key={x}>{x==="zh"?"中文":x==="ja"?"日本語":"English"}</button>)}</div><span>{t.data}</span><div className="settings-actions"><button onClick={()=>fileRef.current?.click()}><Upload/>{t.importCsv}</button><button onClick={exportCsv}><Download/>{t.exportCsv}</button><button onClick={()=>jsonRef.current?.click()}><FileJson/>{t.restore}</button><button onClick={exportJson}><Download/>{t.backup}</button><button onClick={()=>iconRef.current?.click()}><div className="tiny-icon">{customIcon?<img src={customIcon}/>:<GraduationCap/>}</div>{t.icon}</button></div><input hidden ref={fileRef} type="file" accept=".csv" onChange={importCsv}/><input hidden ref={jsonRef} type="file" accept=".json" onChange={importJson}/><input hidden ref={iconRef} type="file" accept="image/*" onChange={updateIcon}/></div></ModalShell>}
