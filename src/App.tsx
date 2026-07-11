@@ -1487,8 +1487,8 @@ function Dashboard({
           {t.new}
         </button>
       </div>
-      <div className="desktop-grid">
-        <div className="main-column">
+      <div className="main-dashboard-layout">
+        <div className="dashboard-main">
           <div className="overview-grid">
             <Metric n={active.length} l={t.inProgress} i={BriefcaseBusiness} />
             <Metric n={due.length} l={t.dueWeek} i={Clock3} />
@@ -1544,7 +1544,7 @@ function Dashboard({
             </div>
           </section>
         </div>
-        <aside className="right-column">
+        <aside className="dashboard-sidebar">
           <section className="entity-card">
             <Title>{t.funnel}</Title>
             <div className="funnel">

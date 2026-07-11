@@ -2188,3 +2188,43 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   .dark .modal-layer .form-actions > button:not(.primary) { color: #dce6f0; background: #253346; }
   .modal-layer .form-actions > .primary { color: #fff; background: #2477d9; }
 }
+
+/* Dashboard layout: explicit two-column DOM, with a single stacked sidebar. */
+.main-dashboard-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  min-width: 0;
+}
+.dashboard-main,
+.dashboard-sidebar {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 16px;
+}
+.dashboard-sidebar > .entity-card {
+  width: 100%;
+  min-width: 0;
+}
+.dashboard-sidebar .section-title h2,
+.dashboard-sidebar p,
+.dashboard-sidebar span,
+.dashboard-sidebar strong {
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+@media (min-width: 1440px) {
+  .main-dashboard-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 320px);
+    gap: 24px;
+  }
+  .dashboard-sidebar {
+    min-width: 300px;
+    max-width: 320px;
+  }
+}
+@media (max-width: 760px) {
+  .main-dashboard-layout { display: block; }
+  .dashboard-main, .dashboard-sidebar { gap: 17px; }
+}
