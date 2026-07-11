@@ -1,15 +1,15 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent, type KeyboardEvent } from "react";
 import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import Papa from "papaparse";
 import {
-  BarChart3, CalendarDays, Check, ChevronDown, Circle, Download, GripVertical, Languages,
-  ListTodo, Moon, Pencil, Plus, RotateCcw, Settings, Sun, Tag, Trash2, Upload, X,
+  BarChart3, CalendarDays, Check, ChevronDown, ChevronRight, Circle, Download, GripVertical, Languages,
+  ListTodo, Monitor, Moon, Pencil, Plus, RotateCcw, Settings, Sun, Tag, Trash2, Upload, X,
 } from "lucide-react";
 
 type Locale = "zh" | "ja" | "en";
-type Theme = "light" | "dark";
+type Theme = "light" | "dark" | "system";
 type Filter = "all" | "active" | "completed";
 type View = "list" | "calendar" | "stats";
 type Repeat = "none" | "daily" | "weekly" | "monthly";
@@ -23,11 +23,12 @@ const TASKS_KEY = "todo-apple-tasks-v2";
 const OLD_TASKS_KEY = "todo-apple-tasks";
 const THEME_KEY = "todo-apple-theme";
 const LOCALE_KEY = "todo-apple-locale";
+const ICON_KEY = "todo-apple-custom-icon";
 
 const copy = {
-  zh: { app: "Focus Glass", today: "任务中心", add: "添加任务", first: "添加第一个任务", settings: "设置", language: "语言", appearance: "外观", placeholder: "今天想完成什么？", all: "全部", active: "未完成", completed: "已完成", list: "清单", calendar: "日历", stats: "统计", empty: "还没有任务", emptyHint: "从一件小事开始安排今天。", remaining: "项待完成", clear: "清除已完成", project: "项目", tags: "标签，用逗号分隔", due: "截止日期", repeat: "重复", none: "不重复", daily: "每天", weekly: "每周", monthly: "每月", subtask: "添加子任务", completeRate: "完成率", done: "已完成", total: "总任务", import: "导入 CSV", export: "导出 CSV", auto: "自动保存在此设备", edit: "编辑任务", remove: "删除任务", theme: "深色模式", noDue: "未设置日期" },
-  ja: { app: "Focus Glass", today: "タスクセンター", add: "タスクを追加", first: "最初のタスクを追加", settings: "設定", language: "言語", appearance: "表示", placeholder: "今日は何を終わらせますか？", all: "すべて", active: "未完了", completed: "完了", list: "リスト", calendar: "カレンダー", stats: "統計", empty: "タスクはありません", emptyHint: "小さなことから今日を始めましょう。", remaining: "件 未完了", clear: "完了を削除", project: "プロジェクト", tags: "タグ（カンマ区切り）", due: "期限", repeat: "繰り返し", none: "なし", daily: "毎日", weekly: "毎週", monthly: "毎月", subtask: "サブタスクを追加", completeRate: "完了率", done: "完了", total: "全タスク", import: "CSV 読込", export: "CSV 書出", auto: "この端末に自動保存", edit: "編集", remove: "削除", theme: "ダークモード", noDue: "日付なし" },
-  en: { app: "Focus Glass", today: "Task Center", add: "Add task", first: "Add your first task", settings: "Settings", language: "Language", appearance: "Appearance", placeholder: "What would you like to finish?", all: "All", active: "Incomplete", completed: "Completed", list: "List", calendar: "Calendar", stats: "Insights", empty: "No tasks yet", emptyHint: "Start today with one small thing.", remaining: "left", clear: "Clear completed", project: "Project", tags: "Tags, comma separated", due: "Due date", repeat: "Repeat", none: "No repeat", daily: "Daily", weekly: "Weekly", monthly: "Monthly", subtask: "Add subtask", completeRate: "Completion", done: "Completed", total: "Total tasks", import: "Import CSV", export: "Export CSV", auto: "Saved automatically on this device", edit: "Edit task", remove: "Delete task", theme: "Dark mode", noDue: "No date" },
+  zh: { app: "Focus Glass", today: "任务中心", add: "添加任务", first: "添加第一个任务", settings: "设置", language: "语言", appearance: "外观", light: "浅色", dark: "深色", system: "跟随系统", icon: "自定义 App 图标", selected: "已选择", placeholder: "今天想完成什么？", all: "全部", active: "未完成", completed: "已完成", list: "清单", calendar: "日历", stats: "统计", empty: "还没有任务", emptyHint: "从一件小事开始安排今天。", remaining: "项待完成", clear: "清除已完成", project: "项目", tags: "标签，用逗号分隔", due: "截止日期", repeat: "重复", none: "不重复", daily: "每天", weekly: "每周", monthly: "每月", subtask: "添加子任务", completeRate: "完成率", done: "已完成", total: "总任务", import: "导入 CSV", export: "导出 CSV", auto: "自动保存至此设备", edit: "编辑任务", remove: "删除任务", theme: "深色模式", noDue: "未设置日期" },
+  ja: { app: "Focus Glass", today: "タスクセンター", add: "タスクを追加", first: "最初のタスクを追加", settings: "設定", language: "言語", appearance: "表示", light: "ライト", dark: "ダーク", system: "システム", icon: "Appアイコン", selected: "選択中", placeholder: "今日は何を終わらせますか？", all: "すべて", active: "未完了", completed: "完了", list: "リスト", calendar: "カレンダー", stats: "統計", empty: "タスクはありません", emptyHint: "小さなことから今日を始めましょう。", remaining: "件 未完了", clear: "完了を削除", project: "プロジェクト", tags: "タグ（カンマ区切り）", due: "期限", repeat: "繰り返し", none: "なし", daily: "毎日", weekly: "毎週", monthly: "毎月", subtask: "サブタスクを追加", completeRate: "完了率", done: "完了", total: "全タスク", import: "CSV 読込", export: "CSV 書出", auto: "この端末に自動保存", edit: "編集", remove: "削除", theme: "ダークモード", noDue: "日付なし" },
+  en: { app: "Focus Glass", today: "Task Center", add: "Add task", first: "Add your first task", settings: "Settings", language: "Language", appearance: "Appearance", light: "Light", dark: "Dark", system: "System", icon: "Custom app icon", selected: "Selected", placeholder: "What would you like to finish?", all: "All", active: "Incomplete", completed: "Completed", list: "List", calendar: "Calendar", stats: "Insights", empty: "No tasks yet", emptyHint: "Start today with one small thing.", remaining: "left", clear: "Clear completed", project: "Project", tags: "Tags, comma separated", due: "Due date", repeat: "Repeat", none: "No repeat", daily: "Daily", weekly: "Weekly", monthly: "Monthly", subtask: "Add subtask", completeRate: "Completion", done: "Completed", total: "Total tasks", import: "Import CSV", export: "Export CSV", auto: "Saved automatically on this device", edit: "Edit task", remove: "Delete task", theme: "Dark mode", noDue: "No date" },
 };
 
 const id = () => typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -83,20 +84,27 @@ function SortableTask({ task, locale, onToggle, onDelete, onUpdate }: { task: Ta
 
 function App() {
   const [tasks, setTasks] = useState<Task[]>(readTasks);
-  const [theme, setTheme] = useState<Theme>(() => localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light");
+  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(THEME_KEY) as Theme) || "system");
   const [locale, setLocale] = useState<Locale>(() => (localStorage.getItem(LOCALE_KEY) as Locale) || "zh");
   const [view, setView] = useState<View>("list");
   const [filter, setFilter] = useState<Filter>("all");
   const [draft, setDraft] = useState(""); const [project, setProject] = useState("Personal"); const [tags, setTags] = useState("");
   const [dueDate, setDueDate] = useState(""); const [repeat, setRepeat] = useState<Repeat>("none"); const [advanced, setAdvanced] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsClosing, setSettingsClosing] = useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
+  const [customIcon, setCustomIcon] = useState(() => localStorage.getItem(ICON_KEY) || "");
   const fileRef = useRef<HTMLInputElement>(null);
+  const iconRef = useRef<HTMLInputElement>(null);
   const draftRef = useRef<HTMLInputElement>(null);
+  const settingsButtonRef = useRef<HTMLButtonElement>(null);
+  const settingsPanelRef = useRef<HTMLDivElement>(null);
   const t = copy[locale];
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
   useEffect(() => localStorage.setItem(TASKS_KEY, JSON.stringify(tasks)), [tasks]);
-  useEffect(() => { localStorage.setItem(THEME_KEY, theme); document.documentElement.classList.toggle("dark", theme === "dark"); }, [theme]);
+  useEffect(() => { const media = matchMedia("(prefers-color-scheme: dark)"); const apply = () => document.documentElement.classList.toggle("dark", theme === "dark" || (theme === "system" && media.matches)); apply(); localStorage.setItem(THEME_KEY, theme); media.addEventListener("change", apply); return () => media.removeEventListener("change", apply); }, [theme]);
   useEffect(() => localStorage.setItem(LOCALE_KEY, locale), [locale]);
+  useEffect(() => { if (!settingsOpen) return; settingsPanelRef.current?.focus(); const close = (event: globalThis.KeyboardEvent) => { if (event.key === "Escape") closeSettings(); }; document.addEventListener("keydown", close); return () => document.removeEventListener("keydown", close); }, [settingsOpen]);
   const visible = useMemo(() => tasks.filter((task) => filter === "all" || (filter === "active" ? !task.completed : task.completed)), [tasks, filter]);
   const completed = tasks.filter((task) => task.completed).length;
   const rate = tasks.length ? Math.round(completed / tasks.length * 100) : 0;
@@ -106,22 +114,28 @@ function App() {
   const dragEnd = ({ active, over }: DragEndEvent) => { if (!over || active.id === over.id) return; const oldIndex = tasks.findIndex((task) => task.id === active.id); const newIndex = tasks.findIndex((task) => task.id === over.id); setTasks(arrayMove(tasks, oldIndex, newIndex)); };
   const exportCsv = () => { const csv = Papa.unparse(tasks.map((task) => ({ title: task.title, completed: task.completed, project: task.project, tags: task.tags.join("|"), dueDate: task.dueDate, repeat: task.repeat, subtasks: task.subtasks.map((sub) => `${sub.completed ? "1" : "0"}:${sub.title}`).join("|") }))); const url = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" })); const link = document.createElement("a"); link.href = url; link.download = "focus-glass-tasks.csv"; link.click(); URL.revokeObjectURL(url); };
   const importCsv = (event: ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (!file) return; Papa.parse<Record<string, string>>(file, { header: true, skipEmptyLines: true, complete: ({ data }) => setTasks((current) => [...data.map((row) => normalize({ title: row.title, completed: row.completed === "true", project: row.project, tags: row.tags?.split("|").filter(Boolean), dueDate: row.dueDate, repeat: (row.repeat as Repeat) || "none", subtasks: row.subtasks?.split("|").filter(Boolean).map((value) => { const [done, ...title] = value.split(":"); return { id: id(), completed: done === "1", title: title.join(":") }; }) })), ...current]) }); event.target.value = ""; };
+  const updateIcon = (event: ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (!file || !file.type.startsWith("image/")) return; const reader = new FileReader(); reader.onload = () => { const value = String(reader.result || ""); setCustomIcon(value); localStorage.setItem(ICON_KEY, value); }; reader.readAsDataURL(file); event.target.value = ""; };
+  function closeSettings() { setSettingsClosing(true); setTimeout(() => { setSettingsOpen(false); setSettingsClosing(false); setLanguageOpen(false); settingsButtonRef.current?.focus(); }, 160); }
+  const visibleCount = visible.length;
   const calendarDays = useMemo(() => { const now = new Date(); const first = new Date(now.getFullYear(), now.getMonth(), 1); const count = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(); return [...Array(first.getDay()).fill(null), ...Array.from({ length: count }, (_, i) => i + 1)]; }, []);
 
   return <div className="app-shell">
     <main className="app-container">
       <header className="topbar glass">
-        <div className="brand"><div className="brand-icon"><Check size={22} strokeWidth={3} /></div><div><span>{t.app}</span><h1>{t.today}</h1></div></div>
-        <div className="header-actions"><button className="glass-button" aria-label={t.settings} onClick={() => setSettingsOpen(!settingsOpen)}><Settings /></button></div>
-        {settingsOpen && <div className="settings-menu glass">
-          <div className="settings-title"><strong>{t.settings}</strong><button aria-label="Close" onClick={() => setSettingsOpen(false)}><X /></button></div>
-          <label className="settings-row"><span><Languages />{t.language}</span><select value={locale} onChange={(e) => setLocale(e.target.value as Locale)}><option value="zh">中文</option><option value="ja">日本語</option><option value="en">English</option></select></label>
-          <button className="settings-row" onClick={() => setTheme(theme === "light" ? "dark" : "light")}><span>{theme === "light" ? <Moon /> : <Sun />}{t.appearance}</span><strong>{theme === "dark" ? "On" : "Off"}</strong></button>
-          <button className="settings-row" onClick={() => fileRef.current?.click()}><span><Upload />{t.import}</span></button>
-          <button className="settings-row" onClick={exportCsv}><span><Download />{t.export}</span></button>
-          <input ref={fileRef} hidden type="file" accept=".csv,text/csv" onChange={importCsv} />
-        </div>}
+        <div className="brand"><div className="brand-icon">{customIcon ? <img src={customIcon} alt="" /> : <Check size={22} strokeWidth={3} />}</div><div><span>{t.app}</span><h1>{t.today}</h1></div></div>
+        <div className="header-actions"><button ref={settingsButtonRef} className="glass-button" aria-label={t.settings} aria-haspopup="dialog" aria-expanded={settingsOpen} onClick={() => settingsOpen ? closeSettings() : (setSettingsClosing(false), setSettingsOpen(true))}><Settings /></button></div>
       </header>
+      {settingsOpen && <><button className={`settings-backdrop ${settingsClosing ? "closing" : ""}`} aria-label="Close settings" onClick={closeSettings} /><div ref={settingsPanelRef} className={`settings-menu ${settingsClosing ? "closing" : ""}`} role="dialog" aria-modal="true" aria-labelledby="settings-title" tabIndex={-1} style={{ "--anchor-right": `${Math.max(10, innerWidth - (settingsButtonRef.current?.getBoundingClientRect().right || innerWidth - 10))}px` } as CSSProperties}>
+        <div className="settings-title"><strong id="settings-title">{t.settings}</strong><button aria-label="Close settings" onClick={closeSettings}><X /></button></div>
+        <button className="settings-row" aria-expanded={languageOpen} onClick={() => setLanguageOpen(!languageOpen)}><span><Languages />{t.language}</span><span>{locale === "zh" ? "中文" : locale === "ja" ? "日本語" : "English"}<ChevronRight className={languageOpen ? "rotated" : ""} /></span></button>
+        {languageOpen && <div className="language-list" role="listbox" aria-label={t.language}>{([['zh','中文'],['ja','日本語'],['en','English']] as [Locale,string][]).map(([value,label]) => <button role="option" aria-selected={locale === value} key={value} onClick={() => { setLocale(value); setLanguageOpen(false); }}><span>{label}</span>{locale === value && <><Check /><span className="sr-only">{t.selected}</span></>}</button>)}</div>}
+        <div className="settings-group"><span>{t.appearance}</span><div className="theme-options">{(["light", "dark", "system"] as Theme[]).map((item) => <button className={theme === item ? "active" : ""} aria-pressed={theme === item} onClick={() => setTheme(item)} key={item}>{item === "light" ? <Sun /> : item === "dark" ? <Moon /> : <Monitor />}<span>{t[item]}</span></button>)}</div></div>
+        <button className="settings-row" onClick={() => iconRef.current?.click()}><span><div className="mini-app-icon">{customIcon ? <img src={customIcon} alt="" /> : <Check />}</div>{t.icon}</span><ChevronRight /></button>
+        <button className="settings-row" onClick={() => fileRef.current?.click()}><span><Upload />{t.import}</span></button>
+        <button className="settings-row" onClick={exportCsv}><span><Download />{t.export}</span></button>
+        <div className="settings-note"><Circle size={6} fill="currentColor" />{t.auto}</div>
+        <input ref={fileRef} hidden type="file" accept=".csv,text/csv" onChange={importCsv} /><input ref={iconRef} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={updateIcon} />
+      </div></>}
       <nav className="view-switch">{(["list", "calendar", "stats"] as View[]).map((item) => <button className={view === item ? "active" : ""} onClick={() => setView(item)} key={item}>{item === "list" ? <ListTodo /> : item === "calendar" ? <CalendarDays /> : <BarChart3 />}<span>{t[item]}</span></button>)}</nav>
 
       <section className="composer glass">
@@ -137,7 +151,7 @@ function App() {
       </section>
 
       {view === "list" && <>
-        <div className="toolbar"><div className="segmented">{(["all", "active", "completed"] as Filter[]).map((item) => <button className={filter === item ? "active" : ""} onClick={() => setFilter(item)} key={item}>{t[item]}</button>)}</div><div className="toolbar-actions"><span>{tasks.length - completed} {t.remaining}</span>{completed > 0 && <button onClick={() => setTasks(tasks.filter((task) => !task.completed))}>{t.clear}</button>}</div></div>
+        <div className="toolbar"><div className="segmented">{(["all", "active", "completed"] as Filter[]).map((item) => <button className={filter === item ? "active" : ""} onClick={() => setFilter(item)} key={item}>{t[item]}</button>)}</div><div className="toolbar-actions"><span>{visibleCount} {t[filter]}</span>{completed > 0 && <button onClick={() => setTasks(tasks.filter((task) => !task.completed))}>{t.clear}</button>}</div></div>
         <DndContext sensors={sensors} onDragEnd={dragEnd}><SortableContext items={visible.map((task) => task.id)} strategy={verticalListSortingStrategy}><div className="task-list">{visible.map((task) => <SortableTask key={task.id} task={task} locale={locale} onToggle={() => toggleTask(task)} onDelete={() => setTasks(tasks.filter((item) => item.id !== task.id))} onUpdate={(updated) => setTasks(tasks.map((item) => item.id === updated.id ? updated : item))} />)}</div></SortableContext></DndContext>
         {!visible.length && <div className="empty glass"><div className="empty-icon"><ListTodo /></div><h2>{t.empty}</h2><p>{t.emptyHint}</p><button className="empty-action" onClick={() => { setView("list"); setFilter("all"); draftRef.current?.focus(); }}>{t.first}</button></div>}
       </>}
@@ -146,7 +160,6 @@ function App() {
 
       {view === "stats" && <section className="stats-grid"><article className="stat-card glass hero-stat"><div className="progress-ring" style={{ "--progress": `${rate * 3.6}deg` } as React.CSSProperties}><div>{rate}%</div></div><div><span>{t.completeRate}</span><h2>{completed} / {tasks.length}</h2></div></article><article className="stat-card glass"><Check /><span>{t.done}</span><strong>{completed}</strong></article><article className="stat-card glass"><ListTodo /><span>{t.total}</span><strong>{tasks.length}</strong></article><article className="stat-card glass project-stat"><Tag /><span>{t.project}</span><div>{projects.map((item) => <p key={item}><span>{item}</span><strong>{tasks.filter((task) => task.project === item).length}</strong></p>)}</div></article></section>}
 
-      <footer><Circle size={7} fill="currentColor" />{t.auto}</footer>
     </main>
   </div>;
 }
