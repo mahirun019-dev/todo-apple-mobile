@@ -31,9 +31,10 @@ body.settings-drawer-open { overflow: hidden; overscroll-behavior: none; }
   .app-shell { padding: 18px 22px; }
   .student-app { grid-template-columns: 260px minmax(0, 1fr); min-height: calc(100dvh - 36px); }
   .workspace { padding: 26px 30px 34px; overflow-y: auto; }
-  .desktop-grid { grid-template-columns: minmax(560px, 1fr) 340px; gap: 20px; }
+  .desktop-grid { grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); gap: 20px; }
+  .right-column { grid-template-columns: minmax(0, 1fr); min-width: 300px; max-width: 340px; }
   .main-column, .right-column { gap: 14px; }
-  .entity-card { border-radius: 9px; }
+  .entity-card { border-radius: 15px; }
   .metric { min-height: 78px; padding: 13px; }
   .page-head { margin-bottom: 18px; }
   .settings-drawer-panel { width: min(420px, 30vw); }
@@ -42,11 +43,27 @@ body.settings-drawer-open { overflow: hidden; overscroll-behavior: none; }
   .student-app { grid-template-columns: 240px minmax(0, 1fr); }
   .workspace { padding: 24px 26px 34px; overflow-y: auto; }
   .desktop-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
-  .right-column { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .right-column { grid-template-columns: minmax(0, 1fr); gap: 16px; }
   .right-column .entity-card { min-width: 0; }
   .main-column { gap: 16px; }
   .metric { min-height: 78px; padding: 13px; }
   .page-head { margin-bottom: 18px; }
+}
+
+@media (min-width: 981px) {
+  .right-column .entity-card { width: 100%; min-width: 280px; }
+  .right-column .section-title h2,
+  .right-column .entity-card strong,
+  .right-column .entity-card span { white-space: normal; word-break: keep-all; overflow-wrap: normal; }
+  .desktop-create .create-entry { border-radius: 10px; box-shadow: 0 3px 9px rgba(36,119,217,.12); }
+  .desktop-create-menu { border-radius: 12px; }
+  .settings-drawer-panel { width: min(420px, 440px); padding-inline: 22px; }
+  .settings-drawer-panel .backup-cloud-actions { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .settings-drawer-panel .backup-cloud-actions button { min-height: 48px; height: 48px; border-radius: 11px; }
+  .settings-drawer-panel .backup-list button { min-width: 44px; min-height: 44px; }
+  .settings-drawer-panel .danger-button { color: #c45752 !important; background: transparent !important; }
+  .deadline-list .empty-small { min-height: 0; padding: 18px 16px; }
+  .deadline-list .empty-small p { margin: 0; max-width: 300px; }
 }
 * {
   box-sizing: border-box;
