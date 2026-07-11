@@ -2058,6 +2058,15 @@ html.keyboard-open .career-mobile-nav {
 .dark .empty-small strong {
   color: #edf2f7;
 }
+body.modal-open { overflow: hidden; overscroll-behavior: none; }
+.next-class .empty-small { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; }
+.next-class .empty-small p { width: 100%; max-width: 300px; white-space: normal; word-break: normal; overflow-wrap: normal; }
+@media (max-width: 760px) {
+  .modal-layer { height: 100dvh; min-height: 100dvh; overflow: hidden; }
+  .drawer { max-height: calc(100dvh - env(safe-area-inset-top) - 8px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  .next-class .empty-small { flex-direction: column; align-items: center; text-align: center; }
+  .next-class .empty-small p { max-width: 300px; }
+}
 
 @media (max-width: 760px) {
   .next-class .empty-small { min-height: 190px; align-content: center; }

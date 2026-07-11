@@ -501,10 +501,14 @@ const tr = {
 // Keep keyboard viewport changes out of React's render path. Safari can emit many
 // visualViewport resize events while the keyboard and address bar settle.
 if (typeof window !== "undefined") {
+  let keyboardFrame = 0;
   const syncKeyboardClass = () => {
+    cancelAnimationFrame(keyboardFrame);
+    keyboardFrame = requestAnimationFrame(() => {
     const vv = window.visualViewport;
     const keyboardOpen = !!vv && window.innerHeight - vv.height > 140;
     document.documentElement.classList.toggle("keyboard-open", keyboardOpen);
+    });
   };
   window.visualViewport?.addEventListener("resize", syncKeyboardClass, {
     passive: true,
@@ -1435,6 +1439,7 @@ function Title({
 }
 function Empty({ t, load, kind = "general", open }: { t: any; load?: () => void; kind?: "company" | "schedule" | "materials" | "general"; open?: () => void }) {
   const copy: Record<string, [string, string, string]> = t.language === "言語" ? { company: ["企業がまだ登録されていません", "応募先企業を追加して、選考状況や締切をまとめて管理できます。", t.addCompany], schedule: ["日程がまだありません", "説明会や面接の予定を登録すると、次の行動が見やすくなります。", t.addEvent], materials: ["資料・面接記録がまだありません", "ESや面接記録を登録して、就活の準備を整理しましょう。", t.addMaterial], general: [t.noData, "ここから就活の記録を追加できます。", t.new] } : t.language === "Language" ? { company: ["No companies yet", "Add companies to keep applications, stages, and deadlines together.", t.addCompany], schedule: ["No schedule yet", "Add briefings and interviews to make your next action clear.", t.addEvent], materials: ["No materials or interview records yet", "Add ES, resumes, and interview notes to organize your search.", t.addMaterial], general: [t.noData, "Start by adding your first career record.", t.new] } : { company: ["还没有企业", "添加应聘企业，集中管理选考进度和截止时间。", t.addCompany], schedule: ["还没有日程", "添加说明会或面试安排，让下一步更清晰。", t.addEvent], materials: ["还没有资料或面试记录", "添加 ES、履历书或面试记录，整理你的就活准备。", t.addMaterial], general: [t.noData, "从这里开始添加你的就活记录。", t.new] };
+  if (t.language === "言語") copy.schedule[1] = "説明会、筆記試験、面接などの予定を追加して、選考スケジュールを管理しましょう。";
   const [title, description, action] = copy[kind];
   return (
     <div className="empty-small">
@@ -1883,7 +1888,7 @@ function Schedule({
             </Swipe>
           ))
         ) : (
-          <Empty t={t} kind="materials" open={() => open("es")} />
+          <Empty t={t} kind="schedule" open={() => setForm("schedule")} />
         )}
       </div>
     </>
@@ -2117,6 +2122,10 @@ function Modal({
   close: () => void;
   children: ReactNode;
 }) {
+  useEffect(() => {
+    document.body.classList.add("modal-open");
+    return () => document.body.classList.remove("modal-open");
+  }, []);
   return (
     <div className="modal-layer">
       <button className="modal-backdrop" onClick={close} />
