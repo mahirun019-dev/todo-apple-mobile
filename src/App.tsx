@@ -1017,8 +1017,11 @@ export default function App() {
     r.onload = () => {
       try {
         const x = JSON.parse(String(r.result));
-        if (x.schemaVersion === 5) setData(normalize(x));
-      } catch {}
+        if (x.schemaVersion !== 5 || !Array.isArray(x.companies) || !Array.isArray(x.materials) || !Array.isArray(x.events)) throw new Error("invalid");
+        setData(normalize(x));
+      } catch {
+        setToast({ text: locale === "ja" ? "バックアップの形式が無効です" : locale === "en" ? "Invalid backup format; existing data was kept" : "备份格式无效，原数据未改变", undo: () => undefined });
+      }
     };
     r.readAsText(f);
   };
