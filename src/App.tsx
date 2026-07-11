@@ -14,6 +14,11 @@ type Theme = "light" | "dark";
 const TASKS_KEY = "todo-apple-tasks";
 const THEME_KEY = "todo-apple-theme";
 
+const createTaskId = () => {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
+
 const readTasks = (): Task[] => {
   try {
     const saved = localStorage.getItem(TASKS_KEY);
@@ -55,7 +60,7 @@ function App() {
     event.preventDefault();
     const title = draft.trim();
     if (!title) return;
-    setTasks((current) => [{ id: crypto.randomUUID(), title, completed: false, createdAt: Date.now() }, ...current]);
+    setTasks((current) => [{ id: createTaskId(), title, completed: false, createdAt: Date.now() }, ...current]);
     setDraft("");
   }
 
