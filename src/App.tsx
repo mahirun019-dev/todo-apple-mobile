@@ -2159,7 +2159,7 @@ function CompanyForm({
       <form className="form-grid" onSubmit={save}>
         <label>
           <span>{t.company}</span>
-          <input name="name" defaultValue={initial?.name} autoFocus required />
+          <input name="name" defaultValue={initial?.name} required />
         </label>
         <label>
           <span>{t.industry}</span>
@@ -2235,7 +2235,7 @@ function MaterialForm({
       <form className="form-grid" onSubmit={save}>
         <label className="wide">
           <span>{t.fieldTitle}</span>
-          <input name="title" autoFocus required />
+          <input name="title" required />
         </label>
         <label>
           <span>{t.company}</span>
@@ -2304,7 +2304,6 @@ function EventForm({
           <input
             name="title"
             defaultValue={initial?.title}
-            autoFocus
             required
           />
         </label>
@@ -2393,7 +2392,6 @@ function InterviewForm({
           <input
             name="round"
             defaultValue={initial?.round}
-            autoFocus
             required
           />
         </label>
@@ -2482,7 +2480,6 @@ function PreparationForm({
           <input
             name="title"
             defaultValue={initial?.title}
-            autoFocus
             required
           />
         </label>
@@ -2599,15 +2596,20 @@ function Toast({
     </div>
   );
 }
-function BackupControls({ t, data, theme, locale, setData }: any) {
+function BackupControls({ t, data, theme, locale, setData, download }: any) {
   const [items, setItems] = useState<BackupSnapshot[]>([]);
   const [error, setError] = useState("");
+  const [lastExport, setLastExport] = useState<number>(() => Number(localStorage.getItem("careerflow-last-export") || 0));
+  const fileRef = useRef<HTMLInputElement>(null);
   const refresh = () => listBackups().then(setItems).catch(() => setError("备份列表读取失败"));
   useEffect(() => { refresh(); }, []);
   const snapshot = (): BackupSnapshot => ({ schemaVersion: data.schemaVersion, createdAt: Date.now(), companies: data.companies, schedules: data.events, resources: data.materials, interviews: data.interviews, preparations: data.preparations, selectionRecords: data.companies.map((x: Company) => ({ id: x.id, stage: x.stage, updatedAt: x.updatedAt })), settings: { theme, locale } });
   const backupNow = async () => { try { await createBackup(snapshot()); await refresh(); } catch { setError("备份创建失败，原数据未改变"); } };
   const restore = async (item: BackupSnapshot) => { try { if (!item || !Array.isArray(item.companies) || !Array.isArray(item.schedules) || !Array.isArray(item.resources) || !Array.isArray(item.interviews) || !Array.isArray(item.preparations)) throw new Error(); await createBackup(snapshot()); setData(normalize({ schemaVersion: 5, companies: item.companies, events: item.schedules, materials: item.resources, interviews: item.interviews, preparations: item.preparations, focusMinutes: data.focusMinutes })); } catch { setError("备份结构无效，原数据未改变"); } };
-  return <section className="backup-panel"><strong>{t.backupArea || "数据与备份"}</strong><p>{t.backupNotice || "数据主要保存在当前设备，请定期导出完整备份。"}</p><div className="backup-meta"><span>当前设备存储</span><span>{items.length}/5 个自动备份</span><span>{data.companies.length} 企业 · {data.events.length} 日程 · {data.materials.length} 资料 · {data.interviews.length} 面试 · {data.preparations.length} 准备</span></div><button className="primary" onClick={backupNow}>立即创建备份</button>{error&&<p className="backup-error">{error}</p>}<div className="backup-list">{items.map((x)=><div key={x.createdAt}><span>{new Date(x.createdAt).toLocaleString()}</span><button onClick={()=>restore(x)}>恢复</button><button onClick={()=>deleteBackup(x.createdAt).then(refresh)}>删除</button></div>)}</div></section>;
+  const exportCloud = () => { const now = new Date(); const pad = (x: number) => String(x).padStart(2, "0"); const name = `careerflow-backup-${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.json`; const exported = { ...snapshot(), exportedAt: Date.now() }; download(name, JSON.stringify(exported, null, 2), "application/json"); const timestamp = Date.now(); localStorage.setItem("careerflow-last-export", String(timestamp)); setLastExport(timestamp); };
+  const restoreFile = (e: ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = async () => { try { const x = JSON.parse(String(reader.result)); if (x.schemaVersion !== 5 || !Array.isArray(x.companies) || !Array.isArray(x.schedules) || !Array.isArray(x.resources) || !Array.isArray(x.interviews) || !Array.isArray(x.preparations)) throw new Error(); await createBackup(snapshot()); setData(normalize({ schemaVersion: 5, companies: x.companies, events: x.schedules, materials: x.resources, interviews: x.interviews, preparations: x.preparations, focusMinutes: data.focusMinutes })); setError(`${x.companies.length} 企业、${x.schedules.length} 日程、${x.resources.length} 资料已恢复`); } catch { setError("JSON 结构无效，原数据未改变"); } }; reader.readAsText(file); e.currentTarget.value = ""; };
+  const days = lastExport ? Math.floor((Date.now() - lastExport) / 864e5) : null;
+  return <section className="backup-panel"><strong>{t.backupArea || "数据与备份"}</strong><p>{t.backupNotice || "数据主要保存在当前设备，请定期导出完整备份。"}</p><div className="backup-meta"><span>当前设备存储 · {items.length}/5 个自动备份</span><span>{data.companies.length} 企业 · {data.events.length} 日程 · {data.materials.length} 资料 · {data.interviews.length} 面试 · {data.preparations.length} 准备</span><span>{lastExport ? `上次导出：${new Date(lastExport).toLocaleDateString()}（${days} 天前）` : "尚未导出完整备份"}</span></div>{days !== null && days > 7 && <p className="backup-warning">距离上次导出已超过 7 天，建议再次备份。</p>}<div className="backup-cloud-actions"><button className="primary" onClick={exportCloud}>备份到 iCloud Drive</button><button onClick={() => fileRef.current?.click()}>从 iCloud Drive 恢复</button></div><button className="text-button" onClick={backupNow}>立即创建本地备份</button>{error&&<p className="backup-error">{error}</p>}<input hidden ref={fileRef} type="file" accept="application/json,.json" onChange={restoreFile}/><div className="backup-list">{items.map((x)=><div key={x.createdAt}><span>{new Date(x.createdAt).toLocaleString()}</span><button onClick={()=>restore(x)}>恢复</button><button onClick={()=>deleteBackup(x.createdAt).then(refresh)}>删除</button></div>)}</div></section>;
 }
 function SettingsPanel({
   t,
@@ -2630,7 +2632,7 @@ function SettingsPanel({
   return (
     <Modal title={t.settings} close={close}>
       <div className="settings-content">
-        <BackupControls t={t} data={data} theme={theme} locale={locale} setData={setData} />
+        <BackupControls t={t} data={data} theme={theme} locale={locale} setData={setData} download={download} />
         <span>{t.appearance}</span>
         <div className="choice-row">
           {(["light", "dark", "system"] as Theme[]).map((x) => (
