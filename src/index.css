@@ -2400,3 +2400,16 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+.document-question-list { display: grid; gap: 10px; }
+.document-question { display: grid; gap: 8px; padding: 12px; border: 1px solid #dce4ed; border-radius: 10px; background: #f7f9fc; }
+.document-question input, .document-question textarea { width: 100%; }
+.document-question textarea { min-height: 90px; }
+.document-form details { padding: 12px; border-top: 1px solid #dce4ed; color: #65748a; }
+.document-form summary { cursor: pointer; color: #2477d9; font-weight: 700; }
+.document-form details p { margin: 10px 0 0; font-size: 12px; }
+.document-summary { display: grid; gap: 3px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e7edf3; font-size: 11px; }
+.document-summary span { color: #68778a; }
+.dark .document-question { border-color: #334458; background: #121c28; }
+.dark .document-form details { border-color: #304054; color: #b7c4d2; }
+.dark .document-summary { border-color: #304054; }
+.dark .document-summary span { color: #b7c4d2; }
