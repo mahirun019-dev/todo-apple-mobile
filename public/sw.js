@@ -1,4 +1,4 @@
-const CACHE_NAME = "todo-apple-v2";
+const CACHE_NAME = "todo-apple-mobile-v1";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(["./manifest.webmanifest", "./icon.svg"])));
