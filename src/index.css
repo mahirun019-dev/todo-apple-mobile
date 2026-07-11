@@ -25,6 +25,29 @@
 @media (max-width: 760px) { .settings-drawer-panel { width: min(92vw,420px); }.settings-drawer-backdrop { backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }.settings-drawer-panel .backup-cloud-actions { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .settings-drawer-panel, .settings-drawer-backdrop { animation: none !important; transition: none !important; } }
 body.settings-drawer-open { overflow: hidden; overscroll-behavior: none; }
+
+/* Desktop shell: the workspace owns the middle and right columns. */
+@media (min-width: 1440px) {
+  .app-shell { padding: 18px 22px; }
+  .student-app { grid-template-columns: 260px minmax(0, 1fr); min-height: calc(100dvh - 36px); }
+  .workspace { padding: 26px 30px 34px; overflow-y: auto; }
+  .desktop-grid { grid-template-columns: minmax(560px, 1fr) 340px; gap: 20px; }
+  .main-column, .right-column { gap: 14px; }
+  .entity-card { border-radius: 9px; }
+  .metric { min-height: 78px; padding: 13px; }
+  .page-head { margin-bottom: 18px; }
+  .settings-drawer-panel { width: min(420px, 30vw); }
+}
+@media (min-width: 981px) and (max-width: 1439px) {
+  .student-app { grid-template-columns: 240px minmax(0, 1fr); }
+  .workspace { padding: 24px 26px 34px; overflow-y: auto; }
+  .desktop-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .right-column { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .right-column .entity-card { min-width: 0; }
+  .main-column { gap: 16px; }
+  .metric { min-height: 78px; padding: 13px; }
+  .page-head { margin-bottom: 18px; }
+}
 * {
   box-sizing: border-box;
 }
@@ -2097,4 +2120,54 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   .color-swatches { align-items: center; }
   .color-swatch { display: grid; place-items: center; flex: 0 0 28px; }
   .color-swatch svg { width: 15px; color: #fff; stroke-width: 3; }
+}
+
+@media (min-width: 761px) {
+  .modal-layer { padding: 24px; }
+  .modal-layer .drawer {
+    display: flex;
+    flex-direction: column;
+    width: min(680px, 100%);
+    max-height: 85dvh;
+    padding: 0;
+    overflow: hidden;
+  }
+  .modal-layer .drawer > header {
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid #e3e9f0;
+  }
+  .dark .modal-layer .drawer > header { border-color: #304054; }
+  .modal-layer .drawer > form {
+    min-height: 0;
+    overflow-y: auto;
+    padding: 18px 22px 22px;
+    overscroll-behavior: contain;
+  }
+  .modal-layer .form-actions {
+    position: sticky;
+    bottom: -22px;
+    z-index: 2;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin: 8px -22px -22px;
+    padding: 14px 22px 22px;
+    background: linear-gradient(to bottom, rgba(255,255,255,.82), #fff 35%);
+  }
+  .dark .modal-layer .form-actions { background: linear-gradient(to bottom, rgba(26,37,51,.82), #1a2533 35%); }
+  .modal-layer .form-actions > button {
+    width: 120px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 11px;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .modal-layer .form-actions > button:not(.primary) { color: #526176; background: #edf2f6; }
+  .dark .modal-layer .form-actions > button:not(.primary) { color: #dce6f0; background: #253346; }
+  .modal-layer .form-actions > .primary { color: #fff; background: #2477d9; }
 }

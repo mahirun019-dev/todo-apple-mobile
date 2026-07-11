@@ -176,7 +176,7 @@ const stages: Stage[] = [
 ];
 const tr = {
   zh: {
-    dashboard: "仪表盘",
+    dashboard: "主页",
     companies: "企业",
     schedule: "日程",
     materials: "ES・面试",
@@ -283,7 +283,7 @@ const tr = {
     scheduleSub: "说明会、笔试、面试与截止时间",
   },
   ja: {
-    dashboard: "ダッシュボード",
+    dashboard: "ホーム",
     companies: "企業",
     schedule: "日程",
     materials: "ES・面接",
@@ -390,7 +390,7 @@ const tr = {
     scheduleSub: "説明会・筆記・面接・締切",
   },
   en: {
-    dashboard: "Dashboard",
+    dashboard: "Home",
     companies: "Companies",
     schedule: "Schedule",
     materials: "ES · Interview",
@@ -2249,7 +2249,7 @@ function MaterialForm({
           </select>
         </label>
         <label>
-          <span>Type</span>
+          <span>{t.language === "言語" ? "種類" : t.language === "Language" ? "Type" : "类型"}</span>
           <select name="type" defaultValue="es">
             <option value="es">{t.es}</option>
             <option value="resume">{t.resume}</option>
@@ -2319,7 +2319,7 @@ function EventForm({
           </select>
         </label>
         <label>
-          <span>Type</span>
+          <span>{t.language === "言語" ? "種類" : t.language === "Language" ? "Type" : "类型"}</span>
           <select name="type" defaultValue={initial?.type || "interview"}>
             {types.map((x) => (
               <option key={x} value={x}>
