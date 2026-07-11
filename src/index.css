@@ -2410,8 +2410,8 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
     align-items: center;
     justify-content: center;
     width: 100%;
-    min-height: 320px;
-    margin-top: 24px;
+    min-height: 300px;
+    margin-top: 26px;
     padding: 36px 24px;
     border: 1px solid #dce4ed;
     border-radius: 16px;
@@ -2424,8 +2424,15 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   .timeline > .empty-small p { width: min(100%, 540px); max-width: 540px; margin: 8px 0 16px; line-height: 1.7; }
   .company-grid > .empty-small .primary,
   .timeline > .empty-small .primary { min-width: 140px; white-space: nowrap; }
+  .company-grid > .empty-small .primary,
+  .timeline > .empty-small .primary { min-height: 42px; padding-inline: 15px; border-radius: 10px; background: #347fcf; font-size: 12px; }
+  .company-grid,
+  .timeline { max-width: 1120px; margin-left: 0; }
+  .career-app .create-entry { color: #eaf3ff; background: #4b8bd0; box-shadow: none; }
+  .career-app .create-entry:hover { background: #3f7fc2; }
   .dark .company-grid > .empty-small,
   .dark .timeline > .empty-small { border-color: #2c3a4d; background: #1a2533; }
+  .dark .career-app .create-entry { color: #e5f1ff; background: #285f9d; }
 }
 .document-question-list { display: grid; gap: 10px; }
 .document-question { display: grid; gap: 8px; padding: 12px; border: 1px solid #dce4ed; border-radius: 10px; background: #f7f9fc; }
