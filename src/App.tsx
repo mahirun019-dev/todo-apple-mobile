@@ -904,8 +904,11 @@ export default function App() {
         companyId: String(f.get("company") || "") || undefined,
         type: "es",
         dueAt: String(f.get("due") || "") || undefined,
-        priority: "medium",
-        tags: [],
+        priority: f.get("priority") as Priority,
+        tags: String(f.get("tags") || "")
+          .split(/[，,\n]+/)
+          .map((tag) => tag.trim())
+          .filter(Boolean),
         notes: String(f.get("notes") || ""),
         completed: false,
         isWeeklyFocus: false,
@@ -2331,7 +2334,24 @@ function MaterialForm({
         <label><span>{label("结果通知日期", "結果通知日", "Result date")}</span><input name="resultAt" type="date" /></label>
         <label className="wide"><span>{label("修改要点", "修正ポイント", "Revision points")}</span><textarea name="revisionPoints" /></label>
         <label className="wide"><span>{t.notes}</span><textarea name="notes" /></label>
-        <details className="wide"><summary>{label("详细设置（可选）", "詳細設定（任意）", "Advanced settings")}</summary><p>{label("优先度和标签已从主要字段中移出，书类以提交状态和结果为核心管理。", "優先度とタグは詳細設定にまとめています。", "Priority and tags are kept out of the primary document workflow.")}</p></details>
+        <details className="wide document-advanced">
+          <summary>{label("详细设置（可选）", "詳細設定（任意）", "Advanced settings")}</summary>
+          <div className="document-advanced-fields">
+            <label>
+              <span>{label("优先度", "優先度", "Priority")}</span>
+              <select name="priority" defaultValue="medium">
+                <option value="low">{label("低", "低", "Low")}</option>
+                <option value="medium">{label("中", "中", "Medium")}</option>
+                <option value="high">{label("高", "高", "High")}</option>
+              </select>
+            </label>
+            <label>
+              <span>{label("标签", "タグ", "Tags")}</span>
+              <input name="tags" placeholder={label("用逗号分隔多个标签", "カンマ区切りで入力", "Separate tags with commas")} />
+            </label>
+          </div>
+          <p>{label("可选：优先度和标签用于整理书类，不影响提交状态。", "優先度とタグで書類を整理できます。", "Use priority and tags to organize documents.")}</p>
+        </details>
         <Actions t={t} close={close} />
       </form>
     </Modal>
