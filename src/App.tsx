@@ -1420,12 +1420,14 @@ function MobileNav({
 function Title({
   children,
   action,
+  className = "",
 }: {
   children: ReactNode;
   action?: ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="section-title">
+    <div className={`section-title ${className}`}>
       <h2>{children}</h2>
       {action}
     </div>
@@ -1504,11 +1506,12 @@ function Dashboard({
                 </div>
               </div>
             ) : (
-            <Empty t={t} kind="company" open={() => open("company")} />
+            <Empty t={t} kind="schedule" open={() => open("schedule")} />
             )}
           </section>
           <section>
             <Title
+              className="deadline-title"
               action={
                 <button className="text-button" onClick={() => open("es")}>
                   <Plus />

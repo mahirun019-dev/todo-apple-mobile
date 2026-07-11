@@ -1420,6 +1420,14 @@ textarea:focus-visible {
   font-weight: 750;
 }
 @media (max-width: 760px) {
+  .next-class .empty-small { min-height: 190px; align-content: center; }
+  .empty-small strong, .empty-small .primary { white-space: nowrap; }
+  .empty-small .primary { min-width: 140px; min-height: 48px; padding-inline: 16px; }
+  .deadline-title .text-button { display: none; }
+  .career-app .workspace { padding-bottom: calc(98px + env(safe-area-inset-bottom)); }
+  .career-app .metric { min-height: 66px; padding: 9px; }
+  .career-app .metric strong { font-size: 18px; }
+  .career-app .metric span { font-size: 9px; }
   .mobile-header { padding-top: max(14px, env(safe-area-inset-top)); min-height: calc(62px + env(safe-area-inset-top)); }
   .company-grid {
     grid-template-columns: 1fr;
@@ -2040,4 +2048,15 @@ html.keyboard-open .career-mobile-nav {
 }
 .dark .empty-small strong {
   color: #edf2f7;
+}
+
+@media (max-width: 760px) {
+  .next-class .empty-small { min-height: 190px; align-content: center; }
+  .empty-small strong, .empty-small .primary { white-space: nowrap; }
+  .empty-small .primary { min-width: 140px; min-height: 48px; padding-inline: 16px; }
+  .deadline-title .text-button { display: none; }
+  .career-app .workspace { padding-bottom: calc(98px + env(safe-area-inset-bottom)); }
+  .career-app .metric { min-height: 66px; padding: 9px; }
+  .career-app .metric strong { font-size: 18px; }
+  .career-app .metric span { font-size: 9px; }
 }
