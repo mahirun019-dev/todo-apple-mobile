@@ -16,6 +16,15 @@
   background: #eef2f7;
   font-synthesis: none;
 }
+
+.settings-drawer-layer { position: fixed; inset: 0; z-index: 140; display: flex; justify-content: flex-end; overflow: hidden; }
+.settings-drawer-backdrop { position: absolute; inset: 0; border: 0; background: rgba(12,22,36,.28); opacity: 1; transition: opacity .26s ease; }
+.settings-drawer-panel { position: relative; z-index: 1; display: flex; flex-direction: column; width: min(420px,92vw); height: 100dvh; padding: max(18px,env(safe-area-inset-top)) 20px max(18px,env(safe-area-inset-bottom)); border-radius: 30px 0 0 30px; background: #f8fafc; box-shadow: -12px 0 36px rgba(18,35,57,.16); transform: translateX(0); animation: settings-slide-in .26s cubic-bezier(.2,.8,.2,1); will-change: transform; }
+.settings-drawer-panel > header { display: flex; align-items: center; justify-content: space-between; flex: 0 0 auto; padding-bottom: 14px; border-bottom: 1px solid #e2e8f0; }.settings-drawer-panel h2 { margin: 0; font-size: 20px; }.settings-close-button { display: grid; width: 40px; height: 40px; place-items: center; border: 1px solid #d8e1eb; border-radius: 50%; color: #55667b; background: rgba(229,235,242,.82); }.settings-close-button svg { width: 18px; }.settings-drawer-scroll { min-height: 0; overflow-y: auto; padding-top: 16px; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }.settings-drawer-layer.closing .settings-drawer-panel { animation: settings-slide-out .26s ease forwards; }.settings-drawer-layer.closing .settings-drawer-backdrop { opacity: 0; }.dark .settings-drawer-panel { background: #182333; box-shadow: -12px 0 36px rgba(0,0,0,.3); }.dark .settings-drawer-panel > header { border-color: #304054; }.dark .settings-close-button { border-color: #3b4b60; color: #e1e9f2; background: #253346; }.settings-drawer-panel .settings-content { gap: 14px; }.settings-drawer-panel .settings-content > span { color: #2a6eb7; font-size: 12px; }.dark .settings-drawer-panel .settings-content > span { color: #8dc8ff; }.settings-drawer-panel .settings-actions button, .settings-drawer-panel .choice-row button { min-height: 48px; border-radius: 12px; }.dark .settings-drawer-panel .settings-actions button, .dark .settings-drawer-panel .choice-row button { border-color: #35465b; color: #dce6f0; background: #253346; }.dark .settings-drawer-panel .choice-row button.active { color: #b9ddff; background: #21456c; border-color: #3979b9; }
+@keyframes settings-slide-in { from { transform: translateX(100%); } to { transform: translateX(0); } } @keyframes settings-slide-out { from { transform: translateX(0); } to { transform: translateX(100%); } }
+@media (max-width: 760px) { .settings-drawer-panel { width: min(92vw,420px); }.settings-drawer-backdrop { backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }.settings-drawer-panel .backup-cloud-actions { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .settings-drawer-panel, .settings-drawer-backdrop { animation: none !important; transition: none !important; } }
+body.settings-drawer-open { overflow: hidden; overscroll-behavior: none; }
 * {
   box-sizing: border-box;
 }

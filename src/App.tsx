@@ -2612,6 +2612,13 @@ function BackupControls({ t, data, theme, locale, setData, download }: any) {
   const labels = locale === "ja" ? {area:"データとバックアップ", notice:"データは主にこのデバイスに保存されます。定期的に書き出してください。", storage:"このデバイスの保存状況", version:"データベースバージョン", cloud:"クラウドへの書き出しと復元", local:"自動バックアップ", exportCloud:"iCloud Drive に書き出す", restoreFile:"バックアップファイルから復元", permission:"ブラウザの権限制限により、システムの共有シートから iCloud Drive を選択してください。", last:"前回の書き出し", never:"まだ完全バックアップを書き出していません", now:"今すぐローカルバックアップを作成", restore:"復元", remove:"削除", confirm:"このバックアップを削除しますか？", warning:"前回の書き出しから7日以上経過しています。"} : locale === "en" ? {area:"Data & backups", notice:"Your data is mainly stored on this device. Export a backup regularly.", storage:"Device storage", version:"Database version", cloud:"Cloud export and restore", local:"Automatic backups", exportCloud:"Export to iCloud Drive", restoreFile:"Restore from backup file", permission:"Due to browser permissions, choose iCloud Drive from the system share sheet.", last:"Last export", never:"No complete backup has been exported", now:"Create local backup now", restore:"Restore", remove:"Delete", confirm:"Delete this backup?", warning:"It has been more than 7 days since the last export."} : {area:"数据与备份", notice:"数据主要保存在当前设备，请定期导出完整备份。", storage:"当前设备存储", version:"数据库版本", cloud:"云端导出与恢复", local:"本地自动备份", exportCloud:"导出到 iCloud Drive", restoreFile:"从备份文件恢复", permission:"由于浏览器权限限制，需要在系统分享面板中手动选择 iCloud Drive。", last:"上次导出", never:"尚未导出完整备份", now:"立即创建本地备份", restore:"恢复", remove:"删除", confirm:"确定删除此备份吗？", warning:"距离上次导出已超过 7 天。"};
   return <section className="backup-panel"><section><h3>{labels.storage}</h3><p>{labels.version}: v{data.schemaVersion}</p><div className="backup-meta"><span>{data.companies.length} {locale === "ja" ? "企業" : locale === "en" ? "companies" : "企业"} · {data.events.length} {locale === "ja" ? "日程" : locale === "en" ? "schedules" : "日程"}</span><span>{data.materials.length} {locale === "ja" ? "資料" : locale === "en" ? "resources" : "资料"} · {data.interviews.length} {locale === "ja" ? "面接記録" : locale === "en" ? "interviews" : "面试记录"} · {data.preparations.length} {locale === "ja" ? "準備事項" : locale === "en" ? "preparations" : "准备事项"}</span></div></section><section><h3>{labels.cloud}</h3><div className="backup-cloud-actions"><button className="primary" onClick={exportCloud}>{labels.exportCloud}</button><button onClick={() => fileRef.current?.click()}>{labels.restoreFile}</button></div><p>{labels.permission}</p><p>{lastExport ? `${labels.last}: ${new Date(lastExport).toLocaleDateString()} (${days} ${locale === "ja" ? "日前" : locale === "en" ? "days ago" : "天前"})` : labels.never}</p>{days !== null && days > 7 && <p className="backup-warning">{labels.warning}</p>}</section><section><h3>{labels.local}</h3><div className="backup-meta"><span>{items.length}/5</span><span>{items[0] ? new Date(items[0].createdAt).toLocaleString() : labels.never}</span></div><button className="primary" onClick={backupNow}>{labels.now}</button>{error&&<p className="backup-error">{error}</p>}<input hidden ref={fileRef} type="file" accept="application/json,.json" onChange={restoreFile}/><div className="backup-list">{items.map((x)=><div key={x.createdAt}><span>{new Date(x.createdAt).toLocaleString()}</span><button onClick={()=>restore(x)}>{labels.restore}</button><button onClick={()=>{if(window.confirm(labels.confirm)) deleteBackup(x.createdAt).then(refresh)}}>{labels.remove}</button></div>)}</div></section></section>;
 }
+function SettingsDrawer({ close, children, title }: { close: () => void; children: ReactNode; title: string }) {
+  const [closing, setClosing] = useState(false);
+  const startX = useRef<number | null>(null);
+  const dismiss = () => { if (closing) return; setClosing(true); window.setTimeout(close, 260); };
+  useEffect(() => { const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") dismiss(); }; document.addEventListener("keydown", onKey); document.body.classList.add("settings-drawer-open"); return () => { document.removeEventListener("keydown", onKey); document.body.classList.remove("settings-drawer-open"); }; }, []);
+  return <div className={`settings-drawer-layer ${closing ? "closing" : ""}`}><button className="settings-drawer-backdrop" onClick={dismiss} aria-label="Close settings"/><aside className="settings-drawer-panel" role="dialog" aria-modal="true" aria-label={title} onTouchStart={(e) => { startX.current = e.touches[0].clientX; }} onTouchEnd={(e) => { if (startX.current !== null && e.changedTouches[0].clientX - startX.current > 70) dismiss(); startX.current = null; }}><header><h2>{title}</h2><button className="settings-close-button" onClick={dismiss} aria-label="Close settings"><X /></button></header><div className="settings-drawer-scroll">{children}</div></aside></div>;
+}
 function SettingsPanel({
   t,
   theme,
@@ -2631,7 +2638,7 @@ function SettingsPanel({
   download,
 }: any) {
   return (
-    <Modal title={t.settings} close={close}>
+    <SettingsDrawer title={t.settings} close={close}>
       <div className="settings-content">
         <BackupControls t={t} data={data} theme={theme} locale={locale} setData={setData} download={download} />
         <span>{t.appearance}</span>
@@ -2748,6 +2755,6 @@ function SettingsPanel({
           onChange={upload}
         />
       </div>
-    </Modal>
+    </SettingsDrawer>
   );
 }
