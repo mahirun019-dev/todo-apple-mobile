@@ -1519,7 +1519,7 @@ function Dashboard({
         </div>
         <button className="primary" onClick={() => open("company")}>
           <Plus />
-          {t.new}
+          {t.addCompany}
         </button>
       </div>
       <div className="main-dashboard-layout">
@@ -1840,7 +1840,7 @@ function Companies({
         </div>
         <button className="primary" onClick={() => open("company")}>
           <Plus />
-          {t.new}
+          {t.addCompany}
         </button>
       </div>
       <div className="company-grid">
