@@ -1420,6 +1420,15 @@ textarea:focus-visible {
   font-weight: 750;
 }
 @media (max-width: 760px) {
+  .form-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; width: 100%; margin-top: 4px; }
+  .form-actions > button { min-width: 0; min-height: 48px; height: 48px; padding: 0 12px; border-radius: 12px; font-size: 14px; font-weight: 700; line-height: 1; }
+  .form-actions > button:not(.primary) { color: #526176; background: #edf2f6; }
+  .form-actions > .primary { color: #fff; background: #2477d9; }
+  .next-class .empty-small { width: 100%; padding: 24px 16px; }
+  .next-class .empty-small p { width: min(100%, 300px); max-width: 300px; white-space: normal; overflow-wrap: normal; word-break: normal; }
+  .color-swatches { align-items: center; }
+  .color-swatch { display: grid; place-items: center; flex: 0 0 28px; }
+  .color-swatch svg { width: 15px; color: #fff; stroke-width: 3; }
   .next-class .empty-small { min-height: 190px; align-content: center; }
   .empty-small strong, .empty-small .primary { white-space: nowrap; }
   .empty-small .primary { min-width: 140px; min-height: 48px; padding-inline: 16px; }
@@ -2059,4 +2068,13 @@ html.keyboard-open .career-mobile-nav {
   .career-app .metric { min-height: 66px; padding: 9px; }
   .career-app .metric strong { font-size: 18px; }
   .career-app .metric span { font-size: 9px; }
+  .form-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; width: 100%; margin-top: 4px; }
+  .form-actions > button { min-width: 0; min-height: 48px; height: 48px; padding: 0 12px; border-radius: 12px; font-size: 14px; font-weight: 700; line-height: 1; }
+  .form-actions > button:not(.primary) { color: #526176; background: #edf2f6; }
+  .form-actions > .primary { color: #fff; background: #2477d9; }
+  .next-class .empty-small { width: 100%; padding: 24px 16px; }
+  .next-class .empty-small p { width: min(100%, 300px); max-width: 300px; white-space: normal; overflow-wrap: normal; word-break: normal; }
+  .color-swatches { align-items: center; }
+  .color-swatch { display: grid; place-items: center; flex: 0 0 28px; }
+  .color-swatch svg { width: 15px; color: #fff; stroke-width: 3; }
 }

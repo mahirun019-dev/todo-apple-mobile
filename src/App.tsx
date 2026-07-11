@@ -2143,6 +2143,8 @@ function CompanyForm({
   close: () => void;
   save: any;
 }) {
+  const colors = ["#2878d9", "#6b5bd6", "#d18135", "#d4534d", "#2d9b78", "#9a6b44", "#6e7d91", "#c04f8a"];
+  const [color, setColor] = useState(initial?.color || colors[0]);
   return (
     <Modal title={initial ? t.edit : t.addCompany} close={close}>
       <form className="form-grid" onSubmit={save}>
@@ -2193,12 +2195,11 @@ function CompanyForm({
           <input name="url" type="url" defaultValue={initial?.careersUrl} />
         </label>
         <label>
-          <span>Color</span>
-          <input
-            name="color"
-            type="color"
-            defaultValue={initial?.color || "#2878d9"}
-          />
+          <span>{t.language === "言語" ? "表示色" : t.language === "Language" ? "Display color" : "显示色"}</span>
+          <input name="color" type="hidden" value={color} readOnly />
+          <div className="color-swatches" role="radiogroup" aria-label={t.language === "言語" ? "表示色" : "Display color"}>
+            {colors.map((value) => <button type="button" key={value} className={`color-swatch ${color === value ? "active" : ""}`} style={{ background: value }} aria-label={value} aria-pressed={color === value} onClick={() => setColor(value)}>{color === value && <Check />}</button>)}
+          </div>
         </label>
         <label className="wide">
           <span>{t.notes}</span>
