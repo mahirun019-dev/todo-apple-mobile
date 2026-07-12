@@ -2237,6 +2237,21 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   .dark .modal-layer .form-actions > button:not(.primary) { color: #dce6f0; background: #253346; }
   .modal-layer .form-actions > .primary { color: #fff; background: #2477d9; }
 }
+.nav-list,
+.nav-list button,
+.nav-list button::before,
+.nav-list button::after,
+.sidebar,
+.sidebar * {
+  transition: none !important;
+  animation: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transform: none !important;
+  view-transition-name: none !important;
+}
 
 /* Dashboard layout: explicit two-column DOM, with a single stacked sidebar. */
 .main-dashboard-layout {

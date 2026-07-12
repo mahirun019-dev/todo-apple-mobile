@@ -1350,8 +1350,14 @@ function Nav({
 }) {
   const [activeSection, setActiveSection] = useState<View>(view);
   const [debugActive, setDebugActive] = useState(false);
+  console.log("[nav-debug] render", performance.now(), { debugActive, activeSection: activeSection });
   const [debugPhase, setDebugPhase] = useState<"idle" | "pressed" | "clicked" | "active">("idle");
   useEffect(() => setActiveSection(view), [view]);
+  useEffect(() => {
+    if (!debugActive) return;
+    const nav = document.querySelector('.nav-list button[data-debug-nav="schedule"]');
+    console.log("[nav-debug] active class write", performance.now(), nav?.className, nav ? getComputedStyle(nav).backgroundColor : "missing");
+  }, [debugActive]);
   useEffect(() => {
     console.log("[nav] sidebar mounted", performance.now());
     return () => console.log("[nav] sidebar unmounted", performance.now());
@@ -1376,7 +1382,13 @@ function Nav({
             console.log("[nav] click", performance.now(), v);
             setDebugPhase("clicked");
             if (v === "schedule") {
+              console.log("[nav-debug] setDebugActive", performance.now(), true);
               setDebugActive(true);
+              requestAnimationFrame(() => {
+                const nav = e.currentTarget;
+                console.log("[nav-debug] frame 1", performance.now(), nav.className, getComputedStyle(nav).backgroundColor);
+                requestAnimationFrame(() => console.log("[nav-debug] frame 2", performance.now(), nav.className, getComputedStyle(nav).backgroundColor));
+              });
               return;
             }
             setActiveSection(v);
@@ -1393,9 +1405,10 @@ function Nav({
           onPointerUp={(e) => { delete e.currentTarget.dataset.pressed; }}
           onPointerLeave={(e) => { delete e.currentTarget.dataset.pressed; }}
           key={v}
+          data-debug-nav={v === "schedule" ? "schedule" : undefined}
         >
           <I />
-          <span>{t[k]}</span>
+          <span>{v === "schedule" && debugActive ? "DEBUG NAV" : t[k]}</span>
         </button>
       ))}
     </div>
