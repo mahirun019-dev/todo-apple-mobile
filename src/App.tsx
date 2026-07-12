@@ -8,7 +8,6 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
-import Papa from "papaparse";
 import { createBackup, deleteBackup, listBackups, type BackupSnapshot } from "./backups";
 import {
   Archive,
@@ -22,7 +21,6 @@ import {
   ChevronDown,
   ChevronUp,
   Clock3,
-  Download,
   ExternalLink,
   FileJson,
   Globe,
@@ -362,8 +360,6 @@ const tr = {
     light: "浅色",
     dark: "深色",
     system: "跟随系统",
-    importCsv: "导入 CSV",
-    exportCsv: "导出 CSV",
     backup: "完整备份",
     restore: "恢复备份",
     data: "数据管理",
@@ -491,8 +487,6 @@ const tr = {
     light: "ライト",
     dark: "ダーク",
     system: "システム",
-    importCsv: "CSV読込",
-    exportCsv: "CSV書出",
     backup: "完全バックアップ",
     restore: "復元",
     data: "データ",
@@ -620,8 +614,6 @@ const tr = {
     light: "Light",
     dark: "Dark",
     system: "System",
-    importCsv: "Import CSV",
-    exportCsv: "Export CSV",
     backup: "Full backup",
     restore: "Restore",
     data: "Data",
@@ -862,8 +854,7 @@ export default function App() {
     [filter, setFilter] = useState("all"),
     [toast, setToast] = useState<{ text: string; undo: () => void }>(),
     [icon, setIcon] = useState(() => localStorage.getItem(ICON) || "");
-  const csv = useRef<HTMLInputElement>(null),
-    json = useRef<HTMLInputElement>(null),
+  const json = useRef<HTMLInputElement>(null),
     iconRef = useRef<HTMLInputElement>(null);
   const firstDataRender = useRef(true);
   const t = tr[locale];
@@ -1245,33 +1236,6 @@ export default function App() {
     r.onerror = () => { setToast({ text: locale === "ja" ? "バックアップを読み込めませんでした" : "无法读取备份文件", undo: () => undefined }); input.value = ""; };
     r.readAsText(f);
   };
-  const importCsv = (e: ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    Papa.parse<any>(f, {
-      header: true,
-      complete: ({ data: rows }) =>
-        setData((d) => ({
-          ...d,
-          materials: [
-            ...rows
-              .filter((x: any) => x.title)
-              .map((x: any) => ({
-                ...x,
-                id: id(),
-                tags: String(x.tags || "")
-                  .split("|")
-                  .filter(Boolean),
-                completed: x.completed === "true",
-                isWeeklyFocus: false,
-                createdAt: Date.now(),
-                updatedAt: Date.now(),
-              })),
-            ...d.materials,
-          ],
-        })),
-    });
-  };
   const upload = (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
@@ -1436,10 +1400,8 @@ export default function App() {
             data={data}
             setData={setData}
             icon={icon}
-            csv={csv}
             json={json}
             iconRef={iconRef}
-            importCsv={importCsv}
             importJson={importJson}
             upload={upload}
             download={download}
@@ -1456,10 +1418,8 @@ export default function App() {
             data={data}
             setData={setData}
             icon={icon}
-            csv={csv}
             json={json}
             iconRef={iconRef}
-            importCsv={importCsv}
             importJson={importJson}
             upload={upload}
             download={download}
@@ -3039,7 +2999,7 @@ function BackupControls({ t, data, theme, locale, setData, download }: any) {
   return <section className="backup-panel"><section><h3>{labels.storage}</h3><p>{labels.version}: v{data.schemaVersion}</p><div className="backup-meta"><span>{data.companies.length} {locale === "ja" ? "企業" : locale === "en" ? "companies" : "企业"} · {data.events.length} {locale === "ja" ? "日程" : locale === "en" ? "schedules" : "日程"}</span><span>{data.materials.length} {locale === "ja" ? "資料" : locale === "en" ? "resources" : "资料"} · {data.interviews.length} {locale === "ja" ? "面接記録" : locale === "en" ? "interviews" : "面试记录"} · {data.preparations.length} {locale === "ja" ? "準備事項" : locale === "en" ? "preparations" : "准备事项"}</span></div></section><section><h3>{labels.cloud}</h3><div className="backup-cloud-actions"><button className="primary" onClick={exportCloud}>{labels.exportCloud}</button><button onClick={() => fileRef.current?.click()}>{labels.restoreFile}</button></div><p>{labels.permission}</p><p>{lastExport ? `${labels.last}: ${new Date(lastExport).toLocaleDateString()} (${days} ${locale === "ja" ? "日前" : locale === "en" ? "days ago" : "天前"})` : labels.never}</p>{days !== null && days > 7 && <p className="backup-warning">{labels.warning}</p>}</section><section><h3>{labels.local}</h3><div className="backup-meta"><span>{items.length}/5</span><span>{items[0] ? new Date(items[0].createdAt).toLocaleString() : labels.never}</span></div><button className="primary" onClick={backupNow}>{labels.now}</button>{error&&<p className="backup-error">{error}</p>}<input hidden ref={fileRef} type="file" accept="application/json,.json" onChange={restoreFile}/><div className="backup-list">{items.map((x)=><div key={x.createdAt}><span>{new Date(x.createdAt).toLocaleString()}</span><button onClick={()=>restore(x)}>{labels.restore}</button><button onClick={()=>{if(window.confirm(labels.confirm)) deleteBackup(x.createdAt).then(refresh)}}>{labels.remove}</button></div>)}</div></section></section>;
 }
 function MobileSettingsDrawer({
-  t, page, setPage, close, setView, view, selectedItem, setSelectedItem, theme, setTheme, locale, setLocale, data, setData, csv, json, download,
+  t, page, setPage, close, setView, view, selectedItem, setSelectedItem, theme, setTheme, locale, setLocale, data, setData, json, download,
 }: any) {
   const label = "CareerFlow";
   const about = locale === "ja"
@@ -3073,7 +3033,7 @@ function MobileSettingsDrawer({
       <div className="drawer-main drawer-scroll"><nav className="mobile-settings-nav">
         <button className={selectedItem === "home" ? "active" : ""} onClick={() => { setSelectedItem("home"); setPage(null); close(); setView("dashboard"); }}><Home /><span>{t.dashboard}</span></button>
         <button className={`${page === "data" ? "expanded " : ""}${selectedItem === "data" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("data"); setPage(page === "data" ? null : "data"); }}><FileJson /><span>{t.data}</span><ChevronRight /></button>
-        {page === "data" && <div className="drawer-accordion-panel"><button type="button" onClick={() => csv.current?.click()}><Upload /><span>{t.importCsv}</span></button><button type="button" onClick={() => download("careerflow-materials.csv", Papa.unparse(data.materials), "text/csv")}><Download /><span>{t.exportCsv}</span></button><button type="button" onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Archive /><span>{t.backup}</span></button><button type="button" onClick={() => json.current?.click()}><RotateCcw /><span>{t.restore}</span></button><button type="button" onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><CloudUpload /><span>{cloudLabel}</span></button></div>}
+        {page === "data" && <div className="drawer-accordion-panel"><button type="button" onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Archive /><span>{t.backup}</span></button><button type="button" onClick={() => json.current?.click()}><RotateCcw /><span>{t.restore}</span></button><button type="button" onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><CloudUpload /><span>{cloudLabel}</span></button></div>}
         <button className={`${page === "appearance" ? "expanded " : ""}${selectedItem === "appearance" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("appearance"); setPage(page === "appearance" ? null : "appearance"); }}><Settings /><span>{t.appearance}</span><ChevronRight /></button>
         {page === "appearance" && <div className="drawer-accordion-panel">{(["light", "dark", "system"] as Theme[]).map((x) => <button className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}><span>{t[x]}</span>{theme === x && <Check />}</button>)}</div>}
         <button className={`${page === "language" ? "expanded " : ""}${selectedItem === "language" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("language"); setPage(page === "language" ? null : "language"); }}><Globe /><span>{t.language}</span><ChevronRight /></button>
@@ -3091,21 +3051,21 @@ function SettingsDrawer({ close, children, title }: { close: () => void; childre
   useEffect(() => { const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") dismiss(); }; document.addEventListener("keydown", onKey); document.body.classList.add("settings-drawer-open"); return () => { document.removeEventListener("keydown", onKey); document.body.classList.remove("settings-drawer-open"); }; }, []);
   return <div className={`settings-drawer-layer ${closing ? "closing" : ""}`}><button className="settings-drawer-backdrop" onClick={dismiss} aria-label="Close settings"/><aside className="settings-drawer-panel" role="dialog" aria-modal="true" aria-label={title} onTouchStart={(e) => { startX.current = e.touches[0].clientX; }} onTouchEnd={(e) => { if (startX.current !== null && e.changedTouches[0].clientX - startX.current > 70) dismiss(); startX.current = null; }}><header><h2>{title}</h2><CloseButton onClick={dismiss} label="Close settings" /></header><div className="settings-drawer-scroll">{children}</div></aside></div>;
 }
-function SettingsPanel({ t, theme, setTheme, locale, setLocale, close, data, setData, iconRef, csv, json, upload, importCsv, importJson, download }: any) {
+function SettingsPanel({ t, theme, setTheme, locale, setLocale, close, data, setData, iconRef, json, upload, importJson, download }: any) {
   const [tab, setTab] = useState("general");
   const ja = locale === "ja";
   const sampleTitle = ja ? "サンプルデータ" : locale === "en" ? "Sample data" : "示例数据";
   const sampleAction = ja ? "サンプルデータを削除" : locale === "en" ? "Delete sample data" : "删除示例数据";
   const sampleHelp = ja ? "登録済みのサンプルデータのみを削除します。ユーザーが追加したデータは削除されません。" : locale === "en" ? "Only registered sample data will be deleted. Your own data will not be affected." : "仅删除已注册的示例数据，不会影响你添加的数据。";
-  const ui = locale === "ja" ? { general:"一般", appearance:"表示", language:"言語", data:"データとバックアップ", about:"CareerFlowについて", storage:"このデバイスの保存状況", csv:"CSV", backup:"バックアップ", aboutTitle:"CareerFlowについて", version:"CareerFlow バージョン 1.0", db:"データベースバージョン", pwa:"PWA ステータス: standalone 対応", icon:"アイコン: CareerFlow ブランドアイコン", privacy:"プライバシー: データは主にこのデバイスに保存されます。", license:"オープンソースライセンス: MIT License" } : locale === "en" ? { general:"General", appearance:"Appearance", language:"Language", data:"Data & backups", about:"About CareerFlow", storage:"Device storage", csv:"CSV", backup:"Backup", aboutTitle:"About CareerFlow", version:"CareerFlow version 1.0", db:"Database version", pwa:"PWA status: standalone supported", icon:"Icon: CareerFlow brand icon", privacy:"Privacy: Data is mainly stored on this device.", license:"Open-source license: MIT License" } : { general:"常规", appearance:"外观", language:"语言", data:"数据与备份", about:"关于 CareerFlow", storage:"当前设备存储", csv:"CSV", backup:"备份", aboutTitle:"关于 CareerFlow", version:"CareerFlow 版本 1.0", db:"数据库版本", pwa:"PWA 状态：支持 standalone", icon:"图标：CareerFlow 品牌图标", privacy:"隐私：数据主要保存在当前设备。", license:"开源许可：MIT License" };
+  const ui = locale === "ja" ? { general:"一般", appearance:"表示", language:"言語", data:"データとバックアップ", about:"CareerFlowについて", storage:"このデバイスの保存状況", backup:"バックアップ", aboutTitle:"CareerFlowについて", version:"CareerFlow バージョン 1.0", db:"データベースバージョン", pwa:"PWA ステータス: standalone 対応", icon:"アイコン: CareerFlow ブランドアイコン", privacy:"プライバシー: データは主にこのデバイスに保存されます。", license:"オープンソースライセンス: MIT License" } : locale === "en" ? { general:"General", appearance:"Appearance", language:"Language", data:"Data & backups", about:"About CareerFlow", storage:"Device storage", backup:"Backup", aboutTitle:"About CareerFlow", version:"CareerFlow version 1.0", db:"Database version", pwa:"PWA status: standalone supported", icon:"Icon: CareerFlow brand icon", privacy:"Privacy: Data is mainly stored on this device.", license:"Open-source license: MIT License" } : { general:"常规", appearance:"外观", language:"语言", data:"数据与备份", about:"关于 CareerFlow", storage:"当前设备存储", backup:"备份", aboutTitle:"关于 CareerFlow", version:"CareerFlow 版本 1.0", db:"数据库版本", pwa:"PWA 状态：支持 standalone", icon:"图标：CareerFlow 品牌图标", privacy:"隐私：数据主要保存在当前设备。", license:"开源许可：MIT License" };
   const tabs = [["general", ui.general], ["appearance", ui.appearance], ["language", ui.language], ["data", ui.data], ["about", ui.about]];
   return <SettingsDrawer title={t.settings} close={close}><div className="desktop-settings-layout"><nav className="desktop-settings-nav settings-sidebar"><div className="settings-nav-list">{tabs.map(([key, text]) => <SettingsNavItem key={key} label={text} active={tab === key} onClick={() => setTab(key)} />)}</div></nav><div className="desktop-settings-content">
     {tab === "general" && <section className="settings-section"><h3>{ui.storage}</h3><div className="settings-stats">{[[ja ? "企業数" : locale === "en" ? "Companies" : "企业数", data.companies.length], [ja ? "日程数" : locale === "en" ? "Schedules" : "日程数", data.events.length], [ja ? "資料数" : locale === "en" ? "Resources" : "资料数", data.materials.length], [ja ? "面接記録数" : locale === "en" ? "Interviews" : "面试记录数", data.interviews.length], [ja ? "準備事項数" : locale === "en" ? "Preparations" : "准备事项数", data.preparations.length], [ui.db, "v" + data.schemaVersion]].map(([label, value]) => <div key={String(label)}><span>{label}</span><strong>{value}</strong></div>)}</div></section>}
     {tab === "appearance" && <section className="settings-section"><h3>{ui.appearance}</h3><div className="settings-segmented">{(["light", "dark", "system"] as Theme[]).map((x) => <button aria-pressed={theme === x} className={theme === x ? "active" : ""} onClick={() => setTheme(x)} key={x}>{t[x]}</button>)}</div></section>}
     {tab === "language" && <section className="settings-section"><h3>{ui.language}</h3><div className="settings-segmented">{(["zh", "ja"] as Locale[]).map((x) => <button type="button" aria-pressed={locale === x} className={locale === x ? "active" : ""} onClick={() => setLocale(x)} key={x}>{x === "zh" ? "中文" : "日本語"}</button>)}</div></section>}
-    {tab === "data" && <section className="settings-section settings-data-section"><h3>{ui.csv}</h3><div className="settings-actions"><button onClick={() => csv.current?.click()}><Upload />{ja ? "CSV読込" : locale === "en" ? "Import CSV" : "导入 CSV"}</button><button onClick={() => download("careerflow-materials.csv", Papa.unparse(data.materials), "text/csv")}><Download />{ja ? "CSV書出" : locale === "en" ? "Export CSV" : "导出 CSV"}</button></div><h3>{ui.backup}</h3><BackupControls t={t} data={data} theme={theme} locale={locale} setData={setData} download={download} /><div className="settings-actions"><button onClick={() => json.current?.click()}><RotateCcw />{ja ? "バックアップファイルから復元" : locale === "en" ? "Restore from backup file" : "从备份文件恢复"}</button><button onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Archive />{ja ? "完全バックアップをダウンロード" : locale === "en" ? "Download complete backup" : "下载完整备份"}</button></div><div className="settings-danger"><h3>{sampleTitle}</h3><p>{sampleHelp}</p><button className="danger-button" onClick={() => { if (window.confirm(sampleAction + "？")) setData((d: Data) => ({ ...d, companies: d.companies.filter((x) => !x.tags.includes("sample") && !demoNames.includes(x.name)), materials: d.materials.filter((x) => !x.tags.includes("sample")) })); }}><Trash2 />{sampleAction}</button></div></section>}
+    {tab === "data" && <section className="settings-section settings-data-section"><h3>{ui.backup}</h3><BackupControls t={t} data={data} theme={theme} locale={locale} setData={setData} download={download} /><div className="settings-actions"><button type="button" onClick={() => json.current?.click()}><RotateCcw />{ja ? "バックアップファイルから復元" : locale === "en" ? "Restore from backup file" : "从备份文件恢复"}</button><button type="button" onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Archive />{ja ? "完全バックアップをダウンロード" : locale === "en" ? "Download complete backup" : "下载完整备份"}</button></div><div className="settings-danger"><h3>{sampleTitle}</h3><p>{sampleHelp}</p><button type="button" className="danger-button" onClick={() => { if (window.confirm(sampleAction + "？")) setData((d: Data) => ({ ...d, companies: d.companies.filter((x) => !x.tags.includes("sample") && !demoNames.includes(x.name)), materials: d.materials.filter((x) => !x.tags.includes("sample")) })); }}><Trash2 />{sampleAction}</button></div></section>}
     {tab === "about" && <section className="settings-section"><h3>{ui.aboutTitle}</h3><div className="settings-about-list"><p>{ui.version}</p><p>{ui.db}: v{data.schemaVersion}</p><p>{ui.pwa}</p><p>{ui.icon}</p><p>{ui.privacy}</p><p>{ui.license}</p></div></section>}
-  </div></div><input hidden ref={csv} type="file" accept=".csv" onChange={importCsv} /><input hidden ref={json} type="file" accept=".json" onChange={importJson} /><input hidden ref={iconRef} type="file" accept="image/*" onChange={upload} /></SettingsDrawer>;
+  </div></div><input hidden ref={json} type="file" accept=".json,application/json" onChange={importJson} /><input hidden ref={iconRef} type="file" accept="image/*" onChange={upload} /></SettingsDrawer>;
 }
 function SettingsNavItem({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return <button type="button" className={`settings-nav-item ${active ? "active" : ""}`} aria-selected={active} onClick={onClick}><span className="settings-nav-label">{label}</span></button>;
