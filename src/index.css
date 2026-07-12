@@ -3007,6 +3007,29 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .mobile-menu-open > .career-mobile-nav { overflow: hidden; box-shadow: -8px 0 24px rgba(0,0,0,.08); }
   html.drawer-open, body.drawer-open { overflow: hidden; }
   body.drawer-open { position: fixed; width: 100%; }
+
+  /* X-style overlay drawer: keep the page still and let the drawer cover it. */
+  .mobile-settings-layer { padding: 0; }
+  .mobile-settings-backdrop { background: rgba(0,0,0,.38); }
+  .mobile-settings-drawer {
+    width: 80vw;
+    max-width: 360px;
+    height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: 6px 0 18px rgba(0,0,0,.08);
+  }
+  .mobile-menu-open > .mobile-header,
+  .mobile-menu-open > .workspace,
+  .mobile-menu-open > .career-mobile-nav {
+    position: static;
+    z-index: auto;
+    overflow: visible;
+    border-radius: 0;
+    box-shadow: none;
+    transform: none;
+    transition: none;
+  }
 }
 
 /* Desktop global-create control: compact pill, separate from mobile add. */
