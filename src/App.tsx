@@ -713,6 +713,7 @@ export default function App() {
     [desktopMenu, setDesktopMenu] = useState(false),
     [settings, setSettings] = useState(false),
     [mobileSettingsPage, setMobileSettingsPage] = useState<string | null>(null),
+    [selectedDrawerItem, setSelectedDrawerItem] = useState<string | null>(null),
     [form, setForm] = useState<CreateType | null>(null),
     [editCompany, setEditCompany] = useState<Company>(),
     [editEvent, setEditEvent] = useState<Event>(),
@@ -1239,7 +1240,7 @@ export default function App() {
         </main>
         <MobileNav
           view={view}
-          setView={setView}
+          setView={(next) => { setSelectedDrawerItem(null); setView(next); }}
           t={t}
           menu={menu}
           onAdd={() => (menu ? setMenu(false) : setMenu(true))}
@@ -1259,6 +1260,8 @@ export default function App() {
             view={view}
             page={mobileSettingsPage}
             setPage={setMobileSettingsPage}
+            selectedItem={selectedDrawerItem}
+            setSelectedItem={setSelectedDrawerItem}
             close={() => { setSettings(false); setMobileSettingsPage(null); }}
             theme={theme}
             setTheme={setTheme}
@@ -2787,7 +2790,7 @@ function BackupControls({ t, data, theme, locale, setData, download }: any) {
   return <section className="backup-panel"><section><h3>{labels.storage}</h3><p>{labels.version}: v{data.schemaVersion}</p><div className="backup-meta"><span>{data.companies.length} {locale === "ja" ? "企業" : locale === "en" ? "companies" : "企业"} · {data.events.length} {locale === "ja" ? "日程" : locale === "en" ? "schedules" : "日程"}</span><span>{data.materials.length} {locale === "ja" ? "資料" : locale === "en" ? "resources" : "资料"} · {data.interviews.length} {locale === "ja" ? "面接記録" : locale === "en" ? "interviews" : "面试记录"} · {data.preparations.length} {locale === "ja" ? "準備事項" : locale === "en" ? "preparations" : "准备事项"}</span></div></section><section><h3>{labels.cloud}</h3><div className="backup-cloud-actions"><button className="primary" onClick={exportCloud}>{labels.exportCloud}</button><button onClick={() => fileRef.current?.click()}>{labels.restoreFile}</button></div><p>{labels.permission}</p><p>{lastExport ? `${labels.last}: ${new Date(lastExport).toLocaleDateString()} (${days} ${locale === "ja" ? "日前" : locale === "en" ? "days ago" : "天前"})` : labels.never}</p>{days !== null && days > 7 && <p className="backup-warning">{labels.warning}</p>}</section><section><h3>{labels.local}</h3><div className="backup-meta"><span>{items.length}/5</span><span>{items[0] ? new Date(items[0].createdAt).toLocaleString() : labels.never}</span></div><button className="primary" onClick={backupNow}>{labels.now}</button>{error&&<p className="backup-error">{error}</p>}<input hidden ref={fileRef} type="file" accept="application/json,.json" onChange={restoreFile}/><div className="backup-list">{items.map((x)=><div key={x.createdAt}><span>{new Date(x.createdAt).toLocaleString()}</span><button onClick={()=>restore(x)}>{labels.restore}</button><button onClick={()=>{if(window.confirm(labels.confirm)) deleteBackup(x.createdAt).then(refresh)}}>{labels.remove}</button></div>)}</div></section></section>;
 }
 function MobileSettingsDrawer({
-  t, page, setPage, close, setView, view, theme, setTheme, locale, setLocale, data, setData, csv, json, download,
+  t, page, setPage, close, setView, view, selectedItem, setSelectedItem, theme, setTheme, locale, setLocale, data, setData, csv, json, download,
 }: any) {
   const label = "CareerFlow";
   const cloudLabel = locale === "ja" ? "iCloud Drive に書き出す" : locale === "en" ? "Export to iCloud Drive" : "导出到 iCloud Drive";
@@ -2814,14 +2817,14 @@ function MobileSettingsDrawer({
         <span /><div className="mobile-settings-brand"><strong>CareerFlow</strong><small>日本就活管理</small></div><span />
       </header>
       <div className="drawer-main drawer-scroll"><nav className="mobile-settings-nav">
-        <button className={view === "dashboard" && page === null ? "active" : ""} onClick={() => { setPage(null); close(); setView("dashboard"); }}><Home /><span>{t.dashboard}</span></button>
-        <button className={page === "data" ? "expanded" : ""} onClick={() => setPage(page === "data" ? null : "data")}><FileJson /><span>{t.data}</span><ChevronRight /></button>
+        <button className={selectedItem === "home" ? "active" : ""} onClick={() => { setSelectedItem("home"); setPage(null); close(); setView("dashboard"); }}><Home /><span>{t.dashboard}</span></button>
+        <button className={`${page === "data" ? "expanded " : ""}${selectedItem === "data" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("data"); setPage(page === "data" ? null : "data"); }}><FileJson /><span>{t.data}</span><ChevronRight /></button>
         {page === "data" && <div className="drawer-accordion-panel"><button onClick={() => csv.current?.click()}><Upload /><span>{t.importCsv}</span></button><button onClick={() => download("careerflow-materials.csv", Papa.unparse(data.materials), "text/csv")}><Download /><span>{t.exportCsv}</span></button><button onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Download /><span>{t.backup}</span></button><button onClick={() => json.current?.click()}><FileJson /><span>{t.restore}</span></button><button onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Download /><span>{cloudLabel}</span></button></div>}
-        <button className={page === "appearance" ? "expanded" : ""} onClick={() => setPage(page === "appearance" ? null : "appearance")}><Settings /><span>{t.appearance}</span><ChevronRight /></button>
+        <button className={`${page === "appearance" ? "expanded " : ""}${selectedItem === "appearance" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("appearance"); setPage(page === "appearance" ? null : "appearance"); }}><Settings /><span>{t.appearance}</span><ChevronRight /></button>
         {page === "appearance" && <div className="drawer-accordion-panel">{(["light", "dark", "system"] as Theme[]).map((x) => <button className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}><span>{t[x]}</span>{theme === x && <Check />}</button>)}</div>}
-        <button className={page === "language" ? "expanded" : ""} onClick={() => setPage(page === "language" ? null : "language")}><Globe /><span>{t.language}</span><ChevronRight /></button>
+        <button className={`${page === "language" ? "expanded " : ""}${selectedItem === "language" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("language"); setPage(page === "language" ? null : "language"); }}><Globe /><span>{t.language}</span><ChevronRight /></button>
         {page === "language" && <div className="drawer-accordion-panel">{(["zh", "ja", "en"] as Locale[]).map((x) => <button className={locale === x ? "selected" : ""} onClick={() => setLocale(x)} key={x}><span>{x === "zh" ? "中文" : x === "ja" ? "日本語" : "English"}</span>{locale === x && <Check />}</button>)}</div>}
-        <button className={page === "about" ? "expanded" : ""} onClick={() => setPage(page === "about" ? null : "about")}><BriefcaseBusiness /><span>关于 CareerFlow</span><ChevronRight /></button>
+        <button className={`${page === "about" ? "expanded " : ""}${selectedItem === "about" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("about"); setPage(page === "about" ? null : "about"); }}><BriefcaseBusiness /><span>关于 CareerFlow</span><ChevronRight /></button>
         {page === "about" && <div className="drawer-accordion-panel mobile-about"><p>CareerFlow</p><p>{t.version || "版本 1.0"}</p><p>数据库版本：v{data.schemaVersion}</p><p>隐私说明：数据主要保存在当前设备。</p><p>开源许可：MIT License</p></div>}
       </nav></div>
     </aside>

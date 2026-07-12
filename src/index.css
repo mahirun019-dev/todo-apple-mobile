@@ -3065,7 +3065,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .drawer-shell { height: 100dvh; min-height: 0; overflow: hidden; }
   .drawer-header { position: relative; z-index: 20; flex: 0 0 auto; background: #fff; opacity: 1; transform: none; }
   .drawer-scroll { min-height: 0; flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
-  .drawer-accordion-panel { display: grid; grid-template-rows: 1fr; overflow: hidden; margin: 0 0 4px 52px; padding: 0; border-radius: 0; background: transparent; animation: drawer-accordion-in .2s ease-out; }
+  .drawer-accordion-panel { display: grid; grid-template-rows: 1fr; overflow: hidden; margin: 0 0 4px 46px; padding: 0; border-radius: 0; background: transparent; animation: drawer-accordion-in .2s ease-out; }
   .mobile-settings-nav > button.expanded svg:last-child { transform: rotate(90deg); }
   .drawer-accordion-panel .mobile-choice-list button,
   .drawer-accordion-panel .mobile-data-actions button { min-height: 44px; height: 44px; padding: 0 12px; font-size: 15px; font-weight: 500; }
@@ -3111,6 +3111,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   }
   .mobile-settings-nav button.active svg:first-child { color: #0f1419; }
   .mobile-settings-nav > button.expanded { background: rgba(15,20,25,.045); color: #0f1419; font-weight: 700; }
+  .mobile-settings-nav > button.selected-setting { background: rgba(15,20,25,.045); color: #0f1419; font-weight: 700; }
   .mobile-settings-nav > button.expanded svg:first-child { color: #0f1419; }
   .mobile-settings-nav button:nth-child(n+5) { font-size: 17px; font-weight: 600; }
   .mobile-settings-nav button svg:last-child {
