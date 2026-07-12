@@ -94,8 +94,8 @@ type Material = {
   isWeeklyFocus: boolean;
   createdAt: number;
   updatedAt: number;
-  documentType?: "es" | "resume" | "open_es" | "transcript" | "graduation" | "recommendation" | "other";
-  submissionStatus?: "not_started" | "drafting" | "review" | "submitted" | "returned";
+  documentType?: "es" | "resume" | "other_document" | "open_es" | "transcript" | "graduation" | "recommendation" | "other";
+  submissionStatus?: "not_started" | "drafting" | "submitted" | "review" | "returned";
   submittedAt?: string;
   versionName?: string;
   fileName?: string;
@@ -111,6 +111,8 @@ type Material = {
   result?: "undecided" | "passed" | "failed";
   resultAt?: string;
   revisionPoints?: string;
+  question?: string;
+  answer?: string;
 };
 type Event = {
   id: string;
@@ -615,7 +617,16 @@ function normalize(x: any): Data {
   return {
     schemaVersion: 5,
     companies: x.companies || [],
-    materials: x.materials || [],
+    materials: (x.materials || []).map((m: Material) => ({
+      ...m,
+      submissionStatus:
+        m.submissionStatus === "review" || m.submissionStatus === "returned"
+          ? "drafting"
+          : m.submissionStatus,
+      documentType: ["open_es", "transcript", "graduation", "recommendation", "other"].includes(m.documentType || "")
+        ? "other_document"
+        : m.documentType,
+    })),
     events: x.events || [],
     interviews: x.interviews || [],
     preparations: x.preparations || [],
@@ -901,11 +912,11 @@ export default function App() {
     const f = new FormData(e.currentTarget),
       v: Material = {
         id: id(),
-        title: String(f.get("versionName") || f.get("documentType") || "书类"),
+        title: String(f.get("versionName") || (f.get("documentType") === "other_document" ? f.get("otherType") : f.get("documentType")) || "书类"),
         companyId: String(f.get("company") || "") || undefined,
         type: "es",
         dueAt: String(f.get("due") || "") || undefined,
-        priority: f.get("priority") as Priority,
+        priority: (f.get("priority") || "medium") as Priority,
         tags: String(f.get("tags") || "")
           .split(/[，,\n]+/)
           .map((tag) => tag.trim())
@@ -915,7 +926,7 @@ export default function App() {
         isWeeklyFocus: false,
         createdAt: Date.now(),
         updatedAt: Date.now(),
-        documentType: f.get("documentType") as Material["documentType"],
+        documentType: (f.get("documentType") === "other_document" ? f.get("otherType") : f.get("documentType")) as Material["documentType"],
         submissionStatus: f.get("submissionStatus") as Material["submissionStatus"],
         submittedAt: String(f.get("submittedAt") || "") || undefined,
         versionName: String(f.get("versionName") || "") || undefined,
@@ -932,6 +943,8 @@ export default function App() {
         result: f.get("result") as Material["result"],
         resultAt: String(f.get("resultAt") || "") || undefined,
         revisionPoints: String(f.get("revisionPoints") || "") || undefined,
+        question: String(f.get("question") || "") || undefined,
+        answer: String(f.get("answer") || "") || undefined,
       };
     setData((d) => ({ ...d, materials: [v, ...d.materials] }));
     setForm(null);
@@ -2315,15 +2328,17 @@ function MaterialForm({
   const ja = t.language === "言語";
   const en = t.language === "Language";
   const [documentType, setDocumentType] = useState("es");
-  const [questions, setQuestions] = useState([{ question: "", answer: "" }]);
+  const [otherType, setOtherType] = useState("open_es");
   const label = (zh: string, jp: string, eng: string) => ja ? jp : en ? eng : zh;
-  const types = [
-    ["es", "ES"], ["resume", "履歴書"], ["open_es", "OpenES"],
-    ["transcript", "成績証明書"], ["graduation", "卒業見込証明書"],
-    ["recommendation", "推薦状"], ["other", label("其他", "その他", "Other")],
+  const otherTypes = [
+    ["open_es", "OpenES"],
+    ["transcript", label("成绩证明书", "成績証明書", "Academic transcript")],
+    ["graduation", label("预计毕业证明书", "卒業見込証明書", "Expected graduation certificate")],
+    ["recommendation", label("推荐信", "推薦状", "Recommendation letter")],
+    ["other", label("其他", "その他", "Other")],
   ];
-  const statuses = [["not_started", label("未着手", "未着手", "Not started")], ["drafting", label("作成中", "作成中", "Drafting")], ["review", label("确认待ち", "確認待ち", "Review")], ["submitted", label("已提交", "提出済み", "Submitted")], ["returned", label("退回", "差し戻し", "Returned")]];
-  const isContentDocument = ["es", "resume", "open_es"].includes(documentType);
+  const statuses = [["not_started", label("未着手", "未着手", "Not started")], ["drafting", label("作成中", "作成中", "Drafting")], ["submitted", label("已提交", "提出済み", "Submitted")]];
+  const isOtherDocument = documentType === "other_document";
   return (
     <Modal title={label("添加书类", "書類を追加", "Add document")} close={close}>
       <form className="form-grid document-form" onSubmit={save}>
@@ -2341,9 +2356,17 @@ function MaterialForm({
         <label>
           <span>{label("书类类型", "書類の種類", "Document type")} *</span>
           <select name="documentType" value={documentType} onChange={(e) => setDocumentType(e.target.value)} required>
-            {types.map(([value, text]) => <option key={value} value={value}>{text}</option>)}
+            <option value="es">ES</option>
+            <option value="resume">履歴書</option>
+            <option value="other_document">{label("其他的书类", "その他の書類", "Other documents")}</option>
           </select>
         </label>
+        {isOtherDocument && <label>
+          <span>{label("具体书类类型", "書類の種類", "Specific document type")} *</span>
+          <select name="otherType" value={otherType} onChange={(e) => setOtherType(e.target.value)} required>
+            {otherTypes.map(([value, text]) => <option key={value} value={value}>{text}</option>)}
+          </select>
+        </label>}
         <label>
           <span>{label("截止日期", "締切", "Deadline")} *</span>
           <input name="due" type="datetime-local" required />
@@ -2358,40 +2381,17 @@ function MaterialForm({
           <span>{label("提交日期", "提出日", "Submitted on")}</span>
           <input name="submittedAt" type="date" />
         </label>
-        <label><span>{label("版本名称", "バージョン名", "Version name")}</span><input name="versionName" /></label>
-        <label><span>{label("文件名", "ファイル名", "File name")}</span><input name="fileName" /></label>
-        <label><span>{label("使用语言", "使用言語", "Language")}</span><input name="language" placeholder="日本語 / 中文 / English" /></label>
-        <label><span>{label("字数限制", "文字数制限", "Character limit")}</span><input name="characterLimit" type="number" min="0" /></label>
-        {isContentDocument && <>
-          {[["motivation", label("志望动机", "志望動機", "Motivation")], ["selfPr", "自己PR"], ["gakuchika", "ガクチカ"], ["strengths", label("长处", "長所", "Strengths")], ["weaknesses", label("短处", "短所", "Weaknesses")], ["research", label("研究内容", "研究内容", "Research")]].map(([name, text]) => <label className="wide" key={name}><span>{text}</span><textarea name={name} /></label>)}
-          <label className="wide"><span>{label("自定义设问与回答", "カスタム設問と回答", "Custom questions and answers")}</span>
-            <input type="hidden" name="customQuestions" value={JSON.stringify(questions)} readOnly />
-            <div className="document-question-list">{questions.map((q, index) => <div className="document-question" key={index}><input value={q.question} placeholder={label("问题", "設問", "Question")} onChange={(e) => setQuestions((all) => all.map((x, i) => i === index ? { ...x, question: e.target.value } : x))} /><textarea value={q.answer} placeholder={label("回答内容", "回答内容", "Answer")} onChange={(e) => setQuestions((all) => all.map((x, i) => i === index ? { ...x, answer: e.target.value } : x))} /></div>)}</div>
-            <button type="button" className="text-button" onClick={() => setQuestions((all) => [...all, { question: "", answer: "" }])}>＋ {label("添加问题", "設問を追加", "Add question")}</button>
-          </label>
+        {documentType === "es" && <>
+          <label className="wide"><span>{label("题目", "設問", "Question")}</span><input name="question" /></label>
+          <label className="wide"><span>{label("回答", "回答", "Answer")}</span><textarea name="answer" /></label>
+          <label><span>{label("文字数限制", "文字数制限", "Character limit")}</span><input name="characterLimit" type="number" min="0" /></label>
         </>}
-        <label><span>{label("结果", "結果", "Result")}</span><select name="result" defaultValue="undecided"><option value="undecided">{label("未定", "未定", "Undecided")}</option><option value="passed">{label("通过", "通過", "Passed")}</option><option value="failed">{label("不通过", "不通過", "Failed")}</option></select></label>
-        <label><span>{label("结果通知日期", "結果通知日", "Result date")}</span><input name="resultAt" type="date" /></label>
-        <label className="wide"><span>{label("修改要点", "修正ポイント", "Revision points")}</span><textarea name="revisionPoints" /></label>
-        <label className="wide"><span>{t.notes}</span><textarea name="notes" /></label>
-        <details className="wide document-advanced">
-          <summary>{label("详细设置（可选）", "詳細設定（任意）", "Advanced settings")}</summary>
-          <div className="document-advanced-fields">
-            <label>
-              <span>{label("优先度", "優先度", "Priority")}</span>
-              <select name="priority" defaultValue="medium">
-                <option value="low">{label("低", "低", "Low")}</option>
-                <option value="medium">{label("中", "中", "Medium")}</option>
-                <option value="high">{label("高", "高", "High")}</option>
-              </select>
-            </label>
-            <label>
-              <span>{label("标签", "タグ", "Tags")}</span>
-              <input name="tags" placeholder={label("用逗号分隔多个标签", "カンマ区切りで入力", "Separate tags with commas")} />
-            </label>
-          </div>
-          <p>{label("可选：优先度和标签用于整理书类，不影响提交状态。", "優先度とタグで書類を整理できます。", "Use priority and tags to organize documents.")}</p>
-        </details>
+        {documentType === "resume" && <>
+          <label><span>{label("版本名", "バージョン名", "Version name")}</span><input name="versionName" /></label>
+          <label><span>{label("文件名", "ファイル名", "File name")}</span><input name="fileName" /></label>
+          <label><span>{label("使用语言", "使用言語", "Language")}</span><input name="language" placeholder="日本語 / 中文 / English" /></label>
+        </>}
+        {isOtherDocument && <label><span>{label("文件名", "ファイル名", "File name")}</span><input name="fileName" /></label>}
         <Actions t={t} close={close} />
       </form>
     </Modal>
