@@ -3325,6 +3325,119 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .dark .course-nav > button.selected { color: #f5f5f5 !important; background: #24262a !important; }
 .dark .course-nav > button.selected::before,
 .dark .course-nav > button.selected > i { background: #f5f5f5 !important; }
+
+/* Unified semantic theme layer. Component rules below intentionally use these tokens. */
+:root {
+  --bg-app: #f7f7f8;
+  --bg-sidebar: #f1f1f2;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #ffffff;
+  --bg-input: #ffffff;
+  --bg-selected: #ececee;
+  --bg-hover: #f1f2f3;
+  --bg-overlay: rgba(0, 0, 0, 0.28);
+  --text-primary: #17181a;
+  --text-secondary: #646a73;
+  --text-muted: #8b8f97;
+  --text-inverse: #ffffff;
+  --text-disabled: #9da2a9;
+  --border-default: #dedfe3;
+  --border-strong: #c7cbd1;
+  --accent: #2563eb;
+  --accent-soft: rgba(37, 99, 235, 0.12);
+  --danger: #bd4b46;
+  --danger-soft: rgba(189, 75, 70, 0.1);
+  --button-primary-bg: #24262b;
+  --button-primary-text: #ffffff;
+  --button-secondary-bg: #ffffff;
+  --button-secondary-text: #24262b;
+  --button-disabled-bg: #eef0f2;
+  --button-disabled-text: #9298a0;
+}
+.dark {
+  --bg-app: #111315;
+  --bg-sidebar: #17191c;
+  --bg-surface: #202225;
+  --bg-surface-elevated: #25282c;
+  --bg-input: #181b1f;
+  --bg-selected: #2b2e33;
+  --bg-hover: #26292e;
+  --bg-overlay: rgba(0, 0, 0, 0.58);
+  --text-primary: #f5f5f5;
+  --text-secondary: #c4c8cf;
+  --text-muted: #8f96a3;
+  --text-inverse: #111315;
+  --text-disabled: #666d78;
+  --border-default: #363b42;
+  --border-strong: #4a5059;
+  --accent: #3b82f6;
+  --accent-soft: rgba(59, 130, 246, 0.16);
+  --danger: #ff9d98;
+  --danger-soft: rgba(255, 157, 152, 0.12);
+  --button-primary-bg: #2b2e33;
+  --button-primary-text: #f5f5f5;
+  --button-secondary-bg: #25282c;
+  --button-secondary-text: #f5f5f5;
+  --button-disabled-bg: #30343a;
+  --button-disabled-text: #737984;
+}
+
+html, body { background: var(--bg-app); color: var(--text-primary); }
+.app-shell, .career-app { background: var(--bg-app); color: var(--text-primary); }
+.career-app .sidebar { background: var(--bg-sidebar); border-color: var(--border-default); }
+.student-app, .career-app, .entity-card, .task-row-card, .company-card, .timeline-row { background: var(--bg-surface); border-color: var(--border-default); }
+.entity-card, .task-row-card, .company-card, .timeline-row { box-shadow: none; }
+
+/* Navigation, selected states, and the global desktop CTA. */
+.nav-list button.active, .settings-link.active, .course-nav > button.selected, .filter-bar button.active { color: var(--text-primary); background: var(--bg-selected); }
+.nav-list button:hover, .settings-link:hover, .course-nav > button:hover { color: var(--text-primary); background: var(--bg-hover); }
+.sidebar .create-entry, .desktop-create .create-entry { color: var(--button-primary-text); background: var(--button-primary-bg); box-shadow: none; }
+.sidebar .create-entry:hover, .desktop-create .create-entry:hover { background: var(--action-primary-hover, #303238); }
+
+/* All regular controls share the same dark-mode contrast and focus treatment. */
+.career-app input:not([type="hidden"]), .career-app select, .career-app textarea,
+.modal-layer input:not([type="hidden"]), .modal-layer select, .modal-layer textarea,
+.settings-drawer-panel input:not([type="hidden"]), .settings-drawer-panel select, .settings-drawer-panel textarea {
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border-color: var(--border-strong);
+}
+.career-app input::placeholder, .career-app textarea::placeholder,
+.modal-layer input::placeholder, .modal-layer textarea::placeholder { color: var(--text-muted); opacity: 1; }
+.career-app input:focus, .career-app select:focus, .career-app textarea:focus,
+.modal-layer input:focus, .modal-layer select:focus, .modal-layer textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.career-app input:disabled, .career-app select:disabled, .career-app textarea:disabled,
+.modal-layer input:disabled, .modal-layer select:disabled, .modal-layer textarea:disabled { color: var(--button-disabled-text); background: var(--button-disabled-bg); border-color: var(--border-default); opacity: 1; }
+option { color: var(--text-primary); background: var(--bg-input); }
+
+/* Modal, sheet and drawer surfaces use one continuous surface in both themes. */
+.modal-backdrop, .mobile-settings-backdrop { background: var(--bg-overlay); }
+.modal-layer .drawer, .settings-drawer-panel, .mobile-settings-drawer { color: var(--text-primary); background: var(--bg-surface); border-color: var(--border-default); }
+.modal-layer .drawer > header, .settings-drawer-panel > header { color: var(--text-primary); background: var(--bg-surface); border-color: var(--border-default); }
+.modal-layer .form-actions { background: var(--bg-surface); border-color: var(--border-default); }
+.close-button, .settings-drawer-panel .close-button { color: var(--text-secondary); background: var(--bg-surface-elevated); border-color: var(--border-default); }
+.form-actions > .primary, .settings-actions > .primary { color: var(--button-primary-text) !important; background: var(--button-primary-bg) !important; border-color: var(--button-primary-bg); }
+.form-actions > button:not(.primary), .settings-actions button:not(.primary) { color: var(--button-secondary-text); background: var(--button-secondary-bg); border-color: var(--border-default); }
+.danger-button { color: var(--danger) !important; background: transparent !important; border-color: var(--danger) !important; }
+
+/* The mobile drawer header must share the drawer surface, never a white block. */
+.mobile-settings-brand, .drawer-header { color: var(--text-primary); background: var(--bg-sidebar) !important; }
+.mobile-settings-brand strong, .drawer-accordion-panel > button, .mobile-settings-nav button { color: var(--text-primary); }
+.mobile-settings-brand small { color: var(--text-secondary); }
+.mobile-settings-nav button.active { color: var(--text-primary); background: var(--bg-selected); }
+
+/* Upload/text segmented controls remain legible in dark mode. */
+.segmented-control span { color: var(--text-secondary); background: transparent; border-color: var(--border-strong); }
+.segmented-control input:checked + span { color: var(--text-primary); background: var(--bg-selected); border-color: var(--text-primary); }
+.dark .segmented-control input:checked + span { color: var(--text-primary); background: var(--bg-selected); border-color: var(--text-primary); }
+
+@media (max-width: 767px) {
+  .modal-layer { max-height: 100dvh; padding: env(safe-area-inset-top) 0 0; }
+  .modal-layer .drawer { display: flex; max-height: calc(100dvh - env(safe-area-inset-top) - 12px); flex-direction: column; overflow: hidden; }
+  .modal-layer .drawer > header { flex: 0 0 auto; }
+  .modal-layer .drawer > form { display: grid; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding-bottom: 0; }
+  .modal-layer .form-actions { position: sticky; bottom: 0; z-index: 2; padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+}
 .create-record-picker { display: grid; gap: 8px; }
 .create-record-picker button { display: flex; min-height: 52px; align-items: center; gap: 12px; width: 100%; padding: 0 14px; border: 1px solid #d8dce1; border-radius: 10px; color: #24262b; background: #fff; font-weight: 650; text-align: left; }
 .create-record-picker button:hover { background: #f3f4f6; }
@@ -3537,3 +3650,42 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     background: #1d1f23;
   }
 }
+
+/* Final dark-mode consistency pass: these selectors are intentionally last. */
+.dark .career-app,
+.dark .career-app .sidebar,
+.dark .student-app,
+.dark .entity-card,
+.dark .task-row-card,
+.dark .company-card,
+.dark .timeline-row,
+.dark .timeline > .empty-small { background: var(--bg-surface); border-color: var(--border-default); color: var(--text-primary); }
+.dark .career-app .sidebar { background: var(--bg-sidebar); }
+.dark .desktop-settings-nav button.active { color: var(--text-primary); background: var(--bg-selected); }
+.dark .settings-segmented button { color: var(--text-primary); background: transparent; border-color: var(--border-default); }
+.dark .settings-segmented button.active { color: var(--accent); background: var(--accent-soft); border-color: var(--accent); }
+.dark .form-grid label, .dark .page-head p, .dark .section-title > span, .dark .metric span { color: var(--text-secondary); }
+.dark .modal-layer .drawer,
+.dark .modal-layer .drawer > header,
+.dark .modal-layer .form-actions,
+.dark .settings-drawer-panel,
+.dark .settings-drawer-panel > header,
+.dark .mobile-settings-drawer,
+.dark .mobile-settings-brand,
+.dark .drawer-header { background: var(--bg-surface) !important; color: var(--text-primary); border-color: var(--border-default); }
+.dark .mobile-settings-brand { background: var(--bg-sidebar) !important; }
+.dark .modal-layer .form-actions { background: var(--bg-surface) !important; }
+.dark .modal-layer input:not([type="hidden"]), .dark .modal-layer select, .dark .modal-layer textarea,
+.dark .career-app input:not([type="hidden"]), .dark .career-app select, .dark .career-app textarea { background: var(--bg-input); color: var(--text-primary); border-color: var(--border-strong); }
+.dark .modal-layer input::placeholder, .dark .modal-layer textarea::placeholder { color: var(--text-muted); }
+.dark .modal-layer .form-actions > .primary, .dark .settings-actions > .primary,
+.dark .sidebar .create-entry, .dark .desktop-create .create-entry { color: var(--button-primary-text) !important; background: var(--button-primary-bg) !important; border-color: var(--button-primary-bg); }
+.dark .modal-layer .form-actions > button:not(.primary), .dark .settings-actions button:not(.primary) { color: var(--button-secondary-text); background: var(--button-secondary-bg); border-color: var(--border-default); }
+.dark .timeline > .empty-small { background: var(--bg-surface) !important; }
+.dark .filter-bar button.active { color: var(--text-primary); background: var(--bg-selected); }
+.dark .settings-drawer-panel .close-button, .dark .close-button { color: var(--text-secondary); background: var(--bg-surface-elevated); border-color: var(--border-default); }
+.dark .mobile-settings-nav button, .dark .drawer-accordion-panel > button { color: var(--text-primary); }
+.dark .mobile-settings-nav button.active { color: var(--text-primary); background: var(--bg-selected); }
+.dark .segmented-control span { color: var(--text-secondary); background: transparent; border-color: var(--border-strong); }
+.dark .segmented-control input:checked + span { color: var(--text-primary); background: var(--bg-selected); border-color: var(--text-primary); }
+.dark .delete-event-button { color: var(--danger); background: transparent; border-color: var(--danger); }
