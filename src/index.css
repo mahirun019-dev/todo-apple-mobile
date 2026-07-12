@@ -2502,3 +2502,74 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
 .dark .document-summary span { color: #b7c4d2; }
 .dark .document-advanced[open] { background: rgba(77,153,226,.08); }
 @media (max-width: 767px) { .document-advanced-fields { grid-template-columns: minmax(0, 1fr); } }
+
+/* CareerFlow monochrome theme. Blue remains reserved for brand and status cues. */
+:root {
+  color: #171717;
+  background: #f2f2f2;
+}
+.app-shell { background: #f1f1f1; }
+.student-app { border-color: #dedede; background: #fafafa; box-shadow: 0 12px 32px rgba(0,0,0,.06); }
+.career-app { background: #f3f3f3; }
+.career-app .sidebar { background: #f7f7f7; border-color: #dedede; }
+.panel { background: #fafafa; }
+.entity-card { border-color: #dedede; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.025); }
+.brand-mark { background: #2477d9; }
+.nav-list button, .settings-link { color: #666; }
+.nav-list button:hover, .settings-link:hover { color: #171717; background: #ededed; }
+.nav-list button.active { color: #171717; background: #e5e5e5; }
+.course-nav > div, .course-nav > button { color: #666; }
+.course-nav > button:hover { background: #ededed; }
+.course-nav > button.selected { color: #171717; background: #e4e4e4; }
+.create-entry, .primary { color: #fff; background: #171717; box-shadow: 0 4px 10px rgba(0,0,0,.12); }
+.create-entry:hover, .primary:hover { background: #3a3a3a; }
+.desktop-create .create-entry { color: #fff; background: #3a3a3a; }
+.desktop-create .create-entry:hover { background: #171717; }
+.desktop-create-menu { border-color: #dedede; background: #fff; }
+.desktop-create-menu button { border-color: #ededed; color: #333; background: #fff; }
+.desktop-create-menu button:hover { color: #111; background: #f1f1f1; }
+.desktop-create-menu svg { color: #555; }
+.text-button { color: #333; }
+.text-button:hover { color: #111; }
+.section-title > span, .page-head p, .metric span, .empty-small, .form-grid label { color: #6b6b6b; }
+.task-row-card, .company-card, .timeline-row { border-color: #dedede; background: #fff; }
+.head-actions > button { border-color: #cfcfcf; color: #333; background: #fff; }
+.head-actions > button:hover { background: #f0f0f0; }
+.form-actions > button:not(.primary), .settings-actions button:not(.primary) { border: 1px solid #cfcfcf; color: #222; background: #fff; }
+.form-actions > .primary, .settings-actions > .primary { color: #fff; background: #171717; }
+.form-actions > .primary:hover, .settings-actions > .primary:hover { background: #3a3a3a; }
+.career-mobile-nav { border-color: #dedede; background: rgba(250,250,250,.96); }
+.career-mobile-nav button { color: #666; }
+.career-mobile-nav button.active { color: #171717; background: #e8e8e8; }
+.career-mobile-nav .nav-add { color: #fff; background: #171717; }
+.career-mobile-nav .nav-add.open { background: #3a3a3a; }
+.funnel b { color: #333; background: #e8e8e8; }
+.funnel div, .wait-row { border-color: #e8e8e8; color: #555; }
+.document-summary, .exam-row { border-color: #e8e8e8; }
+.danger-button, .head-actions > button.danger-button { border-color: #d06a65; color: #ba403b; background: transparent; }
+.danger-button:hover, .head-actions > button.danger-button:hover { background: #fff3f2; }
+
+.dark .app-shell { background: #101010; }
+.dark .student-app, .dark .career-app { border-color: #303030; background: #181818; }
+.dark .career-app .sidebar, .dark .panel { border-color: #303030; background: #202020; }
+.dark .entity-card { border-color: #353535; background: #242424; box-shadow: none; }
+.dark .nav-list button, .dark .settings-link, .dark .course-nav > div, .dark .course-nav > button { color: #a6a6a6; }
+.dark .nav-list button:hover, .dark .settings-link:hover, .dark .course-nav > button:hover { color: #fff; background: #2d2d2d; }
+.dark .nav-list button.active, .dark .course-nav > button.selected { color: #fff; background: #363636; }
+.dark .create-entry, .dark .primary { color: #111; background: #f1f1f1; box-shadow: none; }
+.dark .create-entry:hover, .dark .primary:hover { background: #fff; }
+.dark .desktop-create .create-entry { color: #fff; background: #3a3a3a; }
+.dark .desktop-create .create-entry:hover { background: #4a4a4a; }
+.dark .desktop-create-menu { border-color: #3a3a3a; background: #242424; }
+.dark .desktop-create-menu button { border-color: #353535; color: #eee; background: #242424; }
+.dark .desktop-create-menu button:hover { background: #303030; }
+.dark .text-button, .dark .section-title > span, .dark .page-head p, .dark .metric span, .dark .form-grid label { color: #b8b8b8; }
+.dark .head-actions > button, .dark .form-actions > button:not(.primary), .dark .settings-actions button:not(.primary) { border-color: #505050; color: #eee; background: #2b2b2b; }
+.dark .career-mobile-nav { border-color: #353535; background: rgba(30,30,30,.97); }
+.dark .career-mobile-nav button { color: #aaa; }
+.dark .career-mobile-nav button.active { color: #fff; background: #383838; }
+.dark .career-mobile-nav .nav-add { color: #111; background: #f1f1f1; }
+.dark .funnel b { color: #eee; background: #3b3b3b; }
+.dark .funnel div, .dark .wait-row, .dark .document-summary, .dark .exam-row { border-color: #383838; color: #ccc; }
+.dark .danger-button, .dark .head-actions > button.danger-button { border-color: #a85a56; color: #ffaaa4; background: transparent; }
+.dark .danger-button:hover, .dark .head-actions > button.danger-button:hover { background: #38292a; }
