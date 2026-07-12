@@ -140,11 +140,13 @@ type Event = {
 };
 type InterviewRecord = {
   category?: "interview";
+  roundCode?: string;
   id: string;
   companyId?: string;
   round: string;
   interviewAt: string;
   format: string;
+  participationMode?: string;
   interviewers: string;
   questions: string;
   answers: string;
@@ -1137,8 +1139,10 @@ export default function App() {
         id: base?.id || id(),
         companyId: String(f.get("company") || "") || undefined,
         round: String(f.get("round")),
+        roundCode: String(f.get("roundCode") || "other"),
         interviewAt: String(f.get("interviewAt")),
         format: String(f.get("format")),
+        participationMode: String(f.get("participationMode") || "undecided"),
         interviewers: String(f.get("interviewers")),
         questions: String(f.get("questions")),
         answers: String(f.get("answers")),
@@ -2750,6 +2754,16 @@ function InterviewForm({
   close: () => void;
   save: any;
 }) {
+  const ja = t.language === "言語";
+  const en = t.language === "Language";
+  const label = (zh: string, jp: string, eng: string) => ja ? jp : en ? eng : zh;
+  const roundOptions = [["first", label("一次面试", "一次面接", "First Interview")], ["second", label("二次面试", "二次面接", "Second Interview")], ["third", label("三次面试", "三次面接", "Third Interview")], ["final", label("最终面试", "最終面接", "Final Interview")], ["group", label("集团面试", "集団面接", "Group Interview")], ["meeting", label("面谈", "面談", "Meeting")], ["other", label("其他", "その他", "Other")]];
+  const formatOptions = [["individual", label("个人面试", "個人面接", "Individual interview")], ["group", label("集团面试", "集団面接", "Group interview")], ["discussion", label("小组讨论", "グループディスカッション", "Group discussion")], ["hr", label("人事面谈", "人事面談", "HR meeting")], ["other", label("其他", "その他", "Other")]];
+  const modeOptions = [["online", label("线上", "オンライン", "Online")], ["in_person", label("现场", "対面", "In person")], ["hybrid", label("混合", "ハイブリッド", "Hybrid")], ["undecided", label("未确定", "未定", "Undecided")]];
+  const resultOptions = [["waiting", label("等待结果", "結果待ち", "Waiting")], ["passed", label("通过", "通過", "Passed")], ["failed", label("未通过", "不合格", "Not passed")], ["withdrawn", label("辞退", "辞退", "Withdrawn")], ["undecided", label("未确定", "未定", "Undecided")]];
+  const initialRound = initial?.roundCode || roundOptions.find(([code, text]) => text === initial?.round)?.[0] || "other";
+  const [roundCode, setRoundCode] = useState(initialRound);
+  const [score, setScore] = useState(Math.min(5, Math.max(1, initial?.score || 3)));
   return (
     <Modal title={initial ? t.edit : t.addInterview} close={close}>
       <form className="form-grid" onSubmit={save}>
@@ -2764,39 +2778,17 @@ function InterviewForm({
             ))}
           </select>
         </label>
-        <label>
-          <span>{t.round}</span>
-          <input
-            name="round"
-            defaultValue={initial?.round}
-            required
-          />
-        </label>
-        <label>
-          <span>{t.interviewAt}</span>
-          <input
-            name="interviewAt"
-            type="datetime-local"
-            defaultValue={initial?.interviewAt}
-            required
-          />
-        </label>
-        <label>
-          <span>{t.format}</span>
-          <input name="format" defaultValue={initial?.format} />
-        </label>
+        <label><span>{t.round}</span><select name="roundCode" value={roundCode} onChange={(e) => setRoundCode(e.target.value)}>{roundOptions.map(([code, text]) => <option key={code} value={code}>{text}</option>)}</select></label>
+        {roundCode === "other" && <label><span>{label("自定义轮次", "面接回数（自由入力）", "Custom round")}</span><input name="round" defaultValue={initial?.roundCode === "other" ? initial.round : ""} required /></label>}
+        {roundCode !== "other" && <input type="hidden" name="round" value={roundOptions.find(([code]) => code === roundCode)?.[1] || ""} readOnly />}
+        <label><span>{t.format}</span><select name="format" defaultValue={initial?.format || "individual"}>{formatOptions.map(([code, text]) => <option key={code} value={text}>{text}</option>)}</select></label>
+        <label><span>{label("参加方式", "参加方法", "Attendance mode")}</span><select name="participationMode" defaultValue={initial?.participationMode || "undecided"}>{modeOptions.map(([code, text]) => <option key={code} value={code}>{text}</option>)}</select></label>
+        <label><span>{t.interviewAt}</span><input name="interviewAt" type="datetime-local" defaultValue={initial?.interviewAt} required /></label>
         <label>
           <span>{t.interviewers}</span>
           <input name="interviewers" defaultValue={initial?.interviewers} />
         </label>
-        <label>
-          <span>{t.score}</span>
-          <select name="score" defaultValue={initial?.score || 3}>
-            {[1, 2, 3, 4, 5].map((x) => (
-              <option key={x}>{x}</option>
-            ))}
-          </select>
-        </label>
+        <label className="interest-field"><span>{t.score}</span><input type="hidden" name="score" value={score} readOnly /><div className="interest-stars" role="radiogroup" aria-label={t.score}>{[1,2,3,4,5].map((x) => <button key={x} type="button" role="radio" aria-checked={score === x} tabIndex={score === x ? 0 : -1} className={x <= score ? "selected" : ""} onClick={() => setScore(x)} onKeyDown={(e) => { if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); setScore(Math.min(5, score + 1)); } if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); setScore(Math.max(1, score - 1)); } }}>{x <= score ? "★" : "☆"}</button>)}<span>{score} / 5</span></div></label>
         <label className="wide">
           <span>{t.questions}</span>
           <textarea name="questions" defaultValue={initial?.questions} />
@@ -2809,14 +2801,7 @@ function InterviewForm({
           <span>{t.feeling}</span>
           <textarea name="feeling" defaultValue={initial?.feeling} />
         </label>
-        <label>
-          <span>{t.result}</span>
-          <input name="result" defaultValue={initial?.result} />
-        </label>
-        <label>
-          <span>{t.improvements}</span>
-          <input name="improvements" defaultValue={initial?.improvements} />
-        </label>
+        <label><span>{t.result}</span><select name="result" defaultValue={initial?.result || "undecided"}>{resultOptions.map(([code, text]) => <option key={code} value={text}>{text}</option>)}</select></label>
         <label className="wide">
           <span>{t.notes}</span>
           <textarea name="notes" defaultValue={initial?.notes} />
