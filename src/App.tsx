@@ -1111,7 +1111,6 @@ export default function App() {
   };
   return (
     <div className="app-shell">
-      <div className="build-badge">Build: 376130e · based on 623d743</div>
       <div className="student-app career-app">
         <aside className="sidebar panel">
           <Brand icon={icon} />
@@ -1349,23 +1348,7 @@ function Nav({
   t: any;
 }) {
   const [activeSection, setActiveSection] = useState<View>(view);
-  const [debugActive, setDebugActive] = useState(false);
-  console.log("[nav-debug] render", performance.now(), { debugActive, activeSection: activeSection });
-  const [debugPhase, setDebugPhase] = useState<"idle" | "pressed" | "clicked" | "active">("idle");
   useEffect(() => setActiveSection(view), [view]);
-  useEffect(() => {
-    if (!debugActive) return;
-    const nav = document.querySelector('.nav-list button[data-debug-nav="schedule"]');
-    console.log("[nav-debug] active class write", performance.now(), nav?.className, nav ? getComputedStyle(nav).backgroundColor : "missing");
-  }, [debugActive]);
-  useEffect(() => {
-    console.log("[nav] sidebar mounted", performance.now());
-    return () => console.log("[nav] sidebar unmounted", performance.now());
-  }, []);
-  useEffect(() => {
-    console.log("[nav] render", performance.now(), { activeSection, view, pathname: window.location.pathname });
-  });
-  useEffect(() => setDebugPhase("active"), [view]);
   const a: [View, any, string][] = [
     ["dashboard", Home, "dashboard"],
     ["companies", Building2, "companies"],
@@ -1376,39 +1359,21 @@ function Nav({
     <div className="nav-list">
       {a.map(([v, I, k]) => (
         <button
-          className={activeSection === v || (v === "schedule" && debugActive) ? "active" : ""}
-          style={debugPhase !== "idle" && activeSection === v ? { backgroundColor: debugPhase === "pressed" ? "#ef4444" : debugPhase === "clicked" ? "#22c55e" : "#9ca3af" } : undefined}
-          onClick={(e) => {
-            console.log("[nav] click", performance.now(), v);
-            setDebugPhase("clicked");
-            if (v === "schedule") {
-              console.log("[nav-debug] setDebugActive", performance.now(), true);
-              setDebugActive(true);
-              requestAnimationFrame(() => {
-                const nav = e.currentTarget;
-                console.log("[nav-debug] frame 1", performance.now(), nav.className, getComputedStyle(nav).backgroundColor);
-                requestAnimationFrame(() => console.log("[nav-debug] frame 2", performance.now(), nav.className, getComputedStyle(nav).backgroundColor));
-              });
-              return;
-            }
+          className={activeSection === v ? "active" : ""}
+          onClick={() => {
             setActiveSection(v);
             requestAnimationFrame(() => {
-              console.log("[nav] navigate", performance.now(), v);
               setView(v);
-              const el = e.currentTarget;
-              console.log("[nav] frame 1", performance.now(), getComputedStyle(el).backgroundColor);
-              requestAnimationFrame(() => console.log("[nav] frame 2", performance.now(), getComputedStyle(el).backgroundColor));
             });
           }}
           aria-current={view === v ? "page" : undefined}
-          onPointerDown={(e) => { console.log("[nav] pointerdown", performance.now(), v); setDebugPhase("pressed"); e.currentTarget.dataset.pressed = "true"; }}
+          onPointerDown={(e) => { e.currentTarget.dataset.pressed = "true"; }}
           onPointerUp={(e) => { delete e.currentTarget.dataset.pressed; }}
           onPointerLeave={(e) => { delete e.currentTarget.dataset.pressed; }}
           key={v}
-          data-debug-nav={v === "schedule" ? "schedule" : undefined}
         >
           <I />
-          <span>{v === "schedule" && debugActive ? "DEBUG NAV" : t[k]}</span>
+          <span>{t[k]}</span>
         </button>
       ))}
     </div>

@@ -16,8 +16,6 @@
   background: #eef2f7;
   font-synthesis: none;
 }
-.build-badge { position: fixed; right: 8px; bottom: 8px; z-index: 300; padding: 4px 7px; border: 1px solid #d0d3d8; border-radius: 5px; color: #50545a; background: rgba(255,255,255,.94); font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; pointer-events: none; }
-.dark .build-badge { border-color: #4a5058; color: #d6d9de; background: rgba(24,27,32,.94); }
 
 .settings-drawer-layer { position: fixed; inset: 0; z-index: 140; display: flex; justify-content: flex-end; overflow: hidden; }
 .settings-drawer-backdrop { position: absolute; inset: 0; border: 0; background: rgba(12,22,36,.28); opacity: 1; transition: opacity .26s ease; }
@@ -2237,22 +2235,6 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   .dark .modal-layer .form-actions > button:not(.primary) { color: #dce6f0; background: #253346; }
   .modal-layer .form-actions > .primary { color: #fff; background: #2477d9; }
 }
-.nav-list,
-.nav-list button,
-.nav-list button::before,
-.nav-list button::after,
-.sidebar,
-.sidebar * {
-  transition: none !important;
-  animation: none !important;
-  opacity: 1 !important;
-  filter: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  transform: none !important;
-  view-transition-name: none !important;
-}
-
 /* Dashboard layout: explicit two-column DOM, with a single stacked sidebar. */
 .main-dashboard-layout {
   display: grid;
@@ -2728,11 +2710,3 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .nav-list button:focus-visible, .career-mobile-nav button:focus-visible { outline: 3px solid rgba(17,17,17,.3); outline-offset: -2px; }
 .dark .nav-list button[data-pressed="true"] { background: #41464d !important; }
 .dark .nav-list button:focus-visible, .dark .career-mobile-nav button:focus-visible { outline-color: rgba(245,245,245,.55); }
-@media (min-width: 761px) {
-  .sidebar .nav-list button,
-  .sidebar .nav-list button::before,
-  .sidebar .nav-list button::after {
-    transition: none !important;
-    animation: none !important;
-  }
-}
