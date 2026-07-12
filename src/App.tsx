@@ -3094,5 +3094,5 @@ function SettingsPanel({ t, theme, setTheme, locale, setLocale, close, data, set
   </div></div><input hidden ref={csv} type="file" accept=".csv" onChange={importCsv} /><input hidden ref={json} type="file" accept=".json" onChange={importJson} /><input hidden ref={iconRef} type="file" accept="image/*" onChange={upload} /></SettingsDrawer>;
 }
 function SettingsNavItem({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return <button type="button" className={`settings-nav-item ${active ? "is-active" : ""}`} onClick={onClick}><span className="settings-nav-label">{label}</span></button>;
+  return <button type="button" className={`settings-nav-item ${active ? "active" : ""}`} aria-selected={active} onClick={onClick}><span className="settings-nav-label">{label}</span></button>;
 }

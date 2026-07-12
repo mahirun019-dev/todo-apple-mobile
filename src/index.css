@@ -3690,6 +3690,50 @@ option { color: var(--text-primary); background: var(--bg-input); }
 [data-theme="dark"] .segmented-control input:checked + span { color: var(--text-primary); background: var(--bg-selected); border-color: var(--text-primary); }
 [data-theme="dark"] .delete-event-button { color: var(--danger); background: transparent; border-color: var(--danger); }
 
+/* Final component-only corrections. */
+.settings-nav-item {
+  width: 100%;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--settings-nav-text, var(--text-secondary));
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.settings-nav-item, .settings-nav-item *, .settings-nav-label { color: inherit; }
+.settings-nav-item[aria-selected="true"] {
+  background: var(--settings-nav-active-bg, var(--bg-selected));
+  color: var(--settings-nav-active-text, var(--text-primary));
+  font-weight: 700;
+}
+.settings-nav-item[aria-selected="true"] *,
+.settings-nav-item[aria-selected="true"] .settings-nav-label { color: inherit !important; }
+:root, [data-theme="light"] {
+  --settings-nav-text: #5f6670;
+  --settings-nav-active-bg: #e7e7e9;
+  --settings-nav-active-text: #111318;
+}
+[data-theme="dark"] {
+  --settings-nav-text: #b6bcc5;
+  --settings-nav-active-bg: #34383f;
+  --settings-nav-active-text: #f5f6f7;
+}
+[data-theme="dark"] .settings-nav-item[aria-selected="true"] { color: var(--settings-nav-active-text); background: var(--settings-nav-active-bg); }
+[data-theme="dark"] .settings-nav-item[aria-selected="true"] * { color: inherit !important; fill: currentColor; stroke: currentColor; }
+.mobile-settings-brand { background: transparent !important; box-shadow: none !important; border: 0 !important; }
+[data-theme="light"] .mobile-settings-drawer { background: #fff !important; color: #111318; }
+[data-theme="light"] .mobile-settings-brand strong { color: #111318 !important; }
+[data-theme="light"] .mobile-settings-brand small { color: #66707c !important; }
+[data-theme="dark"] .mobile-settings-drawer { background: var(--bg-sidebar) !important; color: var(--text-primary); }
+[data-theme="dark"] .mobile-settings-brand { background: transparent !important; }
+
 /* Final targeted dark-mode corrections. */
 [data-theme="dark"] .dashboard-date,
 [data-theme="dark"] .home-date,
