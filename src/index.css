@@ -3053,6 +3053,15 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     gap: 0;
   }
   .drawer-main { min-height: 0; overflow-y: auto; }
+  .drawer-accordion-panel { display: grid; grid-template-rows: 1fr; overflow: hidden; margin: 0 8px 4px 40px; padding: 0 0 4px; border-radius: 10px; background: rgba(15,20,25,.025); animation: drawer-accordion-in .2s ease-out; }
+  .mobile-settings-nav > button.expanded svg:last-child { transform: rotate(90deg); }
+  .drawer-accordion-panel .mobile-choice-list button,
+  .drawer-accordion-panel .mobile-data-actions button { min-height: 44px; height: 44px; padding: 0 12px; font-size: 15px; font-weight: 500; }
+  .drawer-accordion-panel .mobile-data-actions { gap: 0; padding: 4px 0; }
+  .drawer-accordion-panel .mobile-data-actions button { gap: 10px; }
+  .drawer-accordion-panel .mobile-data-actions button svg { width: 19px; height: 19px; }
+  @keyframes drawer-accordion-in { from { grid-template-rows: 0fr; opacity: 0; } to { grid-template-rows: 1fr; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .drawer-accordion-panel { animation: none; } }
   .mobile-settings-nav button {
     min-height: 54px;
     height: 54px;

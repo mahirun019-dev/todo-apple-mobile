@@ -2789,7 +2789,7 @@ function BackupControls({ t, data, theme, locale, setData, download }: any) {
 function MobileSettingsDrawer({
   t, page, setPage, close, setView, view, theme, setTheme, locale, setLocale, data, setData, csv, json, download,
 }: any) {
-  const label = page === "data" ? t.data : page === "appearance" ? t.appearance : page === "language" ? t.language : page === "about" ? "关于 CareerFlow" : "CareerFlow";
+  const label = "CareerFlow";
   const go = (next: string) => setPage(next);
   const touchStart = useRef<number | null>(null);
   useEffect(() => {
@@ -2809,24 +2809,23 @@ function MobileSettingsDrawer({
   return <div className="mobile-settings-layer">
     <button className="mobile-settings-backdrop" onClick={close} aria-label="Close" />
     <aside className="mobile-settings-drawer" role="dialog" aria-modal="true" aria-label={label} onTouchStart={(e) => { touchStart.current = e.touches[0].clientX; }} onTouchEnd={(e) => { const start = touchStart.current; const delta = start === null ? 0 : e.changedTouches[0].clientX - start; if (page && start !== null && start <= 24 && delta > 72) setPage(null); else if (!page && delta < -70) close(); touchStart.current = null; }}>
-      <header className={`mobile-settings-header ${page ? "mobile-settings-subheader" : ""}`}>
-        {page ? <><button onClick={() => setPage(null)} aria-label="Back"><ChevronRight className="back-icon" /></button><h2>{label}</h2><span /></> : <><span /><div className="mobile-settings-brand"><strong>CareerFlow</strong><small>日本就活管理</small></div><span /></>}
+      <header className="mobile-settings-header">
+        <span /><div className="mobile-settings-brand"><strong>CareerFlow</strong><small>日本就活管理</small></div><span />
       </header>
-      {!page ? <div className="drawer-main"><nav className="mobile-settings-nav">
+      <div className="drawer-main"><nav className="mobile-settings-nav">
         <button className={view === "dashboard" ? "active" : ""} onClick={() => { setPage(null); close(); setView("dashboard"); }}><Home /><span>{t.dashboard}</span></button>
         <button className={view === "companies" ? "active" : ""} onClick={() => { setPage(null); close(); setView("companies"); }}><Building2 /><span>{t.companies}</span></button>
         <button className={view === "schedule" ? "active" : ""} onClick={() => { setPage(null); close(); setView("schedule"); }}><CalendarDays /><span>{t.schedule}</span></button>
         <button className={view === "materials" ? "active" : ""} onClick={() => { setPage(null); close(); setView("materials"); }}><FileJson /><span>{t.materials}</span></button>
-        <button onClick={() => go("data")}><FileJson /><span>{t.data}</span><ChevronRight /></button>
-        <button onClick={() => go("appearance")}><Settings /><span>{t.appearance}</span><ChevronRight /></button>
-        <button onClick={() => go("language")}><Globe /><span>{t.language}</span><ChevronRight /></button>
-        <button onClick={() => go("about")}><BriefcaseBusiness /><span>关于 CareerFlow</span><ChevronRight /></button>
-      </nav></div> : <div className="mobile-settings-page is-subpage">
-        {page === "appearance" && <div className="mobile-choice-list">{(["light", "dark", "system"] as Theme[]).map((x) => <button className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}>{t[x]}{theme === x && <Check />}</button>)}</div>}
-        {page === "language" && <div className="mobile-choice-list">{(["zh", "ja", "en"] as Locale[]).map((x) => <button className={locale === x ? "selected" : ""} onClick={() => setLocale(x)} key={x}>{x === "zh" ? "中文" : x === "ja" ? "日本語" : "English"}{locale === x && <Check />}</button>)}</div>}
-        {page === "about" && <div className="mobile-about"><strong>CareerFlow</strong><p>{t.subtitle}</p><span>日本就活进度与材料管理</span></div>}
-        {page === "data" && <div className="mobile-data-page"><BackupControls t={t} data={data} theme={theme} locale={locale} setData={setData} download={download} /><div className="mobile-data-actions"><button onClick={() => csv.current?.click()}><Upload />{t.importCsv}</button><button onClick={() => download("careerflow-materials.csv", Papa.unparse(data.materials), "text/csv")}><Download />{t.exportCsv}</button><button onClick={() => json.current?.click()}><FileJson />{t.restore}</button><button onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Download />{t.backup}</button></div></div>}
-      </div>}
+        <button className={page === "data" ? "expanded" : ""} onClick={() => setPage(page === "data" ? null : "data")}><FileJson /><span>{t.data}</span><ChevronRight /></button>
+        {page === "data" && <div className="drawer-accordion-panel"><BackupControls t={t} data={data} theme={theme} locale={locale} setData={setData} download={download} /><div className="mobile-data-actions"><button onClick={() => csv.current?.click()}><Upload />{t.importCsv}</button><button onClick={() => download("careerflow-materials.csv", Papa.unparse(data.materials), "text/csv")}><Download />{t.exportCsv}</button><button onClick={() => json.current?.click()}><FileJson />{t.restore}</button><button onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Download />{t.backup}</button></div></div>}
+        <button className={page === "appearance" ? "expanded" : ""} onClick={() => setPage(page === "appearance" ? null : "appearance")}><Settings /><span>{t.appearance}</span><ChevronRight /></button>
+        {page === "appearance" && <div className="drawer-accordion-panel"><div className="mobile-choice-list">{(["light", "dark", "system"] as Theme[]).map((x) => <button className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}>{t[x]}{theme === x && <Check />}</button>)}</div></div>}
+        <button className={page === "language" ? "expanded" : ""} onClick={() => setPage(page === "language" ? null : "language")}><Globe /><span>{t.language}</span><ChevronRight /></button>
+        {page === "language" && <div className="drawer-accordion-panel"><div className="mobile-choice-list">{(["zh", "ja", "en"] as Locale[]).map((x) => <button className={locale === x ? "selected" : ""} onClick={() => setLocale(x)} key={x}>{x === "zh" ? "中文" : x === "ja" ? "日本語" : "English"}{locale === x && <Check />}</button>)}</div></div>}
+        <button className={page === "about" ? "expanded" : ""} onClick={() => setPage(page === "about" ? null : "about")}><BriefcaseBusiness /><span>关于 CareerFlow</span><ChevronRight /></button>
+        {page === "about" && <div className="drawer-accordion-panel"><div className="mobile-about"><strong>CareerFlow</strong><p>{t.subtitle}</p><span>日本就活进度与材料管理</span></div></div>}
+      </nav></div>
     </aside>
   </div>;
 }
