@@ -342,6 +342,30 @@ textarea:focus-visible {
 .course-nav > button:hover {
   background: #eef4fa;
 }
+.course-nav > button {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  border-radius: 9px;
+}
+.course-nav > button.selected {
+  color: #155fa9;
+  font-weight: 700;
+  background: #dcecff;
+}
+.course-nav > button.selected::before {
+  position: absolute;
+  left: 0;
+  width: 3px;
+  height: 22px;
+  border-radius: 0 3px 3px 0;
+  background: #2477d9;
+  content: "";
+}
+.dark .course-nav > button.selected { color: #b8ddff; background: #23476f; }
+.dark .course-nav > button.selected::before { background: #6ab1f5; }
 .course-nav i,
 .class-block i,
 .agenda-row i,
@@ -357,6 +381,29 @@ textarea:focus-visible {
 .settings-link {
   margin-top: auto;
 }
+.head-actions { display: flex; align-items: center; gap: 11px; }
+.head-actions > button {
+  display: inline-flex;
+  min-width: 72px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border: 1px solid #cbd7e4;
+  border-radius: 10px;
+  color: #506078;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+.head-actions > button:hover { background: #f0f5fa; }
+.head-actions > button.danger-button { border-color: #d67c77; color: #c24f4a; background: transparent; }
+.head-actions > button.danger-button:hover { background: #fff4f3; }
+.dark .head-actions > button { border-color: #415268; color: #d6e0ec; }
+.dark .head-actions > button:hover { background: #22344a; }
+.dark .head-actions > button.danger-button { border-color: #a85a56; color: #ffaaa4; background: transparent; }
+.dark .head-actions > button.danger-button:hover { background: #3a2930; }
 .workspace {
   min-width: 0;
   padding: 30px 34px 42px;

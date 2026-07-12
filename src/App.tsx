@@ -1105,6 +1105,7 @@ export default function App() {
   const open = (kind: CreateType) => {
     setMenu(false);
     setDesktopMenu(false);
+    localStorage.setItem("careerflow-last-create-type", kind);
     setForm(kind);
   };
   return (
@@ -1128,6 +1129,8 @@ export default function App() {
             </div>
             {data.companies.map((x) => (
               <button
+                className={selected === x.id ? "selected" : ""}
+                title={x.name}
                 key={x.id}
                 onClick={() => {
                   setSelected(x.id);
@@ -2115,10 +2118,11 @@ function ActionMenu({
     setClosing(true);
     setTimeout(close, 220);
   };
-  const actions = createActions(t);
-  const preferred = view === "companies" ? 0 : view === "schedule" ? 1 : 2;
+  const actions = createActions(t).filter(([kind]) => kind !== "preparation");
+  const recent = localStorage.getItem("careerflow-last-create-type");
+  const preferred = actions.findIndex(([kind]) => kind === recent);
   const ordered = [
-    actions[preferred],
+    ...(preferred >= 0 ? [actions[preferred]] : []),
     ...actions.filter((_, index) => index !== preferred),
   ];
   return (
