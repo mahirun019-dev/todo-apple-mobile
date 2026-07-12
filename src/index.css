@@ -2920,7 +2920,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .settings-segmented { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
   .settings-segmented button { height: 48px; border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-primary); background: var(--bg-surface); font-weight: 600; }
   .settings-segmented button.active { color: #246fbd; border-color: #8db9e4; background: #eef6ff; }
-  .settings-data-section { gap: 16px; }
+  .settings-data-section { gap: 24px; }
   .settings-data-section > h3:not(:first-child) { margin-top: 12px; padding-top: 24px; border-top: 1px solid var(--border-color); }
   .settings-data-section .backup-panel { padding: 0; border: 0; background: transparent; }
   .settings-data-section .backup-panel > section { padding: 0; border: 0; }
