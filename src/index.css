@@ -3752,9 +3752,14 @@ option { color: var(--text-primary); background: var(--bg-input); }
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: 0;
+    background: var(--bg-sidebar);
   }
-  .mobile-settings-drawer.drawer-shell .drawer-scroll { min-height: 0; }
+  .mobile-settings-drawer.drawer-shell .drawer-scroll {
+    min-height: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    background: inherit;
+  }
 }
 
 /* Final targeted dark-mode corrections. */
