@@ -2710,3 +2710,59 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .nav-list button:focus-visible, .career-mobile-nav button:focus-visible { outline: 3px solid rgba(17,17,17,.3); outline-offset: -2px; }
 .dark .nav-list button[data-pressed="true"] { background: #41464d !important; }
 .dark .nav-list button:focus-visible, .dark .career-mobile-nav button:focus-visible { outline-color: rgba(245,245,245,.55); }
+.sidebar .nav-list button {
+  min-height: 48px;
+  padding-inline: 16px;
+  border-radius: 14px;
+  background: transparent;
+  color: #676b73;
+  transition: background-color 80ms ease, color 80ms ease;
+}
+.sidebar .nav-list button:hover {
+  color: #2a2b2e;
+  background: #ececee !important;
+}
+.sidebar .nav-list button:active,
+.sidebar .nav-list button[data-pressed="true"] {
+  color: #202124;
+  background: #dedfe2 !important;
+}
+.sidebar .nav-list button.active,
+.sidebar .nav-list button[aria-current="page"] {
+  color: #111214 !important;
+  background: #ececee !important;
+  font-weight: 600;
+}
+.sidebar .nav-list button svg {
+  flex: 0 0 auto;
+  stroke-width: 1.8;
+  transition: color 80ms ease, stroke-width 80ms ease;
+}
+.sidebar .nav-list button.active svg,
+.sidebar .nav-list button[aria-current="page"] svg {
+  color: #111214;
+  stroke-width: 2.4;
+}
+.course-nav > button {
+  transition: background-color 80ms ease, color 80ms ease;
+}
+.course-nav > button:hover { color: #2a2b2e; background: #f1f2f3 !important; }
+.course-nav > button:active,
+.course-nav > button[data-pressed="true"] { background: #dedfe2 !important; }
+.course-nav > button.selected { color: #111214 !important; background: #ececee !important; font-weight: 600; }
+.course-nav > button.selected::before { background: #24262b !important; }
+.course-nav > button.selected > i { background: #24262b !important; }
+.dark .sidebar .nav-list button { color: #9a9fa8; }
+.dark .sidebar .nav-list button:hover { color: #f5f5f5; background: #24262a !important; }
+.dark .sidebar .nav-list button:active,
+.dark .sidebar .nav-list button[data-pressed="true"] { background: #303238 !important; }
+.dark .sidebar .nav-list button.active,
+.dark .sidebar .nav-list button[aria-current="page"] { color: #f5f5f5 !important; background: #24262a !important; }
+.dark .sidebar .nav-list button.active svg,
+.dark .sidebar .nav-list button[aria-current="page"] svg { color: #f5f5f5; }
+.dark .course-nav > button:hover { color: #f5f5f5; background: #24262a !important; }
+.dark .course-nav > button:active,
+.dark .course-nav > button[data-pressed="true"] { background: #303238 !important; }
+.dark .course-nav > button.selected { color: #f5f5f5 !important; background: #24262a !important; }
+.dark .course-nav > button.selected::before,
+.dark .course-nav > button.selected > i { background: #f5f5f5 !important; }
