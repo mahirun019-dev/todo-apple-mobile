@@ -29,6 +29,7 @@ import {
   Plus,
   RotateCcw,
   Settings,
+  SlidersHorizontal,
   Target,
   Timer,
   Trash2,
@@ -1983,7 +1984,17 @@ function Companies({
   const [query, setQuery] = useState("");
   const [stageFilter, setStageFilter] = useState("all");
   const [sortBy, setSortBy] = useState("updated");
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [draftStageFilter, setDraftStageFilter] = useState("all");
+  const [draftSortBy, setDraftSortBy] = useState("updated");
   const [recordMenu, setRecordMenu] = useState(false);
+  const filterSheetTouchStart = useRef<number | null>(null);
+  useEffect(() => {
+    if (!filterSheetOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previous; };
+  }, [filterSheetOpen]);
   if (co) {
     const materials = data.materials.filter((x: any) => x.companyId === co.id),
       interviews = data.interviews.filter((x: any) => x.companyId === co.id),
@@ -2086,6 +2097,7 @@ function Companies({
     .sort((a: Company, b: Company) => {
       if (sortBy === "interest") return b.interestLevel - a.interestLevel;
       if (sortBy === "event") return (a.nextEventAt || "9999").localeCompare(b.nextEventAt || "9999");
+      if (sortBy === "name") return a.name.localeCompare(b.name);
       return b.updatedAt - a.updatedAt;
     });
   return (
@@ -2102,6 +2114,7 @@ function Companies({
       </div>
       {data.companies.length > 0 && <div className="company-toolbar">
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t.language === "言語" ? "企業を検索" : t.language === "Language" ? "Search companies" : "搜索企业"} aria-label={t.language === "言語" ? "企業を検索" : t.language === "Language" ? "Search companies" : "搜索企业"} />
+        <button type="button" className={`company-filter-trigger${stageFilter !== "all" || sortBy !== "updated" ? " has-filter" : ""}`} aria-label={t.language === "言語" ? "絞り込みと並び替え" : "筛选与排序"} onClick={() => { setDraftStageFilter(stageFilter); setDraftSortBy(sortBy); setFilterSheetOpen(true); }}><SlidersHorizontal /></button>
         <select value={stageFilter} onChange={(e) => setStageFilter(e.target.value)} aria-label={t.stage}>
           <option value="all">{t.all}</option>
           {stages.map((stage) => <option key={stage} value={stage}>{t[stage]}</option>)}
@@ -2111,6 +2124,20 @@ function Companies({
           <option value="interest">{t.interest}</option>
           <option value="event">{t.event}</option>
         </select>
+      </div>}
+      {filterSheetOpen && <div className="company-filter-sheet-layer">
+        <button type="button" className="company-filter-sheet-backdrop" aria-label={t.cancel} onClick={() => setFilterSheetOpen(false)} />
+        <section className="company-filter-sheet" role="dialog" aria-modal="true" aria-label={t.language === "言語" ? "絞り込みと並び替え" : "筛选与排序"} onTouchStart={(e) => { filterSheetTouchStart.current = e.touches[0].clientY; }} onTouchEnd={(e) => { const start = filterSheetTouchStart.current; if (start !== null && e.changedTouches[0].clientY - start > 60) setFilterSheetOpen(false); filterSheetTouchStart.current = null; }}>
+          <div className="sheet-handle" />
+          <h2>{t.language === "言語" ? "絞り込みと並び替え" : "筛选与排序"}</h2>
+          <fieldset><legend>{t.stage}</legend><div className="company-filter-options">
+            {["all", ...stages].map((stage) => <label key={stage} className={draftStageFilter === stage ? "selected" : ""}><input type="radio" name="company-stage" checked={draftStageFilter === stage} onChange={() => setDraftStageFilter(stage)} /><span>{stage === "all" ? t.all : t[stage]}</span><Check /></label>)}
+          </div></fieldset>
+          <fieldset><legend>{t.language === "言語" ? "並び替え" : "排序方式"}</legend><div className="company-filter-options">
+            {["updated", "event", "interest", "name"].map((sort) => <label key={sort} className={draftSortBy === sort ? "selected" : ""}><input type="radio" name="company-sort" checked={draftSortBy === sort} onChange={() => setDraftSortBy(sort)} /><span>{sort === "updated" ? (t.language === "言語" ? "最近更新" : "最近更新") : sort === "event" ? t.event : sort === "interest" ? (t.language === "言語" ? "志望度の高い順" : "志望度从高到低") : (t.language === "言語" ? "企業名" : "企业名称")}</span><Check /></label>)}
+          </div></fieldset>
+          <div className="company-filter-sheet-actions"><button type="button" onClick={() => { setDraftStageFilter("all"); setDraftSortBy("updated"); }}>{t.language === "言語" ? "リセット" : "重置"}</button><button type="button" className="primary" onClick={() => { setStageFilter(draftStageFilter); setSortBy(draftSortBy); setFilterSheetOpen(false); }}>{t.language === "言語" ? "適用" : "应用"}</button></div>
+        </section>
       </div>}
       <div className="company-grid">
         {filteredCompanies.length ? (
