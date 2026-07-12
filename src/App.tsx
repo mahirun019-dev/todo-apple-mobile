@@ -359,8 +359,8 @@ const tr = {
     light: "浅色",
     dark: "深色",
     system: "跟随系统",
-    backup: "导出完整备份",
-    restore: "从备份恢复",
+    backup: "导出备份",
+    restore: "恢复备份",
     data: "数据管理",
     icon: "自定义图标",
     online: "线上",
@@ -486,8 +486,8 @@ const tr = {
     light: "ライト",
     dark: "ダーク",
     system: "システム",
-    backup: "完全バックアップを書き出す",
-    restore: "バックアップから復元",
+    backup: "バックアップを書き出す",
+    restore: "バックアップを復元",
     data: "データ",
     icon: "アイコン",
     online: "オンライン",
@@ -2994,7 +2994,7 @@ function BackupControls({ t, data, theme, locale, setData, download }: any) {
   };
   const restoreFile = (e: ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = async () => { try { const x = JSON.parse(String(reader.result)); if (x.schemaVersion !== 5 || !Array.isArray(x.companies) || !Array.isArray(x.schedules) || !Array.isArray(x.resources) || !Array.isArray(x.interviews) || !Array.isArray(x.preparations)) throw new Error(); await createBackup(snapshot()); setData(normalize({ schemaVersion: 5, companies: x.companies, events: x.schedules, materials: x.resources, interviews: x.interviews, preparations: x.preparations, focusMinutes: data.focusMinutes })); setError(`${x.companies.length} 企业、${x.schedules.length} 日程、${x.resources.length} 资料已恢复`); } catch { setError("JSON 结构无效，原数据未改变"); } }; reader.readAsText(file); e.currentTarget.value = ""; };
   const days = lastExport ? Math.floor((Date.now() - lastExport) / 864e5) : null;
-  const labels = locale === "ja" ? {area:"データとバックアップ", notice:"データは主にこのデバイスに保存されます。定期的に書き出してください。", storage:"このデバイスの保存状況", version:"データベースバージョン", cloud:"バックアップ", local:"自動バックアップ", exportBackup:"完全バックアップを書き出す", restoreFile:"バックアップから復元", permission:"ファイルアプリで保存先を選択できます。", last:"前回の書き出し", never:"まだ完全バックアップを書き出していません", now:"今すぐローカルバックアップを作成", restore:"復元", remove:"削除", confirm:"このバックアップを削除しますか？", warning:"前回の書き出しから7日以上経過しています。"} : locale === "en" ? {area:"Data & backups", notice:"Your data is mainly stored on this device. Export a backup regularly.", storage:"Device storage", version:"Database version", cloud:"Backup", local:"Automatic backups", exportBackup:"Export complete backup", restoreFile:"Restore from backup", permission:"Choose a location in the Files app.", last:"Last export", never:"No complete backup has been exported", now:"Create local backup now", restore:"Restore", remove:"Delete", confirm:"Delete this backup?", warning:"It has been more than 7 days since the last export."} : {area:"数据与备份", notice:"数据主要保存在当前设备，请定期导出完整备份。", storage:"当前设备存储", version:"数据库版本", cloud:"备份", local:"本地自动备份", exportBackup:"导出完整备份", restoreFile:"从备份恢复", permission:"请在文件 App 中选择保存位置。", last:"上次导出", never:"尚未导出完整备份", now:"立即创建本地备份", restore:"恢复", remove:"删除", confirm:"确定删除此备份吗？", warning:"距离上次导出已超过 7 天。"};
+  const labels = locale === "ja" ? {area:"データとバックアップ", notice:"データは主にこのデバイスに保存されます。定期的に書き出してください。", storage:"このデバイスの保存状況", version:"データベースバージョン", cloud:"バックアップ", local:"自動バックアップ", exportBackup:"バックアップを書き出す", restoreFile:"バックアップを復元", permission:"ファイルアプリで保存先を選択できます。", last:"前回の書き出し", never:"まだ完全バックアップを書き出していません", now:"今すぐローカルバックアップを作成", restore:"復元", remove:"削除", confirm:"このバックアップを削除しますか？", warning:"前回の書き出しから7日以上経過しています。"} : locale === "en" ? {area:"Data & backups", notice:"Your data is mainly stored on this device. Export a backup regularly.", storage:"Device storage", version:"Database version", cloud:"Backup", local:"Automatic backups", exportBackup:"Export complete backup", restoreFile:"Restore from backup", permission:"Choose a location in the Files app.", last:"Last export", never:"No complete backup has been exported", now:"Create local backup now", restore:"Restore", remove:"Delete", confirm:"Delete this backup?", warning:"It has been more than 7 days since the last export."} : {area:"数据与备份", notice:"数据主要保存在当前设备，请定期导出完整备份。", storage:"当前设备存储", version:"数据库版本", cloud:"备份", local:"本地自动备份", exportBackup:"导出备份", restoreFile:"恢复备份", permission:"请在文件 App 中选择保存位置。", last:"上次导出", never:"尚未导出完整备份", now:"立即创建本地备份", restore:"恢复", remove:"删除", confirm:"确定删除此备份吗？", warning:"距离上次导出已超过 7 天。"};
   return <section className="backup-panel"><section><h3>{labels.storage}</h3><p>{labels.version}: v{data.schemaVersion}</p><div className="backup-meta"><span>{data.companies.length} {locale === "ja" ? "企業" : "企业"} · {data.events.length} {locale === "ja" ? "日程" : "日程"}</span><span>{data.materials.length} {locale === "ja" ? "資料" : "资料"} · {data.interviews.length} {locale === "ja" ? "面接記録" : "面试记录"} · {data.preparations.length} {locale === "ja" ? "準備事項" : "准备事项"}</span></div></section><section><h3>{labels.cloud}</h3><div className="backup-cloud-actions"><button className="primary" onClick={exportBackup}>{labels.exportBackup}</button><button onClick={() => fileRef.current?.click()}>{labels.restoreFile}</button></div><p>{labels.permission}</p><p>{lastExport ? `${labels.last}: ${new Date(lastExport).toLocaleDateString()}` : labels.never}</p>{days !== null && days > 7 && <p className="backup-warning">{labels.warning}</p>}</section><section><h3>{labels.local}</h3><div className="backup-meta"><span>{items.length}/5</span><span>{items[0] ? new Date(items[0].createdAt).toLocaleString() : labels.never}</span></div><button className="primary" onClick={backupNow}>{labels.now}</button>{error&&<p className="backup-error">{error}</p>}<input hidden ref={fileRef} type="file" accept="application/json,.json" onChange={restoreFile}/><div className="backup-list">{items.map((x)=><div key={x.createdAt}><span>{new Date(x.createdAt).toLocaleString()}</span><button onClick={()=>restore(x)}>{labels.restore}</button><button onClick={()=>{if(window.confirm(labels.confirm)) deleteBackup(x.createdAt).then(refresh)}}>{labels.remove}</button></div>)}</div></section></section>;
 }
 function MobileSettingsDrawer({
