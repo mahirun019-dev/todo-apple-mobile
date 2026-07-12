@@ -3110,6 +3110,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     font-weight: 700;
   }
   .mobile-settings-nav button.active svg:first-child { color: #0f1419; }
+  .mobile-settings-nav > button.expanded { background: rgba(15,20,25,.045); color: #0f1419; font-weight: 700; }
+  .mobile-settings-nav > button.expanded svg:first-child { color: #0f1419; }
   .mobile-settings-nav button:nth-child(n+5) { font-size: 17px; font-weight: 600; }
   .mobile-settings-nav button svg:last-child {
     width: 16px;
