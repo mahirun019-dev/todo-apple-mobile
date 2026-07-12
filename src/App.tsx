@@ -177,6 +177,39 @@ type Data = {
   preparations: Preparation[];
   focusMinutes: number;
 };
+
+function makeBackupSnapshot(data: Data, theme: Theme, locale: Locale): BackupSnapshot {
+  return {
+    schemaVersion: data.schemaVersion,
+    createdAt: Date.now(),
+    companies: data.companies,
+    schedules: data.events,
+    resources: data.materials,
+    interviews: data.interviews,
+    preparations: data.preparations,
+    selectionRecords: data.companies.map((x) => ({ id: x.id, stage: x.stage, updatedAt: x.updatedAt })),
+    settings: { theme, locale },
+  };
+}
+
+function parseBackupPayload(value: unknown): { data: ReturnType<typeof normalize>; counts: { companies: number; schedules: number; materials: number; interviews: number; preparations: number } } {
+  if (!value || typeof value !== "object") throw new Error("backup must be an object");
+  const x = value as Record<string, unknown>;
+  const version = x.schemaVersion;
+  if (!(version === 5 || version === "5" || version === "v5")) throw new Error("schemaVersion must be 5");
+  const array = (names: string[], required = false): unknown[] => {
+    const found = names.find((name) => Array.isArray(x[name]));
+    if (!found && required) throw new Error(`missing ${names.join(" or ")}`);
+    return found ? x[found] as unknown[] : [];
+  };
+  const companies = array(["companies"], true);
+  const events = array(["events", "schedules"]);
+  const materials = array(["materials", "resources", "documents"]);
+  const interviews = array(["interviews", "interviewRecords"]);
+  const preparations = array(["preparations", "preparationItems"]);
+  const data = normalize({ schemaVersion: 5, companies, events, materials, interviews, preparations, focusMinutes: 0 });
+  return { data, counts: { companies: companies.length, schedules: events.length, materials: materials.length, interviews: interviews.length, preparations: preparations.length } };
+}
 const KEY = "career-flow-data-v5",
   OLD = "career-flow-data-v4",
   BACKUP = "career-flow-pre-v5-backup",
@@ -1213,15 +1246,17 @@ export default function App() {
     const confirmed = window.confirm(locale === "ja" ? "バックアップを復元すると、このデバイスの現在のデータが上書きされます。続行しますか？" : "恢复备份将覆盖当前设备中的数据，是否继续？");
     if (!confirmed) { input.value = ""; return; }
     const r = new FileReader();
-    r.onload = () => {
+    r.onload = async () => {
       try {
         const x = JSON.parse(String(r.result));
-        if (x.schemaVersion !== 5 || !Array.isArray(x.companies) || !Array.isArray(x.materials) || !Array.isArray(x.events)) throw new Error("invalid");
-        setData(normalize(x));
+        const parsed = parseBackupPayload(x);
+        await createBackup(makeBackupSnapshot(data, theme, locale));
+        setData(parsed.data);
         setSettings(false);
         setMobileSettingsPage(null);
         setToast({ text: locale === "ja" ? "復元しました" : "恢复成功", undo: () => undefined });
-      } catch {
+      } catch (error) {
+        console.error("[backup] restore validation failed", error);
         setToast({ text: locale === "ja" ? "バックアップの形式が無効です" : "备份格式无效，原数据未改变", undo: () => undefined });
       }
       input.value = "";
@@ -2942,7 +2977,7 @@ function BackupControls({ data, theme, locale, setData }: any) {
   const [error, setError] = useState("");
   const [lastExport, setLastExport] = useState<number>(() => Number(localStorage.getItem("careerflow-last-export") || 0));
   const fileRef = useRef<HTMLInputElement>(null);
-  const snapshot = (): BackupSnapshot => ({ schemaVersion: data.schemaVersion, createdAt: Date.now(), companies: data.companies, schedules: data.events, resources: data.materials, interviews: data.interviews, preparations: data.preparations, selectionRecords: data.companies.map((x: Company) => ({ id: x.id, stage: x.stage, updatedAt: x.updatedAt })), settings: { theme, locale } });
+  const snapshot = (): BackupSnapshot => makeBackupSnapshot(data, theme, locale);
   const exportBackup = async () => {
     const now = new Date();
     const pad = (x: number) => String(x).padStart(2, "0");
@@ -2976,7 +3011,7 @@ function BackupControls({ data, theme, locale, setData }: any) {
       if ((e as DOMException).name !== "AbortError") setError(locale === "ja" ? "書き出しに失敗しました" : locale === "en" ? "Export failed" : "导出失败");
     }
   };
-  const restoreFile = (e: ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = async () => { try { const x = JSON.parse(String(reader.result)); if (x.schemaVersion !== 5 || !Array.isArray(x.companies) || !Array.isArray(x.schedules) || !Array.isArray(x.resources) || !Array.isArray(x.interviews) || !Array.isArray(x.preparations)) throw new Error(); await createBackup(snapshot()); setData(normalize({ schemaVersion: 5, companies: x.companies, events: x.schedules, materials: x.resources, interviews: x.interviews, preparations: x.preparations, focusMinutes: data.focusMinutes })); setError(`${x.companies.length} 企业、${x.schedules.length} 日程、${x.resources.length} 资料已恢复`); } catch { setError("JSON 结构无效，原数据未改变"); } }; reader.readAsText(file); e.currentTarget.value = ""; };
+  const restoreFile = (e: ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = async () => { try { const parsed = parseBackupPayload(JSON.parse(String(reader.result))); await createBackup(snapshot()); setData(parsed.data); setError(`${parsed.counts.companies} 企业、${parsed.counts.schedules} 日程、${parsed.counts.materials} 资料已恢复`); } catch (error) { console.error("[backup] restore validation failed", error); setError("JSON 结构无效，原数据未改变"); } }; reader.readAsText(file); e.currentTarget.value = ""; };
   const labels = locale === "ja" ? { cloud:"バックアップ", exportBackup:"バックアップを書き出す", restoreFile:"バックアップを復元", permission:"ファイルアプリで保存先を選択できます。", last:"前回の書き出し", never:"まだバックアップを書き出していません" } : { cloud:"备份", exportBackup:"导出备份", restoreFile:"恢复备份", permission:"请在文件 App 中选择保存位置。", last:"上次导出", never:"尚未导出备份" };
   return <section className="backup-panel"><section><h3>{labels.cloud}</h3><div className="backup-cloud-actions"><button className="primary" onClick={exportBackup}>{labels.exportBackup}</button><button onClick={() => fileRef.current?.click()}>{labels.restoreFile}</button></div><p>{labels.permission}</p><p>{lastExport ? `${labels.last}: ${new Date(lastExport).toLocaleDateString()}` : labels.never}</p>{error && <p className="backup-error">{error}</p>}<input hidden ref={fileRef} type="file" accept="application/json,.json" onChange={restoreFile} /></section></section>;
 }
@@ -3014,7 +3049,7 @@ function MobileSettingsDrawer({
       <div className="drawer-main drawer-scroll"><nav className="mobile-settings-nav">
         <button className={selectedItem === "home" ? "active" : ""} onClick={() => { setSelectedItem("home"); setPage(null); close(); setView("dashboard"); }}><Home /><span>{t.dashboard}</span></button>
         <button className={`${page === "data" ? "expanded " : ""}${selectedItem === "data" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("data"); setPage(page === "data" ? null : "data"); }}><FileJson /><span>{t.data}</span><ChevronRight /></button>
-        {page === "data" && <div className="drawer-accordion-panel"><button type="button" onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Archive /><span>{t.backup}</span></button><button type="button" onClick={() => json.current?.click()}><RotateCcw /><span>{t.restore}</span></button></div>}
+        {page === "data" && <div className="drawer-accordion-panel"><button type="button" onClick={() => download("careerflow-backup.json", JSON.stringify(makeBackupSnapshot(data, theme, locale), null, 2), "application/json")}><Archive /><span>{t.backup}</span></button><button type="button" onClick={() => json.current?.click()}><RotateCcw /><span>{t.restore}</span></button></div>}
         <button className={`${page === "appearance" ? "expanded " : ""}${selectedItem === "appearance" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("appearance"); setPage(page === "appearance" ? null : "appearance"); }}><Settings /><span>{t.appearance}</span><ChevronRight /></button>
         {page === "appearance" && <div className="drawer-accordion-panel">{(["light", "dark", "system"] as Theme[]).map((x) => <button className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}><span>{t[x]}</span>{theme === x && <Check />}</button>)}</div>}
         <button className={`${page === "language" ? "expanded " : ""}${selectedItem === "language" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("language"); setPage(page === "language" ? null : "language"); }}><Globe /><span>{t.language}</span><ChevronRight /></button>
