@@ -27,6 +27,7 @@ export default defineConfig(({ command }) => ({
         ],
       },
       workbox: {
+        cacheId: "careerflow-623d743",
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,

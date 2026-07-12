@@ -16,6 +16,8 @@
   background: #eef2f7;
   font-synthesis: none;
 }
+.build-badge { position: fixed; right: 8px; bottom: 8px; z-index: 300; padding: 4px 7px; border: 1px solid #d0d3d8; border-radius: 5px; color: #50545a; background: rgba(255,255,255,.94); font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; pointer-events: none; }
+.dark .build-badge { border-color: #4a5058; color: #d6d9de; background: rgba(24,27,32,.94); }
 
 .settings-drawer-layer { position: fixed; inset: 0; z-index: 140; display: flex; justify-content: flex-end; overflow: hidden; }
 .settings-drawer-backdrop { position: absolute; inset: 0; border: 0; background: rgba(12,22,36,.28); opacity: 1; transition: opacity .26s ease; }

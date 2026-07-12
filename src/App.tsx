@@ -1111,6 +1111,7 @@ export default function App() {
   };
   return (
     <div className="app-shell">
+      <div className="build-badge">Build: 623d743</div>
       <div className="student-app career-app">
         <aside className="sidebar panel">
           <Brand icon={icon} />
@@ -1348,7 +1349,18 @@ function Nav({
   t: any;
 }) {
   const [pendingNav, setPendingNav] = useState<View | null>(null);
+  const [debugPhase, setDebugPhase] = useState<"idle" | "pressed" | "clicked" | "active">("idle");
   useEffect(() => setPendingNav(null), [view]);
+  useEffect(() => {
+    console.log("[nav] sidebar mounted", performance.now());
+    return () => console.log("[nav] sidebar unmounted", performance.now());
+  }, []);
+  useEffect(() => {
+    console.log("[nav] render", performance.now(), { pendingNav, view, pathname: window.location.pathname });
+  });
+  useEffect(() => {
+    if (pendingNav === null) setDebugPhase("active");
+  }, [pendingNav]);
   const a: [View, any, string][] = [
     ["dashboard", Home, "dashboard"],
     ["companies", Building2, "companies"],
@@ -1360,9 +1372,10 @@ function Nav({
       {a.map(([v, I, k]) => (
         <button
           className={(pendingNav ?? view) === v ? "active" : ""}
-          onClick={() => { setPendingNav(v); setView(v); }}
+          style={debugPhase !== "idle" && (pendingNav ?? view) === v ? { backgroundColor: debugPhase === "pressed" ? "#ef4444" : debugPhase === "clicked" ? "#22c55e" : "#9ca3af" } : undefined}
+          onClick={(e) => { console.log("[nav] click", performance.now(), v, "navigate", window.location.pathname); setDebugPhase("clicked"); setPendingNav(v); setView(v); requestAnimationFrame(() => { const el = e.currentTarget; console.log("[nav] frame 1", performance.now(), getComputedStyle(el).backgroundColor); requestAnimationFrame(() => console.log("[nav] frame 2", performance.now(), getComputedStyle(el).backgroundColor)); }); }}
           aria-current={view === v ? "page" : undefined}
-          onPointerDown={(e) => { setPendingNav(v); e.currentTarget.dataset.pressed = "true"; }}
+          onPointerDown={(e) => { console.log("[nav] pointerdown", performance.now(), v); setDebugPhase("pressed"); console.log("[nav] setPendingNav", performance.now(), v); setPendingNav(v); e.currentTarget.dataset.pressed = "true"; }}
           onPointerUp={(e) => { delete e.currentTarget.dataset.pressed; }}
           onPointerLeave={(e) => { delete e.currentTarget.dataset.pressed; }}
           key={v}
