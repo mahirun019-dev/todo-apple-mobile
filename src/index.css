@@ -2778,6 +2778,47 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .dark .nav-list button[data-pressed="true"] { background: #41464d !important; }
 .dark .nav-list button:focus-visible, .dark .career-mobile-nav button:focus-visible { outline-color: rgba(245,245,245,.55); }
 
+/* Global create sheet follows the neutral navigation palette. */
+.bottom-sheet-layer .sheet-action {
+  color: #2f3742;
+}
+.bottom-sheet-layer .sheet-action svg:first-child {
+  color: #3f4650;
+  stroke: currentColor;
+  fill: none;
+}
+.bottom-sheet-layer .sheet-action svg:last-child {
+  color: #98a2ad;
+  stroke: currentColor;
+  fill: none;
+}
+.bottom-sheet-layer .sheet-action:hover,
+.bottom-sheet-layer .sheet-action:active,
+.bottom-sheet-layer .sheet-action[data-pressed="true"] {
+  color: #111111;
+}
+.bottom-sheet-layer .sheet-action:hover svg:first-child,
+.bottom-sheet-layer .sheet-action:active svg:first-child,
+.bottom-sheet-layer .sheet-action[data-pressed="true"] svg:first-child {
+  color: #111111;
+}
+.dark .bottom-sheet-layer .sheet-action {
+  color: #d6dbe2;
+}
+.dark .bottom-sheet-layer .sheet-action:hover,
+.dark .bottom-sheet-layer .sheet-action:active,
+.dark .bottom-sheet-layer .sheet-action[data-pressed="true"] {
+  color: #f5f5f5;
+}
+.dark .bottom-sheet-layer .sheet-action svg:first-child {
+  color: #c2c9d1;
+}
+.dark .bottom-sheet-layer .sheet-action:hover svg:first-child,
+.dark .bottom-sheet-layer .sheet-action:active svg:first-child,
+.dark .bottom-sheet-layer .sheet-action[data-pressed="true"] svg:first-child {
+  color: #f5f5f5;
+}
+
 /* Primary actions keep their icon color tied to the button, including inside empty states. */
 .primary-action svg {
   color: inherit !important;
