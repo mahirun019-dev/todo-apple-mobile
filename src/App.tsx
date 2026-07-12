@@ -1223,18 +1223,26 @@ export default function App() {
     URL.revokeObjectURL(a.href);
   };
   const importJson = (e: ChangeEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
     const f = e.target.files?.[0];
     if (!f) return;
+    const confirmed = window.confirm(locale === "ja" ? "バックアップを復元すると、このデバイスの現在のデータが上書きされます。続行しますか？" : "恢复备份将覆盖当前设备中的数据，是否继续？");
+    if (!confirmed) { input.value = ""; return; }
     const r = new FileReader();
     r.onload = () => {
       try {
         const x = JSON.parse(String(r.result));
         if (x.schemaVersion !== 5 || !Array.isArray(x.companies) || !Array.isArray(x.materials) || !Array.isArray(x.events)) throw new Error("invalid");
         setData(normalize(x));
+        setSettings(false);
+        setMobileSettingsPage(null);
+        setToast({ text: locale === "ja" ? "復元しました" : "恢复成功", undo: () => undefined });
       } catch {
         setToast({ text: locale === "ja" ? "バックアップの形式が無効です" : "备份格式无效，原数据未改变", undo: () => undefined });
       }
+      input.value = "";
     };
+    r.onerror = () => { setToast({ text: locale === "ja" ? "バックアップを読み込めませんでした" : "无法读取备份文件", undo: () => undefined }); input.value = ""; };
     r.readAsText(f);
   };
   const importCsv = (e: ChangeEvent<HTMLInputElement>) => {
@@ -3065,7 +3073,7 @@ function MobileSettingsDrawer({
       <div className="drawer-main drawer-scroll"><nav className="mobile-settings-nav">
         <button className={selectedItem === "home" ? "active" : ""} onClick={() => { setSelectedItem("home"); setPage(null); close(); setView("dashboard"); }}><Home /><span>{t.dashboard}</span></button>
         <button className={`${page === "data" ? "expanded " : ""}${selectedItem === "data" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("data"); setPage(page === "data" ? null : "data"); }}><FileJson /><span>{t.data}</span><ChevronRight /></button>
-        {page === "data" && <div className="drawer-accordion-panel"><button onClick={() => csv.current?.click()}><Upload /><span>{t.importCsv}</span></button><button onClick={() => download("careerflow-materials.csv", Papa.unparse(data.materials), "text/csv")}><Download /><span>{t.exportCsv}</span></button><button onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Archive /><span>{t.backup}</span></button><button onClick={() => json.current?.click()}><RotateCcw /><span>{t.restore}</span></button><button onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><CloudUpload /><span>{cloudLabel}</span></button></div>}
+        {page === "data" && <div className="drawer-accordion-panel"><button type="button" onClick={() => csv.current?.click()}><Upload /><span>{t.importCsv}</span></button><button type="button" onClick={() => download("careerflow-materials.csv", Papa.unparse(data.materials), "text/csv")}><Download /><span>{t.exportCsv}</span></button><button type="button" onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Archive /><span>{t.backup}</span></button><button type="button" onClick={() => json.current?.click()}><RotateCcw /><span>{t.restore}</span></button><button type="button" onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><CloudUpload /><span>{cloudLabel}</span></button></div>}
         <button className={`${page === "appearance" ? "expanded " : ""}${selectedItem === "appearance" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("appearance"); setPage(page === "appearance" ? null : "appearance"); }}><Settings /><span>{t.appearance}</span><ChevronRight /></button>
         {page === "appearance" && <div className="drawer-accordion-panel">{(["light", "dark", "system"] as Theme[]).map((x) => <button className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}><span>{t[x]}</span>{theme === x && <Check />}</button>)}</div>}
         <button className={`${page === "language" ? "expanded " : ""}${selectedItem === "language" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("language"); setPage(page === "language" ? null : "language"); }}><Globe /><span>{t.language}</span><ChevronRight /></button>
