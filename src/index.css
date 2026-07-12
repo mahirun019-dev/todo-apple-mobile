@@ -3733,6 +3733,12 @@ option { color: var(--text-primary); background: var(--bg-input); }
 [data-theme="light"] .mobile-settings-brand small { color: #66707c !important; }
 [data-theme="dark"] .mobile-settings-drawer { background: var(--bg-sidebar) !important; color: var(--text-primary); }
 [data-theme="dark"] .mobile-settings-brand { background: transparent !important; }
+[data-theme="dark"] .mobile-settings-header.drawer-header,
+[data-theme="light"] .mobile-settings-header.drawer-header { background: transparent !important; background-color: transparent !important; background-image: none !important; box-shadow: none !important; border: 0 !important; border-radius: 0 !important; }
+[data-theme="dark"] .mobile-settings-header.drawer-header::before,
+[data-theme="dark"] .mobile-settings-header.drawer-header::after,
+[data-theme="light"] .mobile-settings-header.drawer-header::before,
+[data-theme="light"] .mobile-settings-header.drawer-header::after { content: none !important; display: none !important; }
 
 /* Final targeted dark-mode corrections. */
 [data-theme="dark"] .dashboard-date,
