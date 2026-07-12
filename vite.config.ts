@@ -8,7 +8,7 @@ export default defineConfig(({ command }) => ({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon-v4.svg", "favicon-v4.ico", "apple-touch-icon-v6.png", "icon-192.png", "icon-512.png", "icon-maskable-512.png"],
+      includeAssets: ["favicon-v4.svg", "favicon-v4.ico", "apple-touch-icon.png", "icon-192.png", "icon-512.png", "icon-maskable-512.png"],
       manifest: {
         name: "CareerFlow",
         short_name: "CareerFlow",
@@ -28,7 +28,7 @@ export default defineConfig(({ command }) => ({
         ],
       },
       workbox: {
-        cacheId: "careerflow-icons-v6",
+        cacheId: "careerflow-icons-v7",
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
