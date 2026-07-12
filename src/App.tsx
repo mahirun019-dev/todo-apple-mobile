@@ -3033,6 +3033,11 @@ function MobileSettingsDrawer({
   t, page, setPage, close, setView, view, selectedItem, setSelectedItem, theme, setTheme, locale, setLocale, data, setData, csv, json, download,
 }: any) {
   const label = "CareerFlow";
+  const about = locale === "ja"
+    ? { title: "CareerFlowについて", version: "CareerFlow バージョン 1.0", db: `データベースバージョン：v${data.schemaVersion}`, privacy: "プライバシー：データは主にこのデバイスに保存されます。", license: "オープンソースライセンス：MIT License" }
+    : locale === "en"
+      ? { title: "About CareerFlow", version: "CareerFlow version 1.0", db: `Database version: v${data.schemaVersion}`, privacy: "Privacy: Data is mainly stored on this device.", license: "Open-source license: MIT License" }
+      : { title: "关于 CareerFlow", version: "CareerFlow 版本 1.0", db: `数据库版本：v${data.schemaVersion}`, privacy: "隐私说明：数据主要保存在当前设备。", license: "开源许可：MIT License" };
   const cloudLabel = locale === "ja" ? "iCloud Drive に書き出す" : locale === "en" ? "Export to iCloud Drive" : "导出到 iCloud Drive";
   const go = (next: string) => setPage(next);
   const touchStart = useRef<number | null>(null);
@@ -3064,8 +3069,8 @@ function MobileSettingsDrawer({
         {page === "appearance" && <div className="drawer-accordion-panel">{(["light", "dark", "system"] as Theme[]).map((x) => <button className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}><span>{t[x]}</span>{theme === x && <Check />}</button>)}</div>}
         <button className={`${page === "language" ? "expanded " : ""}${selectedItem === "language" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("language"); setPage(page === "language" ? null : "language"); }}><Globe /><span>{t.language}</span><ChevronRight /></button>
         {page === "language" && <div className="drawer-accordion-panel">{(["zh", "ja", "en"] as Locale[]).map((x) => <button className={locale === x ? "selected" : ""} onClick={() => setLocale(x)} key={x}><span>{x === "zh" ? "中文" : x === "ja" ? "日本語" : "English"}</span>{locale === x && <Check />}</button>)}</div>}
-        <button className={`${page === "about" ? "expanded " : ""}${selectedItem === "about" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("about"); setPage(page === "about" ? null : "about"); }}><BriefcaseBusiness /><span>关于 CareerFlow</span><ChevronRight /></button>
-        {page === "about" && <div className="drawer-accordion-panel mobile-about"><p>CareerFlow</p><p>{t.version || "版本 1.0"}</p><p>数据库版本：v{data.schemaVersion}</p><p>隐私说明：数据主要保存在当前设备。</p><p>开源许可：MIT License</p></div>}
+        <button className={`${page === "about" ? "expanded " : ""}${selectedItem === "about" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("about"); setPage(page === "about" ? null : "about"); }}><BriefcaseBusiness /><span>{about.title}</span><ChevronRight /></button>
+        {page === "about" && <div className="drawer-accordion-panel mobile-about"><p>{about.title}</p><p>{about.version}</p><p>{about.db}</p><p>{about.privacy}</p><p>{about.license}</p></div>}
       </nav></div>
     </aside>
   </div>;
