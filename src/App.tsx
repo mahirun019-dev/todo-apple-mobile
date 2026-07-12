@@ -889,10 +889,7 @@ export default function App() {
   useEffect(() => {
     const m = matchMedia("(prefers-color-scheme:dark)");
     const f = () =>
-      document.documentElement.classList.toggle(
-        "dark",
-        theme === "dark" || (theme === "system" && m.matches),
-      );
+      document.documentElement.dataset.theme = theme === "dark" || (theme === "system" && m.matches) ? "dark" : "light";
     f();
     localStorage.setItem(THEME, theme);
     m.addEventListener("change", f);
