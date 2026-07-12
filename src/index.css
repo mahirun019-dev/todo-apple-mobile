@@ -3052,12 +3052,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     margin-top: 20px;
     gap: 0;
   }
-  .drawer-main { display: flex; min-height: 0; flex: 1; flex-direction: column; overflow-y: auto; }
-  .drawer-bottom { margin-top: auto; padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
-  .drawer-bottom .mobile-settings-nav-item { display: flex; min-height: 54px; width: 100%; align-items: center; gap: 17px; padding: 0 24px; border: 0; border-radius: 0; color: #0f1419; background: transparent; font-size: 17px; font-weight: 600; text-align: left; }
-  .drawer-bottom .mobile-settings-nav-item svg:first-child { width: 24px; height: 24px; color: #0f1419; stroke: currentColor; stroke-width: 2.3; }
-  .drawer-bottom .mobile-settings-nav-item svg:last-child { width: 16px; height: 16px; margin-left: auto; color: #8b98a5; stroke: currentColor; stroke-width: 2; }
-  .drawer-bottom .mobile-settings-nav-item:hover { background: var(--bg-muted); }
+  .drawer-main { min-height: 0; overflow-y: auto; }
   .mobile-settings-nav button {
     min-height: 54px;
     height: 54px;

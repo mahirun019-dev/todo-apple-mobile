@@ -2820,7 +2820,8 @@ function MobileSettingsDrawer({
         <button onClick={() => go("data")}><FileJson /><span>{t.data}</span><ChevronRight /></button>
         <button onClick={() => go("appearance")}><Settings /><span>{t.appearance}</span><ChevronRight /></button>
         <button onClick={() => go("language")}><Globe /><span>{t.language}</span><ChevronRight /></button>
-      </nav><div className="drawer-bottom"><button className="mobile-settings-nav-item" onClick={() => go("about")}><BriefcaseBusiness /><span>关于 CareerFlow</span><ChevronRight /></button></div></div> : <div className="mobile-settings-page is-subpage">
+        <button onClick={() => go("about")}><BriefcaseBusiness /><span>关于 CareerFlow</span><ChevronRight /></button>
+      </nav></div> : <div className="mobile-settings-page is-subpage">
         {page === "appearance" && <div className="mobile-choice-list">{(["light", "dark", "system"] as Theme[]).map((x) => <button className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}>{t[x]}{theme === x && <Check />}</button>)}</div>}
         {page === "language" && <div className="mobile-choice-list">{(["zh", "ja", "en"] as Locale[]).map((x) => <button className={locale === x ? "selected" : ""} onClick={() => setLocale(x)} key={x}>{x === "zh" ? "中文" : x === "ja" ? "日本語" : "English"}{locale === x && <Check />}</button>)}</div>}
         {page === "about" && <div className="mobile-about"><strong>CareerFlow</strong><p>{t.subtitle}</p><span>日本就活进度与材料管理</span></div>}
