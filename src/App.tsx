@@ -1129,7 +1129,7 @@ export default function App() {
             </div>
             {data.companies.map((x) => (
               <button
-                className={selected === x.id ? "selected" : ""}
+                className={view === "companies" && selected === x.id ? "selected" : ""}
                 title={x.name}
                 key={x.id}
                 onClick={() => {
