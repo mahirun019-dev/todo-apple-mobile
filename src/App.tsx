@@ -8,7 +8,7 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
-import { createBackup, deleteBackup, listBackups, type BackupSnapshot } from "./backups";
+import { createBackup, type BackupSnapshot } from "./backups";
 import {
   Archive,
   BarChart3,
@@ -366,8 +366,6 @@ const tr = {
     online: "线上",
     noData: "暂无事项",
     noSchedule: "暂无日程",
-    loadDemo: "载入示例数据",
-    clearDemo: "清除示例数据",
     deleteCompany: "删除企业",
     deleteQuestion: "是否同时删除该企业关联的日程、资料和选考记录？",
     deleteAll: "同时删除关联数据",
@@ -493,8 +491,6 @@ const tr = {
     online: "オンライン",
     noData: "予定なし",
     noSchedule: "日程なし",
-    loadDemo: "サンプルを読み込む",
-    clearDemo: "サンプルを削除",
     deleteCompany: "企業を削除",
     deleteQuestion: "関連する日程、資料、選考記録も削除しますか？",
     deleteAll: "関連データも削除",
@@ -620,8 +616,6 @@ const tr = {
     online: "Online",
     noData: "Nothing here",
     noSchedule: "No schedule",
-    loadDemo: "Load sample data",
-    clearDemo: "Clear sample data",
     deleteCompany: "Delete company",
     deleteQuestion:
       "Also delete related events, materials and application records?",
@@ -1697,7 +1691,7 @@ function PrimaryActionButton({
     </button>
   );
 }
-function Empty({ t, load, kind = "general", open }: { t: any; load?: () => void; kind?: "company" | "schedule" | "materials" | "general"; open?: () => void }) {
+function Empty({ t, kind = "general", open }: { t: any; kind?: "company" | "schedule" | "materials" | "general"; open?: () => void }) {
   const copy: Record<string, [string, string, string]> = t.language === "言語" ? { company: ["企業がまだ登録されていません", "応募先企業を追加して、選考状況や締切をまとめて管理できます。", t.addCompany], schedule: ["日程がまだありません", "説明会や面接の予定を登録すると、次の行動が見やすくなります。", t.addEvent], materials: ["資料・面接記録がまだありません", "ESや面接記録を登録して、就活の準備を整理しましょう。", t.addRecord], general: [t.noData, "ここから就活の記録を追加できます。", t.new] } : t.language === "Language" ? { company: ["No companies yet", "Add companies to keep applications, stages, and deadlines together.", t.addCompany], schedule: ["No schedule yet", "Add briefings and interviews to make your next action clear.", t.addEvent], materials: ["No materials or interview records yet", "Add ES, resumes, and interview notes to organize your search.", t.addRecord], general: [t.noData, "Start by adding your first career record.", t.new] } : { company: ["还没有企业", "添加应聘企业，集中管理选考进度和截止时间。", t.addCompany], schedule: ["还没有日程", "添加说明会或面试安排，让下一步更清晰。", t.addEvent], materials: ["还没有资料或面试记录", "添加 ES、履历书或面试记录，整理你的就活准备。", t.addRecord], general: [t.noData, "从这里开始添加你的就活记录。", t.new] };
   if (t.language === "言語") copy.schedule[1] = "説明会、筆記試験、面接などの予定を追加して、選考スケジュールを管理しましょう。";
   const [title, description, action] = copy[kind];
@@ -1707,11 +1701,6 @@ function Empty({ t, load, kind = "general", open }: { t: any; load?: () => void;
       <strong>{title}</strong>
       <p>{description}</p>
       {open && <PrimaryActionButton onClick={open} className="empty-action"><Plus />{action}</PrimaryActionButton>}
-      {load && (
-        <button className="text-button" onClick={load}>
-          {t.loadDemo}
-        </button>
-      )}
     </div>
   );
 }
@@ -2949,16 +2938,11 @@ function Toast({
     </div>
   );
 }
-function BackupControls({ t, data, theme, locale, setData, download }: any) {
-  const [items, setItems] = useState<BackupSnapshot[]>([]);
+function BackupControls({ data, theme, locale, setData }: any) {
   const [error, setError] = useState("");
   const [lastExport, setLastExport] = useState<number>(() => Number(localStorage.getItem("careerflow-last-export") || 0));
   const fileRef = useRef<HTMLInputElement>(null);
-  const refresh = () => listBackups().then(setItems).catch(() => setError("备份列表读取失败"));
-  useEffect(() => { refresh(); }, []);
   const snapshot = (): BackupSnapshot => ({ schemaVersion: data.schemaVersion, createdAt: Date.now(), companies: data.companies, schedules: data.events, resources: data.materials, interviews: data.interviews, preparations: data.preparations, selectionRecords: data.companies.map((x: Company) => ({ id: x.id, stage: x.stage, updatedAt: x.updatedAt })), settings: { theme, locale } });
-  const backupNow = async () => { try { await createBackup(snapshot()); await refresh(); } catch { setError("备份创建失败，原数据未改变"); } };
-  const restore = async (item: BackupSnapshot) => { try { if (!item || !Array.isArray(item.companies) || !Array.isArray(item.schedules) || !Array.isArray(item.resources) || !Array.isArray(item.interviews) || !Array.isArray(item.preparations)) throw new Error(); await createBackup(snapshot()); setData(normalize({ schemaVersion: 5, companies: item.companies, events: item.schedules, materials: item.resources, interviews: item.interviews, preparations: item.preparations, focusMinutes: data.focusMinutes })); } catch { setError("备份结构无效，原数据未改变"); } };
   const exportBackup = async () => {
     const now = new Date();
     const pad = (x: number) => String(x).padStart(2, "0");
@@ -2993,9 +2977,8 @@ function BackupControls({ t, data, theme, locale, setData, download }: any) {
     }
   };
   const restoreFile = (e: ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = async () => { try { const x = JSON.parse(String(reader.result)); if (x.schemaVersion !== 5 || !Array.isArray(x.companies) || !Array.isArray(x.schedules) || !Array.isArray(x.resources) || !Array.isArray(x.interviews) || !Array.isArray(x.preparations)) throw new Error(); await createBackup(snapshot()); setData(normalize({ schemaVersion: 5, companies: x.companies, events: x.schedules, materials: x.resources, interviews: x.interviews, preparations: x.preparations, focusMinutes: data.focusMinutes })); setError(`${x.companies.length} 企业、${x.schedules.length} 日程、${x.resources.length} 资料已恢复`); } catch { setError("JSON 结构无效，原数据未改变"); } }; reader.readAsText(file); e.currentTarget.value = ""; };
-  const days = lastExport ? Math.floor((Date.now() - lastExport) / 864e5) : null;
-  const labels = locale === "ja" ? {area:"データとバックアップ", notice:"データは主にこのデバイスに保存されます。定期的に書き出してください。", storage:"このデバイスの保存状況", version:"データベースバージョン", cloud:"バックアップ", local:"自動バックアップ", exportBackup:"バックアップを書き出す", restoreFile:"バックアップを復元", permission:"ファイルアプリで保存先を選択できます。", last:"前回の書き出し", never:"まだ完全バックアップを書き出していません", now:"今すぐローカルバックアップを作成", restore:"復元", remove:"削除", confirm:"このバックアップを削除しますか？", warning:"前回の書き出しから7日以上経過しています。"} : locale === "en" ? {area:"Data & backups", notice:"Your data is mainly stored on this device. Export a backup regularly.", storage:"Device storage", version:"Database version", cloud:"Backup", local:"Automatic backups", exportBackup:"Export complete backup", restoreFile:"Restore from backup", permission:"Choose a location in the Files app.", last:"Last export", never:"No complete backup has been exported", now:"Create local backup now", restore:"Restore", remove:"Delete", confirm:"Delete this backup?", warning:"It has been more than 7 days since the last export."} : {area:"数据与备份", notice:"数据主要保存在当前设备，请定期导出完整备份。", storage:"当前设备存储", version:"数据库版本", cloud:"备份", local:"本地自动备份", exportBackup:"导出备份", restoreFile:"恢复备份", permission:"请在文件 App 中选择保存位置。", last:"上次导出", never:"尚未导出完整备份", now:"立即创建本地备份", restore:"恢复", remove:"删除", confirm:"确定删除此备份吗？", warning:"距离上次导出已超过 7 天。"};
-  return <section className="backup-panel"><section><h3>{labels.storage}</h3><p>{labels.version}: v{data.schemaVersion}</p><div className="backup-meta"><span>{data.companies.length} {locale === "ja" ? "企業" : "企业"} · {data.events.length} {locale === "ja" ? "日程" : "日程"}</span><span>{data.materials.length} {locale === "ja" ? "資料" : "资料"} · {data.interviews.length} {locale === "ja" ? "面接記録" : "面试记录"} · {data.preparations.length} {locale === "ja" ? "準備事項" : "准备事项"}</span></div></section><section><h3>{labels.cloud}</h3><div className="backup-cloud-actions"><button className="primary" onClick={exportBackup}>{labels.exportBackup}</button><button onClick={() => fileRef.current?.click()}>{labels.restoreFile}</button></div><p>{labels.permission}</p><p>{lastExport ? `${labels.last}: ${new Date(lastExport).toLocaleDateString()}` : labels.never}</p>{days !== null && days > 7 && <p className="backup-warning">{labels.warning}</p>}</section><section><h3>{labels.local}</h3><div className="backup-meta"><span>{items.length}/5</span><span>{items[0] ? new Date(items[0].createdAt).toLocaleString() : labels.never}</span></div><button className="primary" onClick={backupNow}>{labels.now}</button>{error&&<p className="backup-error">{error}</p>}<input hidden ref={fileRef} type="file" accept="application/json,.json" onChange={restoreFile}/><div className="backup-list">{items.map((x)=><div key={x.createdAt}><span>{new Date(x.createdAt).toLocaleString()}</span><button onClick={()=>restore(x)}>{labels.restore}</button><button onClick={()=>{if(window.confirm(labels.confirm)) deleteBackup(x.createdAt).then(refresh)}}>{labels.remove}</button></div>)}</div></section></section>;
+  const labels = locale === "ja" ? { cloud:"バックアップ", exportBackup:"バックアップを書き出す", restoreFile:"バックアップを復元", permission:"ファイルアプリで保存先を選択できます。", last:"前回の書き出し", never:"まだバックアップを書き出していません" } : { cloud:"备份", exportBackup:"导出备份", restoreFile:"恢复备份", permission:"请在文件 App 中选择保存位置。", last:"上次导出", never:"尚未导出备份" };
+  return <section className="backup-panel"><section><h3>{labels.cloud}</h3><div className="backup-cloud-actions"><button className="primary" onClick={exportBackup}>{labels.exportBackup}</button><button onClick={() => fileRef.current?.click()}>{labels.restoreFile}</button></div><p>{labels.permission}</p><p>{lastExport ? `${labels.last}: ${new Date(lastExport).toLocaleDateString()}` : labels.never}</p>{error && <p className="backup-error">{error}</p>}<input hidden ref={fileRef} type="file" accept="application/json,.json" onChange={restoreFile} /></section></section>;
 }
 function MobileSettingsDrawer({
   t, page, setPage, close, setView, view, selectedItem, setSelectedItem, theme, setTheme, locale, setLocale, data, setData, json, download,
@@ -3052,16 +3035,13 @@ function SettingsDrawer({ close, children, title }: { close: () => void; childre
 function SettingsPanel({ t, theme, setTheme, locale, setLocale, close, data, setData, iconRef, json, upload, importJson, download }: any) {
   const [tab, setTab] = useState("general");
   const ja = locale === "ja";
-  const sampleTitle = ja ? "サンプルデータ" : locale === "en" ? "Sample data" : "示例数据";
-  const sampleAction = ja ? "サンプルデータを削除" : locale === "en" ? "Delete sample data" : "删除示例数据";
-  const sampleHelp = ja ? "登録済みのサンプルデータのみを削除します。ユーザーが追加したデータは削除されません。" : locale === "en" ? "Only registered sample data will be deleted. Your own data will not be affected." : "仅删除已注册的示例数据，不会影响你添加的数据。";
   const ui = locale === "ja" ? { general:"一般", appearance:"表示", language:"言語", data:"データとバックアップ", about:"CareerFlowについて", storage:"このデバイスの保存状況", backup:"バックアップ", aboutTitle:"CareerFlowについて", version:"CareerFlow バージョン 1.0", db:"データベースバージョン", pwa:"PWA ステータス: standalone 対応", icon:"アイコン: CareerFlow ブランドアイコン", privacy:"プライバシー: データは主にこのデバイスに保存されます。", license:"オープンソースライセンス: MIT License" } : locale === "en" ? { general:"General", appearance:"Appearance", language:"Language", data:"Data & backups", about:"About CareerFlow", storage:"Device storage", backup:"Backup", aboutTitle:"About CareerFlow", version:"CareerFlow version 1.0", db:"Database version", pwa:"PWA status: standalone supported", icon:"Icon: CareerFlow brand icon", privacy:"Privacy: Data is mainly stored on this device.", license:"Open-source license: MIT License" } : { general:"常规", appearance:"外观", language:"语言", data:"数据与备份", about:"关于 CareerFlow", storage:"当前设备存储", backup:"备份", aboutTitle:"关于 CareerFlow", version:"CareerFlow 版本 1.0", db:"数据库版本", pwa:"PWA 状态：支持 standalone", icon:"图标：CareerFlow 品牌图标", privacy:"隐私：数据主要保存在当前设备。", license:"开源许可：MIT License" };
   const tabs = [["general", ui.general], ["appearance", ui.appearance], ["language", ui.language], ["data", ui.data], ["about", ui.about]];
   return <SettingsDrawer title={t.settings} close={close}><div className="desktop-settings-layout"><nav className="desktop-settings-nav settings-sidebar"><div className="settings-nav-list">{tabs.map(([key, text]) => <SettingsNavItem key={key} label={text} active={tab === key} onClick={() => setTab(key)} />)}</div></nav><div className="desktop-settings-content">
     {tab === "general" && <section className="settings-section"><h3>{ui.storage}</h3><div className="settings-stats">{[[ja ? "企業数" : locale === "en" ? "Companies" : "企业数", data.companies.length], [ja ? "日程数" : locale === "en" ? "Schedules" : "日程数", data.events.length], [ja ? "資料数" : locale === "en" ? "Resources" : "资料数", data.materials.length], [ja ? "面接記録数" : locale === "en" ? "Interviews" : "面试记录数", data.interviews.length], [ja ? "準備事項数" : locale === "en" ? "Preparations" : "准备事项数", data.preparations.length], [ui.db, "v" + data.schemaVersion]].map(([label, value]) => <div key={String(label)}><span>{label}</span><strong>{value}</strong></div>)}</div></section>}
     {tab === "appearance" && <section className="settings-section"><h3>{ui.appearance}</h3><div className="settings-segmented">{(["light", "dark", "system"] as Theme[]).map((x) => <button aria-pressed={theme === x} className={theme === x ? "active" : ""} onClick={() => setTheme(x)} key={x}>{t[x]}</button>)}</div></section>}
     {tab === "language" && <section className="settings-section"><h3>{ui.language}</h3><div className="settings-segmented">{(["zh", "ja"] as Locale[]).map((x) => <button type="button" aria-pressed={locale === x} className={locale === x ? "active" : ""} onClick={() => setLocale(x)} key={x}>{x === "zh" ? "中文" : "日本語"}</button>)}</div></section>}
-    {tab === "data" && <section className="settings-section settings-data-section"><h3>{ui.backup}</h3><BackupControls t={t} data={data} theme={theme} locale={locale} setData={setData} download={download} /><div className="settings-danger"><h3>{sampleTitle}</h3><p>{sampleHelp}</p><button type="button" className="danger-button" onClick={() => { if (window.confirm(sampleAction + "？")) setData((d: Data) => ({ ...d, companies: d.companies.filter((x) => !x.tags.includes("sample") && !demoNames.includes(x.name)), materials: d.materials.filter((x) => !x.tags.includes("sample")) })); }}><Trash2 />{sampleAction}</button></div></section>}
+    {tab === "data" && <section className="settings-section settings-data-section"><h3>{ui.backup}</h3><BackupControls data={data} theme={theme} locale={locale} setData={setData} /></section>}
     {tab === "about" && <section className="settings-section"><h3>{ui.aboutTitle}</h3><div className="settings-about-list"><p>{ui.version}</p><p>{ui.db}: v{data.schemaVersion}</p><p>{ui.pwa}</p><p>{ui.icon}</p><p>{ui.privacy}</p><p>{ui.license}</p></div></section>}
   </div></div><input hidden ref={iconRef} type="file" accept="image/*" onChange={upload} /></SettingsDrawer>;
 }
