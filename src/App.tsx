@@ -20,6 +20,7 @@ import {
   Clock3,
   Download,
   FileJson,
+  Globe,
   Home,
   MoreHorizontal,
   Menu,
@@ -2811,16 +2812,15 @@ function MobileSettingsDrawer({
       <header className={`mobile-settings-header ${page ? "mobile-settings-subheader" : ""}`}>
         {page ? <><button onClick={() => setPage(null)} aria-label="Back"><ChevronRight className="back-icon" /></button><h2>{label}</h2><span /></> : <><span /><div className="mobile-settings-brand"><strong>CareerFlow</strong><small>日本就活管理</small></div><span /></>}
       </header>
-      {!page ? <nav className="mobile-settings-nav">
+      {!page ? <div className="drawer-main"><nav className="mobile-settings-nav">
         <button className={view === "dashboard" ? "active" : ""} onClick={() => { setPage(null); close(); setView("dashboard"); }}><Home /><span>{t.dashboard}</span></button>
         <button className={view === "companies" ? "active" : ""} onClick={() => { setPage(null); close(); setView("companies"); }}><Building2 /><span>{t.companies}</span></button>
         <button className={view === "schedule" ? "active" : ""} onClick={() => { setPage(null); close(); setView("schedule"); }}><CalendarDays /><span>{t.schedule}</span></button>
         <button className={view === "materials" ? "active" : ""} onClick={() => { setPage(null); close(); setView("materials"); }}><FileJson /><span>{t.materials}</span></button>
         <button onClick={() => go("data")}><FileJson /><span>{t.data}</span><ChevronRight /></button>
         <button onClick={() => go("appearance")}><Settings /><span>{t.appearance}</span><ChevronRight /></button>
-        <button onClick={() => go("language")}><MoreHorizontal /><span>{t.language}</span><ChevronRight /></button>
-        <button onClick={() => go("about")}><BriefcaseBusiness /><span>关于 CareerFlow</span><ChevronRight /></button>
-      </nav> : <div className="mobile-settings-page is-subpage">
+        <button onClick={() => go("language")}><Globe /><span>{t.language}</span><ChevronRight /></button>
+      </nav><div className="drawer-bottom"><button className="mobile-settings-nav-item" onClick={() => go("about")}><BriefcaseBusiness /><span>关于 CareerFlow</span><ChevronRight /></button></div></div> : <div className="mobile-settings-page is-subpage">
         {page === "appearance" && <div className="mobile-choice-list">{(["light", "dark", "system"] as Theme[]).map((x) => <button className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}>{t[x]}{theme === x && <Check />}</button>)}</div>}
         {page === "language" && <div className="mobile-choice-list">{(["zh", "ja", "en"] as Locale[]).map((x) => <button className={locale === x ? "selected" : ""} onClick={() => setLocale(x)} key={x}>{x === "zh" ? "中文" : x === "ja" ? "日本語" : "English"}{locale === x && <Check />}</button>)}</div>}
         {page === "about" && <div className="mobile-about"><strong>CareerFlow</strong><p>{t.subtitle}</p><span>日本就活进度与材料管理</span></div>}
