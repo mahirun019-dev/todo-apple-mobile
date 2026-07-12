@@ -1329,7 +1329,7 @@ function Brand({ icon }: { icon: string }) {
   return (
     <div className="brand">
       <div className="brand-mark">
-        {icon ? <img src={icon} /> : <BriefcaseBusiness />}
+        {icon ? <img src={icon} alt="" /> : <img src={`${import.meta.env.BASE_URL}favicon-v3.svg`} alt="" />}
       </div>
       <div>
         <strong>CareerFlow</strong>
