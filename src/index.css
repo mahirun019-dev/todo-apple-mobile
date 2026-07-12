@@ -2713,3 +2713,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .nav-list button:focus-visible, .career-mobile-nav button:focus-visible { outline: 3px solid rgba(17,17,17,.3); outline-offset: -2px; }
 .dark .nav-list button[data-pressed="true"] { background: #41464d !important; }
 .dark .nav-list button:focus-visible, .dark .career-mobile-nav button:focus-visible { outline-color: rgba(245,245,245,.55); }
+@media (min-width: 761px) {
+  .sidebar .nav-list button,
+  .sidebar .nav-list button::before,
+  .sidebar .nav-list button::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

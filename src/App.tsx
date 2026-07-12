@@ -8,6 +8,7 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
+import { flushSync } from "react-dom";
 import Papa from "papaparse";
 import { createBackup, deleteBackup, listBackups, type BackupSnapshot } from "./backups";
 import {
@@ -1373,7 +1374,20 @@ function Nav({
         <button
           className={(pendingNav ?? view) === v ? "active" : ""}
           style={debugPhase !== "idle" && (pendingNav ?? view) === v ? { backgroundColor: debugPhase === "pressed" ? "#ef4444" : debugPhase === "clicked" ? "#22c55e" : "#9ca3af" } : undefined}
-          onClick={(e) => { console.log("[nav] click", performance.now(), v, "navigate", window.location.pathname); setDebugPhase("clicked"); setPendingNav(v); setView(v); requestAnimationFrame(() => { const el = e.currentTarget; console.log("[nav] frame 1", performance.now(), getComputedStyle(el).backgroundColor); requestAnimationFrame(() => console.log("[nav] frame 2", performance.now(), getComputedStyle(el).backgroundColor)); }); }}
+          onClick={(e) => {
+            console.log("[nav] click", performance.now(), v);
+            flushSync(() => {
+              setDebugPhase("clicked");
+              setPendingNav(v);
+            });
+            requestAnimationFrame(() => {
+              console.log("[nav] navigate", performance.now(), v);
+              setView(v);
+              const el = e.currentTarget;
+              console.log("[nav] frame 1", performance.now(), getComputedStyle(el).backgroundColor);
+              requestAnimationFrame(() => console.log("[nav] frame 2", performance.now(), getComputedStyle(el).backgroundColor));
+            });
+          }}
           aria-current={view === v ? "page" : undefined}
           onPointerDown={(e) => { console.log("[nav] pointerdown", performance.now(), v); setDebugPhase("pressed"); console.log("[nav] setPendingNav", performance.now(), v); setPendingNav(v); e.currentTarget.dataset.pressed = "true"; }}
           onPointerUp={(e) => { delete e.currentTarget.dataset.pressed; }}
