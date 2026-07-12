@@ -1111,7 +1111,7 @@ export default function App() {
   };
   return (
     <div className="app-shell">
-      <div className="build-badge">Build: 623d743</div>
+      <div className="build-badge">Build: 376130e · based on 623d743</div>
       <div className="student-app career-app">
         <aside className="sidebar panel">
           <Brand icon={icon} />
