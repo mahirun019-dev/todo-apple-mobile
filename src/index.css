@@ -3325,6 +3325,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .dark .course-nav > button.selected { color: #f5f5f5 !important; background: #24262a !important; }
 .dark .course-nav > button.selected::before,
 .dark .course-nav > button.selected > i { background: #f5f5f5 !important; }
+.create-record-picker { display: grid; gap: 8px; }
+.create-record-picker button { display: flex; min-height: 52px; align-items: center; gap: 12px; width: 100%; padding: 0 14px; border: 1px solid #d8dce1; border-radius: 10px; color: #24262b; background: #fff; font-weight: 650; text-align: left; }
+.create-record-picker button:hover { background: #f3f4f6; }
+.create-record-picker button svg { width: 20px; height: 20px; color: #3f4650; }
+.create-record-picker .picker-cancel { justify-content: center; margin-top: 8px; color: #68717b; background: #f7f7f8; text-align: center; }
+.dark .create-record-picker button { border-color: #424750; color: #f2f2f2; background: #242424; }
+.dark .create-record-picker button:hover { background: #303238; }
+.dark .create-record-picker .picker-cancel { color: #b0b5bd; background: #202020; }
 
 .save-mode-field { min-width: 0; border: 0; padding: 0; }
 .save-mode-field legend { margin-bottom: 8px; color: #59616b; font-size: 12px; font-weight: 700; }

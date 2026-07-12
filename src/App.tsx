@@ -1745,6 +1745,26 @@ function Empty({ t, load, kind = "general", open }: { t: any; load?: () => void;
     </div>
   );
 }
+function CreateRecordPicker({
+  t,
+  close,
+  choose,
+}: {
+  t: any;
+  close: () => void;
+  choose: (kind: CreateType) => void;
+}) {
+  return (
+    <Modal title={t.addRecord} close={close}>
+      <div className="create-record-picker" role="menu" aria-label={t.addRecord}>
+        <button type="button" onClick={() => choose("es")} role="menuitem"><FileJson />{t.addMaterial}</button>
+        <button type="button" onClick={() => choose("interview")} role="menuitem"><BriefcaseBusiness />{t.addInterview}</button>
+        <button type="button" onClick={() => choose("preparation")} role="menuitem"><Target />{t.addPrep}</button>
+        <button type="button" className="picker-cancel" onClick={close}>{t.cancel}</button>
+      </div>
+    </Modal>
+  );
+}
 function Dashboard({
   t,
   data,
@@ -2209,7 +2229,12 @@ function Materials({
   const materials = data.materials.filter((x: Material) => (filter === "all" || filter === "material" || filter === "incomplete" || filter === "completed") && (filter !== "material" || x.category === "material") && matchesStatus(!!x.completed));
   const interviews = data.interviews.filter((x: InterviewRecord) => (filter === "all" || filter === "interview" || filter === "incomplete" || filter === "completed") && (filter !== "interview" || x.category === "interview") && matchesStatus(!!x.result));
   const preps = data.preparations.filter((x: Preparation) => (filter === "all" || filter === "preparation" || filter === "incomplete" || filter === "completed") && (filter !== "preparation" || x.category === "preparation") && matchesStatus(x.completed));
-  const [createMenu, setCreateMenu] = useState(false);
+  const [createPickerOpen, setCreatePickerOpen] = useState(false);
+  const openCreateRecordPicker = () => setCreatePickerOpen(true);
+  const chooseCreateRecord = (kind: CreateType) => {
+    setCreatePickerOpen(false);
+    open(kind);
+  };
   return (
     <>
       <div className="page-head">
@@ -2217,14 +2242,7 @@ function Materials({
           <h1>{t.materials}</h1>
           <p>{t.materialsSub}</p>
         </div>
-        {(materials.length > 0 || interviews.length > 0 || preps.length > 0) && <div className="record-action-wrap">
-          <PrimaryActionButton onClick={() => setCreateMenu(!createMenu)}><Plus />{t.addRecord}</PrimaryActionButton>
-          {createMenu && <div className="record-action-menu">
-            <button onClick={() => open("es")}>{t.addMaterial}</button>
-            <button onClick={() => open("interview")}>{t.addInterview}</button>
-            <button onClick={() => open("preparation")}>{t.addPrep}</button>
-          </div>}
-        </div>}
+        {(materials.length > 0 || interviews.length > 0 || preps.length > 0) && <PrimaryActionButton onClick={openCreateRecordPicker}><Plus />{t.addRecord}</PrimaryActionButton>}
       </div>
       <div className="filter-bar entity-card">
         {[
@@ -2289,14 +2307,10 @@ function Materials({
           </Swipe>
         ))}
         {!materials.length && !interviews.length && !preps.length && <>
-          <Empty t={t} kind="materials" open={() => setCreateMenu(true)} />
-          {createMenu && <div className="record-action-menu inline-record-menu">
-            <button onClick={() => open("es")}>{t.addMaterial}</button>
-            <button onClick={() => open("interview")}>{t.addInterview}</button>
-            <button onClick={() => open("preparation")}>{t.addPrep}</button>
-          </div>}
+          <Empty t={t} kind="materials" open={openCreateRecordPicker} />
         </>}
       </div>
+      {createPickerOpen && <CreateRecordPicker t={t} close={() => setCreatePickerOpen(false)} choose={chooseCreateRecord} />}
     </>
   );
 }
