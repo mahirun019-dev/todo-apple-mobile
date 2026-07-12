@@ -2809,11 +2809,11 @@ function MobileSettingsDrawer({
   }, []);
   return <div className="mobile-settings-layer">
     <button className="mobile-settings-backdrop" onClick={close} aria-label="Close" />
-    <aside className="mobile-settings-drawer" role="dialog" aria-modal="true" aria-label={label} onTouchStart={(e) => { touchStart.current = e.touches[0].clientX; }} onTouchEnd={(e) => { const start = touchStart.current; const delta = start === null ? 0 : e.changedTouches[0].clientX - start; if (page && start !== null && start <= 24 && delta > 72) setPage(null); else if (!page && delta < -70) close(); touchStart.current = null; }}>
-      <header className="mobile-settings-header">
+    <aside className="mobile-settings-drawer drawer-shell" role="dialog" aria-modal="true" aria-label={label} onTouchStart={(e) => { touchStart.current = e.touches[0].clientX; }} onTouchEnd={(e) => { const start = touchStart.current; const delta = start === null ? 0 : e.changedTouches[0].clientX - start; if (page && start !== null && start <= 24 && delta > 72) setPage(null); else if (!page && delta < -70) close(); touchStart.current = null; }}>
+      <header className="mobile-settings-header drawer-header">
         <span /><div className="mobile-settings-brand"><strong>CareerFlow</strong><small>日本就活管理</small></div><span />
       </header>
-      <div className="drawer-main"><nav className="mobile-settings-nav">
+      <div className="drawer-main drawer-scroll"><nav className="mobile-settings-nav">
         <button className={view === "dashboard" ? "active" : ""} onClick={() => { setPage(null); close(); setView("dashboard"); }}><Home /><span>{t.dashboard}</span></button>
         <button className={page === "data" ? "expanded" : ""} onClick={() => setPage(page === "data" ? null : "data")}><FileJson /><span>{t.data}</span><ChevronRight /></button>
         {page === "data" && <div className="drawer-accordion-panel"><button onClick={() => csv.current?.click()}><Upload /><span>{t.importCsv}</span></button><button onClick={() => download("careerflow-materials.csv", Papa.unparse(data.materials), "text/csv")}><Download /><span>{t.exportCsv}</span></button><button onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Download /><span>{t.backup}</span></button><button onClick={() => json.current?.click()}><FileJson /><span>{t.restore}</span></button><button onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Download /><span>{cloudLabel}</span></button></div>}
