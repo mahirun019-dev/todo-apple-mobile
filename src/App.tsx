@@ -22,6 +22,7 @@ import {
   FileJson,
   Home,
   MoreHorizontal,
+  Menu,
   Plus,
   Settings,
   Target,
@@ -202,7 +203,7 @@ const tr = {
     materials: "ES・面试",
     settings: "设置",
     new: "新建",
-    title: "本周就活摘要",
+    title: "就活摘要",
     fieldTitle: "标题",
     subtitle: "日本就活进度与材料管理",
     addCompany: "新增企业",
@@ -309,7 +310,7 @@ const tr = {
     materials: "ES・面接",
     settings: "設定",
     new: "新規作成",
-    title: "今週の就活サマリー",
+    title: "就活サマリー",
     fieldTitle: "タイトル",
     subtitle: "日本就活進捗・書類管理",
     addCompany: "企業を追加",
@@ -416,7 +417,7 @@ const tr = {
     materials: "ES · Interview",
     settings: "Settings",
     new: "New",
-    title: "This week's search",
+    title: "Career summary",
     fieldTitle: "Title",
     subtitle: "Japan job search progress and materials",
     addCompany: "Add company",
@@ -1164,7 +1165,7 @@ export default function App() {
         </aside>
         <header className="mobile-header glass-lite">
           <button className="mobile-menu-button" onClick={() => setSettings(true)} aria-label={t.settings}>
-            <MoreHorizontal />
+            <Menu />
           </button>
           <strong className="mobile-header-title">CareerFlow</strong>
           <span className="mobile-header-action-slot" aria-hidden="true" />
@@ -1254,6 +1255,7 @@ export default function App() {
           <MobileSettingsDrawer
             t={t}
             setView={setView}
+            view={view}
             page={mobileSettingsPage}
             setPage={setMobileSettingsPage}
             close={() => { setSettings(false); setMobileSettingsPage(null); }}
@@ -1600,7 +1602,6 @@ function Dashboard({
             }).format(new Date())}
           </span>
           <h1>{t.title}</h1>
-          <p>{t.subtitle}</p>
         </div>
         <PrimaryActionButton onClick={() => open("company")}>
           <Plus />
@@ -2785,27 +2786,29 @@ function BackupControls({ t, data, theme, locale, setData, download }: any) {
   return <section className="backup-panel"><section><h3>{labels.storage}</h3><p>{labels.version}: v{data.schemaVersion}</p><div className="backup-meta"><span>{data.companies.length} {locale === "ja" ? "企業" : locale === "en" ? "companies" : "企业"} · {data.events.length} {locale === "ja" ? "日程" : locale === "en" ? "schedules" : "日程"}</span><span>{data.materials.length} {locale === "ja" ? "資料" : locale === "en" ? "resources" : "资料"} · {data.interviews.length} {locale === "ja" ? "面接記録" : locale === "en" ? "interviews" : "面试记录"} · {data.preparations.length} {locale === "ja" ? "準備事項" : locale === "en" ? "preparations" : "准备事项"}</span></div></section><section><h3>{labels.cloud}</h3><div className="backup-cloud-actions"><button className="primary" onClick={exportCloud}>{labels.exportCloud}</button><button onClick={() => fileRef.current?.click()}>{labels.restoreFile}</button></div><p>{labels.permission}</p><p>{lastExport ? `${labels.last}: ${new Date(lastExport).toLocaleDateString()} (${days} ${locale === "ja" ? "日前" : locale === "en" ? "days ago" : "天前"})` : labels.never}</p>{days !== null && days > 7 && <p className="backup-warning">{labels.warning}</p>}</section><section><h3>{labels.local}</h3><div className="backup-meta"><span>{items.length}/5</span><span>{items[0] ? new Date(items[0].createdAt).toLocaleString() : labels.never}</span></div><button className="primary" onClick={backupNow}>{labels.now}</button>{error&&<p className="backup-error">{error}</p>}<input hidden ref={fileRef} type="file" accept="application/json,.json" onChange={restoreFile}/><div className="backup-list">{items.map((x)=><div key={x.createdAt}><span>{new Date(x.createdAt).toLocaleString()}</span><button onClick={()=>restore(x)}>{labels.restore}</button><button onClick={()=>{if(window.confirm(labels.confirm)) deleteBackup(x.createdAt).then(refresh)}}>{labels.remove}</button></div>)}</div></section></section>;
 }
 function MobileSettingsDrawer({
-  t, page, setPage, close, setView, theme, setTheme, locale, setLocale, data, setData, csv, json, download,
+  t, page, setPage, close, setView, view, theme, setTheme, locale, setLocale, data, setData, csv, json, download,
 }: any) {
-  const label = page === "data" ? t.data : page === "appearance" ? t.appearance : page === "language" ? t.language : page === "about" ? "About CareerFlow" : t.settings;
+  const label = page === "data" ? t.data : page === "appearance" ? t.appearance : page === "language" ? t.language : page === "about" ? "关于 CareerFlow" : "CareerFlow";
   const go = (next: string) => setPage(next);
+  const touchStart = useRef<number | null>(null);
   return <div className="mobile-settings-layer">
     <button className="mobile-settings-backdrop" onClick={close} aria-label="Close" />
-    <aside className="mobile-settings-drawer" role="dialog" aria-modal="true" aria-label={label}>
+    <aside className="mobile-settings-drawer" role="dialog" aria-modal="true" aria-label={label} onTouchStart={(e) => { touchStart.current = e.touches[0].clientX; }} onTouchEnd={(e) => { if (touchStart.current !== null && e.changedTouches[0].clientX - touchStart.current < -70) close(); touchStart.current = null; }}>
       <header className="mobile-settings-header">
         {page ? <button onClick={() => setPage(null)} aria-label="Back"><ChevronRight className="back-icon" /></button> : <span />}
-        <h2>{label}</h2><CloseButton onClick={close} label="Close" />
+        <div className="mobile-settings-brand"><strong>CareerFlow</strong><small>日本就活管理</small></div>
+        <span />
       </header>
       {!page ? <nav className="mobile-settings-nav">
-        <button onClick={() => { setPage(null); close(); setView("dashboard"); }}><Home /><span>{t.dashboard}</span></button>
-        <button onClick={() => { setPage(null); close(); setView("companies"); }}><Building2 /><span>{t.companies}</span></button>
-        <button onClick={() => { setPage(null); close(); setView("schedule"); }}><CalendarDays /><span>{t.schedule}</span></button>
-        <button onClick={() => { setPage(null); close(); setView("materials"); }}><FileJson /><span>{t.materials}</span></button>
+        <button className={view === "dashboard" ? "active" : ""} onClick={() => { setPage(null); close(); setView("dashboard"); }}><Home /><span>{t.dashboard}</span></button>
+        <button className={view === "companies" ? "active" : ""} onClick={() => { setPage(null); close(); setView("companies"); }}><Building2 /><span>{t.companies}</span></button>
+        <button className={view === "schedule" ? "active" : ""} onClick={() => { setPage(null); close(); setView("schedule"); }}><CalendarDays /><span>{t.schedule}</span></button>
+        <button className={view === "materials" ? "active" : ""} onClick={() => { setPage(null); close(); setView("materials"); }}><FileJson /><span>{t.materials}</span></button>
         <div className="mobile-settings-divider" />
         <button onClick={() => go("data")}><FileJson /><span>{t.data}</span><ChevronRight /></button>
         <button onClick={() => go("appearance")}><Settings /><span>{t.appearance}</span><ChevronRight /></button>
         <button onClick={() => go("language")}><MoreHorizontal /><span>{t.language}</span><ChevronRight /></button>
-        <button onClick={() => go("about")}><BriefcaseBusiness /><span>About CareerFlow</span><ChevronRight /></button>
+        <button onClick={() => go("about")}><BriefcaseBusiness /><span>关于 CareerFlow</span><ChevronRight /></button>
       </nav> : <div className="mobile-settings-page">
         {page === "appearance" && <div className="mobile-choice-list">{(["light", "dark", "system"] as Theme[]).map((x) => <button className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}>{t[x]}{theme === x && <Check />}</button>)}</div>}
         {page === "language" && <div className="mobile-choice-list">{(["zh", "ja", "en"] as Locale[]).map((x) => <button className={locale === x ? "selected" : ""} onClick={() => setLocale(x)} key={x}>{x === "zh" ? "中文" : x === "ja" ? "日本語" : "English"}{locale === x && <Check />}</button>)}</div>}

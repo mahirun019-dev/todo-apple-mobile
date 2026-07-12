@@ -2964,6 +2964,18 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .mobile-data-page { display: grid; gap: 18px; }
   .mobile-data-actions { padding-top: 16px; border-top: 1px solid var(--border-color); }
   @keyframes mobile-settings-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+  .mobile-settings-drawer { width: 75vw; max-width: 320px; border-radius: 0; box-shadow: none; }
+  .mobile-settings-header { min-height: 58px; border-bottom: 1px solid var(--border-color); }
+  .mobile-settings-brand { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: flex-start; padding: 0 10px; }
+  .mobile-settings-brand strong { color: var(--text-primary); font-size: 18px; }
+  .mobile-settings-brand small { margin-top: 2px; color: var(--text-secondary); font-size: 11px; }
+  .mobile-settings-header > button { position: absolute; left: 12px; top: max(12px, env(safe-area-inset-top)); z-index: 1; }
+  .mobile-settings-header > button:last-child { display: none; }
+  .mobile-settings-nav { margin-top: 14px; gap: 1px; }
+  .mobile-settings-nav button.active { color: var(--text-primary); background: var(--nav-active-bg); font-weight: 600; }
+  .mobile-settings-nav button.active svg:first-child { color: var(--text-primary); }
+  .mobile-settings-nav > button:nth-child(-n+4) svg:last-child { display: none; }
+  .mobile-settings-divider { margin: 10px 10px; }
 }
 
 /* Desktop global-create control: compact pill, separate from mobile add. */
