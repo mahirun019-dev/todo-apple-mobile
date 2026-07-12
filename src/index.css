@@ -2934,6 +2934,38 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   transform: scale(0.98);
 }
 
+@media (max-width: 760px) {
+  .mobile-header { align-items: center; justify-content: center; }
+  .mobile-header-title { font-size: 17px; font-weight: 700; }
+  .mobile-menu-button,
+  .mobile-header-action-slot { position: absolute; width: 40px; height: 40px; }
+  .mobile-menu-button { left: 12px; display: grid; place-items: center; border: 0; border-radius: 10px; color: var(--text-primary); background: transparent; }
+  .mobile-header-action-slot { right: 12px; }
+  .mobile-settings-layer { position: fixed; inset: 0; z-index: 150; display: flex; }
+  .mobile-settings-backdrop { position: absolute; inset: 0; width: 100%; border: 0; background: rgba(0,0,0,.24); }
+  .mobile-settings-drawer { position: relative; z-index: 1; display: flex; width: 77vw; max-width: 340px; height: 100dvh; flex-direction: column; padding: max(12px, env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); background: var(--bg-surface); animation: mobile-settings-in .2s ease-out; }
+  .mobile-settings-header { display: grid; grid-template-columns: 40px 1fr 40px; min-height: 52px; align-items: center; gap: 8px; }
+  .mobile-settings-header h2 { margin: 0; text-align: center; font-size: 18px; }
+  .mobile-settings-header > button { display: grid; width: 40px; height: 40px; place-items: center; border: 0; border-radius: 10px; color: var(--text-primary); background: transparent; }
+  .mobile-settings-header .back-icon { transform: rotate(180deg); }
+  .mobile-settings-nav, .mobile-choice-list, .mobile-data-actions { display: grid; gap: 2px; }
+  .mobile-settings-nav { margin-top: 12px; }
+  .mobile-settings-nav button, .mobile-choice-list button, .mobile-data-actions button { display: flex; min-height: 54px; align-items: center; gap: 14px; padding: 0 10px; border: 0; border-radius: 10px; color: var(--text-primary); background: transparent; font-size: 15px; text-align: left; }
+  .mobile-settings-nav button:hover, .mobile-choice-list button:hover, .mobile-data-actions button:hover { background: var(--bg-muted); }
+  .mobile-settings-nav button svg { width: 20px; height: 20px; color: var(--text-secondary); }
+  .mobile-settings-nav button svg:last-child { width: 17px; margin-left: auto; color: var(--text-muted); }
+  .mobile-settings-divider { height: 1px; margin: 12px 10px; background: var(--border-color); }
+  .mobile-settings-page { min-height: 0; overflow-y: auto; padding-top: 16px; }
+  .mobile-choice-list button { justify-content: space-between; }
+  .mobile-choice-list button svg { width: 19px; color: var(--text-primary); }
+  .mobile-about { padding: 20px 10px; color: var(--text-secondary); }
+  .mobile-about strong { display: block; color: var(--text-primary); font-size: 22px; }
+  .mobile-about p { margin: 8px 0; }
+  .mobile-data-page { display: grid; gap: 18px; }
+  .mobile-data-actions { padding-top: 16px; border-top: 1px solid var(--border-color); }
+  @keyframes mobile-settings-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+}
+
 /* Desktop global-create control: compact pill, separate from mobile add. */
 @media (min-width: 1024px) {
   .sidebar .desktop-create .create-entry {

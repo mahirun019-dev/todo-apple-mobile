@@ -710,6 +710,7 @@ export default function App() {
     [menu, setMenu] = useState(false),
     [desktopMenu, setDesktopMenu] = useState(false),
     [settings, setSettings] = useState(false),
+    [mobileSettingsPage, setMobileSettingsPage] = useState<string | null>(null),
     [form, setForm] = useState<CreateType | null>(null),
     [editCompany, setEditCompany] = useState<Company>(),
     [editEvent, setEditEvent] = useState<Event>(),
@@ -1162,10 +1163,11 @@ export default function App() {
           </button>
         </aside>
         <header className="mobile-header glass-lite">
-          <Brand icon={icon} />
-          <button onClick={() => setSettings(true)}>
-            <Settings />
+          <button className="mobile-menu-button" onClick={() => setSettings(true)} aria-label={t.settings}>
+            <MoreHorizontal />
           </button>
+          <strong className="mobile-header-title">CareerFlow</strong>
+          <span className="mobile-header-action-slot" aria-hidden="true" />
         </header>
         <main className="workspace">
           {view === "dashboard" && (
@@ -1249,6 +1251,29 @@ export default function App() {
           />
         )}{" "}
         {settings && (
+          <MobileSettingsDrawer
+            t={t}
+            setView={setView}
+            page={mobileSettingsPage}
+            setPage={setMobileSettingsPage}
+            close={() => { setSettings(false); setMobileSettingsPage(null); }}
+            theme={theme}
+            setTheme={setTheme}
+            locale={locale}
+            setLocale={setLocale}
+            data={data}
+            setData={setData}
+            icon={icon}
+            csv={csv}
+            json={json}
+            iconRef={iconRef}
+            importCsv={importCsv}
+            importJson={importJson}
+            upload={upload}
+            download={download}
+          />
+        )}
+        {settings && false && (
           <SettingsPanel
             t={t}
             theme={theme}
@@ -2758,6 +2783,37 @@ function BackupControls({ t, data, theme, locale, setData, download }: any) {
   const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent || "") || (/Macintosh/.test(navigator.userAgent || "") && navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const labels = locale === "ja" ? {area:"データとバックアップ", notice:"データは主にこのデバイスに保存されます。定期的に書き出してください。", storage:"このデバイスの保存状況", version:"データベースバージョン", cloud:"クラウドへの書き出しと復元", local:"自動バックアップ", exportCloud:isIOSDevice ? "iCloud Drive に書き出す" : "バックアップファイルをダウンロード", restoreFile:"バックアップファイルから復元", permission:isIOSDevice ? "ファイルに保存を選択して iCloud Drive に保存してください。" : "ダウンロードしたファイルは、Finder から iCloud Drive に移動できます。", last:"前回の書き出し", never:"まだ完全バックアップを書き出していません", now:"今すぐローカルバックアップを作成", restore:"復元", remove:"削除", confirm:"このバックアップを削除しますか？", warning:"前回の書き出しから7日以上経過しています。"} : locale === "en" ? {area:"Data & backups", notice:"Your data is mainly stored on this device. Export a backup regularly.", storage:"Device storage", version:"Database version", cloud:"Cloud export and restore", local:"Automatic backups", exportCloud:isIOSDevice ? "Export to iCloud Drive" : "Download backup file", restoreFile:"Restore from backup file", permission:isIOSDevice ? "Choose Save to Files, then select iCloud Drive." : "After downloading, move the file to iCloud Drive in Finder.", last:"Last export", never:"No complete backup has been exported", now:"Create local backup now", restore:"Restore", remove:"Delete", confirm:"Delete this backup?", warning:"It has been more than 7 days since the last export."} : {area:"数据与备份", notice:"数据主要保存在当前设备，请定期导出完整备份。", storage:"当前设备存储", version:"数据库版本", cloud:"云端导出与恢复", local:"本地自动备份", exportCloud:isIOSDevice ? "导出到 iCloud Drive" : "下载备份文件", restoreFile:"从备份文件恢复", permission:isIOSDevice ? "请选择“存储到文件”，再选择 iCloud Drive。" : "下载后可在 Finder 中将文件移动到 iCloud Drive。", last:"上次导出", never:"尚未导出完整备份", now:"立即创建本地备份", restore:"恢复", remove:"删除", confirm:"确定删除此备份吗？", warning:"距离上次导出已超过 7 天。"};
   return <section className="backup-panel"><section><h3>{labels.storage}</h3><p>{labels.version}: v{data.schemaVersion}</p><div className="backup-meta"><span>{data.companies.length} {locale === "ja" ? "企業" : locale === "en" ? "companies" : "企业"} · {data.events.length} {locale === "ja" ? "日程" : locale === "en" ? "schedules" : "日程"}</span><span>{data.materials.length} {locale === "ja" ? "資料" : locale === "en" ? "resources" : "资料"} · {data.interviews.length} {locale === "ja" ? "面接記録" : locale === "en" ? "interviews" : "面试记录"} · {data.preparations.length} {locale === "ja" ? "準備事項" : locale === "en" ? "preparations" : "准备事项"}</span></div></section><section><h3>{labels.cloud}</h3><div className="backup-cloud-actions"><button className="primary" onClick={exportCloud}>{labels.exportCloud}</button><button onClick={() => fileRef.current?.click()}>{labels.restoreFile}</button></div><p>{labels.permission}</p><p>{lastExport ? `${labels.last}: ${new Date(lastExport).toLocaleDateString()} (${days} ${locale === "ja" ? "日前" : locale === "en" ? "days ago" : "天前"})` : labels.never}</p>{days !== null && days > 7 && <p className="backup-warning">{labels.warning}</p>}</section><section><h3>{labels.local}</h3><div className="backup-meta"><span>{items.length}/5</span><span>{items[0] ? new Date(items[0].createdAt).toLocaleString() : labels.never}</span></div><button className="primary" onClick={backupNow}>{labels.now}</button>{error&&<p className="backup-error">{error}</p>}<input hidden ref={fileRef} type="file" accept="application/json,.json" onChange={restoreFile}/><div className="backup-list">{items.map((x)=><div key={x.createdAt}><span>{new Date(x.createdAt).toLocaleString()}</span><button onClick={()=>restore(x)}>{labels.restore}</button><button onClick={()=>{if(window.confirm(labels.confirm)) deleteBackup(x.createdAt).then(refresh)}}>{labels.remove}</button></div>)}</div></section></section>;
+}
+function MobileSettingsDrawer({
+  t, page, setPage, close, setView, theme, setTheme, locale, setLocale, data, setData, csv, json, download,
+}: any) {
+  const label = page === "data" ? t.data : page === "appearance" ? t.appearance : page === "language" ? t.language : page === "about" ? "About CareerFlow" : t.settings;
+  const go = (next: string) => setPage(next);
+  return <div className="mobile-settings-layer">
+    <button className="mobile-settings-backdrop" onClick={close} aria-label="Close" />
+    <aside className="mobile-settings-drawer" role="dialog" aria-modal="true" aria-label={label}>
+      <header className="mobile-settings-header">
+        {page ? <button onClick={() => setPage(null)} aria-label="Back"><ChevronRight className="back-icon" /></button> : <span />}
+        <h2>{label}</h2><CloseButton onClick={close} label="Close" />
+      </header>
+      {!page ? <nav className="mobile-settings-nav">
+        <button onClick={() => { setPage(null); close(); setView("dashboard"); }}><Home /><span>{t.dashboard}</span></button>
+        <button onClick={() => { setPage(null); close(); setView("companies"); }}><Building2 /><span>{t.companies}</span></button>
+        <button onClick={() => { setPage(null); close(); setView("schedule"); }}><CalendarDays /><span>{t.schedule}</span></button>
+        <button onClick={() => { setPage(null); close(); setView("materials"); }}><FileJson /><span>{t.materials}</span></button>
+        <div className="mobile-settings-divider" />
+        <button onClick={() => go("data")}><FileJson /><span>{t.data}</span><ChevronRight /></button>
+        <button onClick={() => go("appearance")}><Settings /><span>{t.appearance}</span><ChevronRight /></button>
+        <button onClick={() => go("language")}><MoreHorizontal /><span>{t.language}</span><ChevronRight /></button>
+        <button onClick={() => go("about")}><BriefcaseBusiness /><span>About CareerFlow</span><ChevronRight /></button>
+      </nav> : <div className="mobile-settings-page">
+        {page === "appearance" && <div className="mobile-choice-list">{(["light", "dark", "system"] as Theme[]).map((x) => <button className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}>{t[x]}{theme === x && <Check />}</button>)}</div>}
+        {page === "language" && <div className="mobile-choice-list">{(["zh", "ja", "en"] as Locale[]).map((x) => <button className={locale === x ? "selected" : ""} onClick={() => setLocale(x)} key={x}>{x === "zh" ? "中文" : x === "ja" ? "日本語" : "English"}{locale === x && <Check />}</button>)}</div>}
+        {page === "about" && <div className="mobile-about"><strong>CareerFlow</strong><p>{t.subtitle}</p><span>日本就活进度与材料管理</span></div>}
+        {page === "data" && <div className="mobile-data-page"><BackupControls t={t} data={data} theme={theme} locale={locale} setData={setData} download={download} /><div className="mobile-data-actions"><button onClick={() => csv.current?.click()}><Upload />{t.importCsv}</button><button onClick={() => download("careerflow-materials.csv", Papa.unparse(data.materials), "text/csv")}><Download />{t.exportCsv}</button><button onClick={() => json.current?.click()}><FileJson />{t.restore}</button><button onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Download />{t.backup}</button></div></div>}
+      </div>}
+    </aside>
+  </div>;
 }
 function SettingsDrawer({ close, children, title }: { close: () => void; children: ReactNode; title: string }) {
   const [closing, setClosing] = useState(false);
