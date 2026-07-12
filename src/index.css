@@ -2850,6 +2850,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   font-weight: 600;
 }
 .sidebar .nav-list button svg {
+  width: 23px;
+  height: 23px;
   flex: 0 0 auto;
   stroke-width: 1.8;
   transition: color 80ms ease, stroke-width 80ms ease;
@@ -2876,6 +2878,20 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .dark .sidebar .nav-list button[aria-current="page"] { color: #f5f5f5 !important; background: #24262a !important; }
 .dark .sidebar .nav-list button.active svg,
 .dark .sidebar .nav-list button[aria-current="page"] svg { color: #f5f5f5; }
+.career-mobile-nav > button:not(.nav-add) svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 1.8;
+}
+.career-mobile-nav > button.active:not(.nav-add) svg {
+  color: currentColor;
+  stroke-width: 2.4;
+}
+.career-mobile-nav .nav-add svg {
+  color: inherit !important;
+  stroke: currentColor !important;
+  fill: none !important;
+}
 
 /* Desktop global-create control: compact pill, separate from mobile add. */
 @media (min-width: 1024px) {

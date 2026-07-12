@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="CareerFlow">
+  <rect width="512" height="512" rx="112" fill="#2477d9"/>
+  <path d="M142 218h228v170H142z" fill="none" stroke="#fff" stroke-linejoin="round" stroke-width="34"/>
+  <path d="M202 218v-28c0-22 18-40 40-40h28c22 0 40 18 40 40v28" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="34"/>
+  <path d="M142 270h228M242 270v22h28v-22" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="30"/>
+</svg>
