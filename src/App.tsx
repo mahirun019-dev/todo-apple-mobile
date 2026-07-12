@@ -689,6 +689,7 @@ function clean(d: Data): Data {
 export default function App() {
   const [data, setData] = useState<Data>(load);
   const [view, setView] = useState<View>("dashboard"),
+    [pendingNav, setPendingNav] = useState<View | null>(null),
     [theme, setTheme] = useState<Theme>(
       () => (localStorage.getItem(THEME) as Theme) || "system",
     ),
@@ -708,6 +709,7 @@ export default function App() {
     [filter, setFilter] = useState("all"),
     [toast, setToast] = useState<{ text: string; undo: () => void }>(),
     [icon, setIcon] = useState(() => localStorage.getItem(ICON) || "");
+  useEffect(() => { setPendingNav(null); }, [view]);
   const csv = useRef<HTMLInputElement>(null),
     json = useRef<HTMLInputElement>(null),
     iconRef = useRef<HTMLInputElement>(null);
@@ -1113,7 +1115,7 @@ export default function App() {
       <div className="student-app career-app">
         <aside className="sidebar panel">
           <Brand icon={icon} />
-          <Nav view={view} setView={setView} t={t} />
+          <Nav view={view} pendingNav={pendingNav} setPendingNav={setPendingNav} setView={setView} t={t} />
           <DesktopCreate
             t={t}
             open={open}
@@ -1339,10 +1341,14 @@ function Brand({ icon }: { icon: string }) {
 }
 function Nav({
   view,
+  pendingNav,
+  setPendingNav,
   setView,
   t,
 }: {
   view: View;
+  pendingNav: View | null;
+  setPendingNav: (v: View) => void;
   setView: (v: View) => void;
   t: any;
 }) {
@@ -1356,10 +1362,10 @@ function Nav({
     <div className="nav-list">
       {a.map(([v, I, k]) => (
         <button
-          className={view === v ? "active" : ""}
-          onClick={() => setView(v)}
+          className={(pendingNav ?? view) === v ? "active" : ""}
+          onClick={() => { setPendingNav(v); setView(v); }}
           aria-current={view === v ? "page" : undefined}
-          onPointerDown={(e) => { e.currentTarget.dataset.pressed = "true"; }}
+          onPointerDown={(e) => { setPendingNav(v); e.currentTarget.dataset.pressed = "true"; }}
           onPointerUp={(e) => { delete e.currentTarget.dataset.pressed; }}
           onPointerLeave={(e) => { delete e.currentTarget.dataset.pressed; }}
           key={v}
