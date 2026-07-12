@@ -2790,6 +2790,7 @@ function MobileSettingsDrawer({
   t, page, setPage, close, setView, view, theme, setTheme, locale, setLocale, data, setData, csv, json, download,
 }: any) {
   const label = "CareerFlow";
+  const cloudLabel = locale === "ja" ? "iCloud Drive に書き出す" : locale === "en" ? "Export to iCloud Drive" : "导出到 iCloud Drive";
   const go = (next: string) => setPage(next);
   const touchStart = useRef<number | null>(null);
   useEffect(() => {
@@ -2814,17 +2815,14 @@ function MobileSettingsDrawer({
       </header>
       <div className="drawer-main"><nav className="mobile-settings-nav">
         <button className={view === "dashboard" ? "active" : ""} onClick={() => { setPage(null); close(); setView("dashboard"); }}><Home /><span>{t.dashboard}</span></button>
-        <button className={view === "companies" ? "active" : ""} onClick={() => { setPage(null); close(); setView("companies"); }}><Building2 /><span>{t.companies}</span></button>
-        <button className={view === "schedule" ? "active" : ""} onClick={() => { setPage(null); close(); setView("schedule"); }}><CalendarDays /><span>{t.schedule}</span></button>
-        <button className={view === "materials" ? "active" : ""} onClick={() => { setPage(null); close(); setView("materials"); }}><FileJson /><span>{t.materials}</span></button>
         <button className={page === "data" ? "expanded" : ""} onClick={() => setPage(page === "data" ? null : "data")}><FileJson /><span>{t.data}</span><ChevronRight /></button>
-        {page === "data" && <div className="drawer-accordion-panel"><BackupControls t={t} data={data} theme={theme} locale={locale} setData={setData} download={download} /><div className="mobile-data-actions"><button onClick={() => csv.current?.click()}><Upload />{t.importCsv}</button><button onClick={() => download("careerflow-materials.csv", Papa.unparse(data.materials), "text/csv")}><Download />{t.exportCsv}</button><button onClick={() => json.current?.click()}><FileJson />{t.restore}</button><button onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Download />{t.backup}</button></div></div>}
+        {page === "data" && <div className="drawer-accordion-panel"><button onClick={() => csv.current?.click()}><Upload /><span>{t.importCsv}</span></button><button onClick={() => download("careerflow-materials.csv", Papa.unparse(data.materials), "text/csv")}><Download /><span>{t.exportCsv}</span></button><button onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Download /><span>{t.backup}</span></button><button onClick={() => json.current?.click()}><FileJson /><span>{t.restore}</span></button><button onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Download /><span>{cloudLabel}</span></button></div>}
         <button className={page === "appearance" ? "expanded" : ""} onClick={() => setPage(page === "appearance" ? null : "appearance")}><Settings /><span>{t.appearance}</span><ChevronRight /></button>
-        {page === "appearance" && <div className="drawer-accordion-panel"><div className="mobile-choice-list">{(["light", "dark", "system"] as Theme[]).map((x) => <button className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}>{t[x]}{theme === x && <Check />}</button>)}</div></div>}
+        {page === "appearance" && <div className="drawer-accordion-panel">{(["light", "dark", "system"] as Theme[]).map((x) => <button className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}><span>{t[x]}</span>{theme === x && <Check />}</button>)}</div>}
         <button className={page === "language" ? "expanded" : ""} onClick={() => setPage(page === "language" ? null : "language")}><Globe /><span>{t.language}</span><ChevronRight /></button>
-        {page === "language" && <div className="drawer-accordion-panel"><div className="mobile-choice-list">{(["zh", "ja", "en"] as Locale[]).map((x) => <button className={locale === x ? "selected" : ""} onClick={() => setLocale(x)} key={x}>{x === "zh" ? "中文" : x === "ja" ? "日本語" : "English"}{locale === x && <Check />}</button>)}</div></div>}
+        {page === "language" && <div className="drawer-accordion-panel">{(["zh", "ja", "en"] as Locale[]).map((x) => <button className={locale === x ? "selected" : ""} onClick={() => setLocale(x)} key={x}><span>{x === "zh" ? "中文" : x === "ja" ? "日本語" : "English"}</span>{locale === x && <Check />}</button>)}</div>}
         <button className={page === "about" ? "expanded" : ""} onClick={() => setPage(page === "about" ? null : "about")}><BriefcaseBusiness /><span>关于 CareerFlow</span><ChevronRight /></button>
-        {page === "about" && <div className="drawer-accordion-panel"><div className="mobile-about"><strong>CareerFlow</strong><p>{t.subtitle}</p><span>日本就活进度与材料管理</span></div></div>}
+        {page === "about" && <div className="drawer-accordion-panel mobile-about"><p>CareerFlow</p><p>{t.version || "版本 1.0"}</p><p>数据库版本：v{data.schemaVersion}</p><p>隐私说明：数据主要保存在当前设备。</p><p>开源许可：MIT License</p></div>}
       </nav></div>
     </aside>
   </div>;
