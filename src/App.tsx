@@ -1,4 +1,5 @@
 import {
+  memo,
   useEffect,
   useMemo,
   useRef,
@@ -689,7 +690,6 @@ function clean(d: Data): Data {
 export default function App() {
   const [data, setData] = useState<Data>(load);
   const [view, setView] = useState<View>("dashboard"),
-    [pendingNav, setPendingNav] = useState<View | null>(null),
     [theme, setTheme] = useState<Theme>(
       () => (localStorage.getItem(THEME) as Theme) || "system",
     ),
@@ -709,7 +709,6 @@ export default function App() {
     [filter, setFilter] = useState("all"),
     [toast, setToast] = useState<{ text: string; undo: () => void }>(),
     [icon, setIcon] = useState(() => localStorage.getItem(ICON) || "");
-  useEffect(() => { setPendingNav(null); }, [view]);
   const csv = useRef<HTMLInputElement>(null),
     json = useRef<HTMLInputElement>(null),
     iconRef = useRef<HTMLInputElement>(null);
@@ -1115,7 +1114,7 @@ export default function App() {
       <div className="student-app career-app">
         <aside className="sidebar panel">
           <Brand icon={icon} />
-          <Nav view={view} pendingNav={pendingNav} setPendingNav={setPendingNav} setView={setView} t={t} />
+          <StableNav view={view} setView={setView} t={t} />
           <DesktopCreate
             t={t}
             open={open}
@@ -1341,17 +1340,15 @@ function Brand({ icon }: { icon: string }) {
 }
 function Nav({
   view,
-  pendingNav,
-  setPendingNav,
   setView,
   t,
 }: {
   view: View;
-  pendingNav: View | null;
-  setPendingNav: (v: View) => void;
   setView: (v: View) => void;
   t: any;
 }) {
+  const [pendingNav, setPendingNav] = useState<View | null>(null);
+  useEffect(() => setPendingNav(null), [view]);
   const a: [View, any, string][] = [
     ["dashboard", Home, "dashboard"],
     ["companies", Building2, "companies"],
@@ -1377,6 +1374,7 @@ function Nav({
     </div>
   );
 }
+const StableNav = memo(Nav);
 function createActions(t: any): [CreateType, any, string][] {
   return [
     ["company", Building2, t.addCompany],
