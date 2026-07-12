@@ -2791,13 +2791,25 @@ function MobileSettingsDrawer({
   const label = page === "data" ? t.data : page === "appearance" ? t.appearance : page === "language" ? t.language : page === "about" ? "关于 CareerFlow" : "CareerFlow";
   const go = (next: string) => setPage(next);
   const touchStart = useRef<number | null>(null);
+  useEffect(() => {
+    const y = window.scrollY;
+    document.documentElement.classList.add("drawer-open");
+    document.body.classList.add("drawer-open");
+    document.body.style.setProperty("--saved-scroll-y", `${y}px`);
+    document.body.style.top = `-${y}px`;
+    return () => {
+      document.documentElement.classList.remove("drawer-open");
+      document.body.classList.remove("drawer-open");
+      document.body.style.removeProperty("--saved-scroll-y");
+      document.body.style.removeProperty("top");
+      window.scrollTo(0, y);
+    };
+  }, []);
   return <div className="mobile-settings-layer">
     <button className="mobile-settings-backdrop" onClick={close} aria-label="Close" />
-    <aside className="mobile-settings-drawer" role="dialog" aria-modal="true" aria-label={label} onTouchStart={(e) => { touchStart.current = e.touches[0].clientX; }} onTouchEnd={(e) => { if (touchStart.current !== null && e.changedTouches[0].clientX - touchStart.current < -70) close(); touchStart.current = null; }}>
-      <header className="mobile-settings-header">
-        {page ? <button onClick={() => setPage(null)} aria-label="Back"><ChevronRight className="back-icon" /></button> : <span />}
-        <div className="mobile-settings-brand"><strong>CareerFlow</strong><small>日本就活管理</small></div>
-        <span />
+    <aside className="mobile-settings-drawer" role="dialog" aria-modal="true" aria-label={label} onTouchStart={(e) => { touchStart.current = e.touches[0].clientX; }} onTouchEnd={(e) => { const start = touchStart.current; const delta = start === null ? 0 : e.changedTouches[0].clientX - start; if (page && start !== null && start <= 24 && delta > 72) setPage(null); else if (!page && delta < -70) close(); touchStart.current = null; }}>
+      <header className={`mobile-settings-header ${page ? "mobile-settings-subheader" : ""}`}>
+        {page ? <><button onClick={() => setPage(null)} aria-label="Back"><ChevronRight className="back-icon" /></button><h2>{label}</h2><span /></> : <><span /><div className="mobile-settings-brand"><strong>CareerFlow</strong><small>日本就活管理</small></div><span /></>}
       </header>
       {!page ? <nav className="mobile-settings-nav">
         <button className={view === "dashboard" ? "active" : ""} onClick={() => { setPage(null); close(); setView("dashboard"); }}><Home /><span>{t.dashboard}</span></button>
@@ -2809,7 +2821,7 @@ function MobileSettingsDrawer({
         <button onClick={() => go("appearance")}><Settings /><span>{t.appearance}</span><ChevronRight /></button>
         <button onClick={() => go("language")}><MoreHorizontal /><span>{t.language}</span><ChevronRight /></button>
         <button onClick={() => go("about")}><BriefcaseBusiness /><span>关于 CareerFlow</span><ChevronRight /></button>
-      </nav> : <div className="mobile-settings-page">
+      </nav> : <div className="mobile-settings-page is-subpage">
         {page === "appearance" && <div className="mobile-choice-list">{(["light", "dark", "system"] as Theme[]).map((x) => <button className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}>{t[x]}{theme === x && <Check />}</button>)}</div>}
         {page === "language" && <div className="mobile-choice-list">{(["zh", "ja", "en"] as Locale[]).map((x) => <button className={locale === x ? "selected" : ""} onClick={() => setLocale(x)} key={x}>{x === "zh" ? "中文" : x === "ja" ? "日本語" : "English"}{locale === x && <Check />}</button>)}</div>}
         {page === "about" && <div className="mobile-about"><strong>CareerFlow</strong><p>{t.subtitle}</p><span>日本就活进度与材料管理</span></div>}
