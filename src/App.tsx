@@ -1620,14 +1620,13 @@ function Dashboard({
     <>
       <div className="page-head">
         <div>
-          <span>
+          <h1 className="dashboard-date">
             {new Intl.DateTimeFormat(undefined, {
               month: "long",
               day: "numeric",
               weekday: "long",
             }).format(new Date())}
-          </span>
-          <h1>{t.title}</h1>
+          </h1>
         </div>
         <PrimaryActionButton onClick={() => open("company")}>
           <Plus />

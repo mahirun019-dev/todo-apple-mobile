@@ -51,6 +51,8 @@ body.settings-drawer-open { overflow: hidden; overscroll-behavior: none; }
 }
 
 @media (min-width: 981px) {
+  .dashboard-date { margin: 0; color: #0f1419; font-size: 38px; font-weight: 700; line-height: 1.2; }
+  .dashboard-date + p { display: none; }
   .settings-drawer-layer {
     position: fixed;
     inset: 0;
@@ -73,6 +75,13 @@ body.settings-drawer-open { overflow: hidden; overscroll-behavior: none; }
   .settings-drawer-panel .danger-button { color: #c45752 !important; background: transparent !important; }
   .deadline-list .empty-small { min-height: 0; padding: 18px 16px; }
   .deadline-list .empty-small p { margin: 0; max-width: 300px; }
+}
+@media (max-width: 760px) {
+  .dashboard-date { margin: 0; color: #0f1419; font-size: 32px; font-weight: 700; line-height: 1.2; }
+  .dashboard-date + p { display: none; }
+  .career-app .page-head { align-items: center; gap: 16px; }
+  .career-app .page-head > div { min-width: 0; }
+  .career-app .page-head > .primary-action { flex: 0 0 auto; }
 }
 * {
   box-sizing: border-box;
