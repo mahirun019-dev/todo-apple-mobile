@@ -2871,6 +2871,27 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .desktop-settings-content > .settings-section { width: min(100%, 720px); }
   .settings-data-section { padding-top: 4px; }
   .settings-data-section > h3 { margin-top: 0; }
+  .settings-sidebar { padding: 16px 12px; }
+  .settings-nav-list { display: flex; width: 100%; flex-direction: column; gap: 4px; }
+  .settings-nav-item,
+  .settings-nav-item.is-active {
+    display: flex;
+    width: 100%;
+    min-height: 48px;
+    height: 48px;
+    align-items: center;
+    margin: 0;
+    padding: 0 16px;
+    box-sizing: border-box;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: #536471;
+    font: inherit;
+    text-align: left;
+  }
+  .settings-nav-item.is-active { color: #0f1419; background: rgba(15,20,25,.06); font-weight: 700; }
+  .settings-nav-label { display: block; width: 100%; min-width: 0; background: transparent; }
 }
 
 /* Desktop keeps only a compact page margin; mobile owns safe-area spacing. */
