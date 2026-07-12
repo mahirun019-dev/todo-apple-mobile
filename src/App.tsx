@@ -41,7 +41,7 @@ import {
 
 type View = "dashboard" | "companies" | "schedule" | "materials";
 type Theme = "light" | "dark" | "system";
-type Locale = "zh" | "ja" | "en";
+type Locale = "zh" | "ja";
 type Stage =
   | "saved"
   | "briefing"
@@ -841,9 +841,10 @@ export default function App() {
     [theme, setTheme] = useState<Theme>(
       () => (localStorage.getItem(THEME) as Theme) || "system",
     ),
-    [locale, setLocale] = useState<Locale>(
-      () => (localStorage.getItem(LOCALE) as Locale) || "zh",
-    ),
+    [locale, setLocale] = useState<Locale>(() => {
+      const saved = localStorage.getItem(LOCALE);
+      return saved === "ja" ? "ja" : "zh";
+    }),
     [menu, setMenu] = useState(false),
     [desktopMenu, setDesktopMenu] = useState(false),
     [settings, setSettings] = useState(false),
@@ -883,7 +884,7 @@ export default function App() {
       selectionRecords: data.companies.map((x) => ({ id: x.id, stage: x.stage, updatedAt: x.updatedAt })),
       settings: { theme, locale },
     };
-    createBackup(snapshot).catch(() => setToast({ text: locale === "ja" ? "自動バックアップに失敗しました" : locale === "en" ? "Automatic backup failed" : "自动备份失败", undo: () => undefined }));
+    createBackup(snapshot).catch(() => setToast({ text: locale === "ja" ? "自動バックアップに失敗しました" : "自动备份失败", undo: () => undefined }));
   }, [data, locale, theme]);
   useEffect(() => localStorage.setItem(LOCALE, locale), [locale]);
   useEffect(() => {
@@ -1231,7 +1232,7 @@ export default function App() {
         if (x.schemaVersion !== 5 || !Array.isArray(x.companies) || !Array.isArray(x.materials) || !Array.isArray(x.events)) throw new Error("invalid");
         setData(normalize(x));
       } catch {
-        setToast({ text: locale === "ja" ? "バックアップの形式が無効です" : locale === "en" ? "Invalid backup format; existing data was kept" : "备份格式无效，原数据未改变", undo: () => undefined });
+        setToast({ text: locale === "ja" ? "バックアップの形式が無効です" : "备份格式无效，原数据未改变", undo: () => undefined });
       }
     };
     r.readAsText(f);
@@ -3068,7 +3069,7 @@ function MobileSettingsDrawer({
         <button className={`${page === "appearance" ? "expanded " : ""}${selectedItem === "appearance" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("appearance"); setPage(page === "appearance" ? null : "appearance"); }}><Settings /><span>{t.appearance}</span><ChevronRight /></button>
         {page === "appearance" && <div className="drawer-accordion-panel">{(["light", "dark", "system"] as Theme[]).map((x) => <button className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}><span>{t[x]}</span>{theme === x && <Check />}</button>)}</div>}
         <button className={`${page === "language" ? "expanded " : ""}${selectedItem === "language" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("language"); setPage(page === "language" ? null : "language"); }}><Globe /><span>{t.language}</span><ChevronRight /></button>
-        {page === "language" && <div className="drawer-accordion-panel">{(["zh", "ja", "en"] as Locale[]).map((x) => <button className={locale === x ? "selected" : ""} onClick={() => setLocale(x)} key={x}><span>{x === "zh" ? "中文" : x === "ja" ? "日本語" : "English"}</span>{locale === x && <Check />}</button>)}</div>}
+        {page === "language" && <div className="drawer-accordion-panel">{(["zh", "ja"] as Locale[]).map((x) => <button type="button" className={locale === x ? "selected" : ""} onClick={() => setLocale(x)} key={x}><span>{x === "zh" ? "中文" : "日本語"}</span>{locale === x && <Check />}</button>)}</div>}
         <button className={`${page === "about" ? "expanded " : ""}${selectedItem === "about" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("about"); setPage(page === "about" ? null : "about"); }}><BriefcaseBusiness /><span>{about.title}</span><ChevronRight /></button>
         {page === "about" && <div className="drawer-accordion-panel mobile-about"><p>{about.title}</p><p>{about.version}</p><p>{about.db}</p><p>{about.privacy}</p><p>{about.license}</p></div>}
       </nav></div>
@@ -3093,7 +3094,7 @@ function SettingsPanel({ t, theme, setTheme, locale, setLocale, close, data, set
   return <SettingsDrawer title={t.settings} close={close}><div className="desktop-settings-layout"><nav className="desktop-settings-nav settings-sidebar"><div className="settings-nav-list">{tabs.map(([key, text]) => <SettingsNavItem key={key} label={text} active={tab === key} onClick={() => setTab(key)} />)}</div></nav><div className="desktop-settings-content">
     {tab === "general" && <section className="settings-section"><h3>{ui.storage}</h3><div className="settings-stats">{[[ja ? "企業数" : locale === "en" ? "Companies" : "企业数", data.companies.length], [ja ? "日程数" : locale === "en" ? "Schedules" : "日程数", data.events.length], [ja ? "資料数" : locale === "en" ? "Resources" : "资料数", data.materials.length], [ja ? "面接記録数" : locale === "en" ? "Interviews" : "面试记录数", data.interviews.length], [ja ? "準備事項数" : locale === "en" ? "Preparations" : "准备事项数", data.preparations.length], [ui.db, "v" + data.schemaVersion]].map(([label, value]) => <div key={String(label)}><span>{label}</span><strong>{value}</strong></div>)}</div></section>}
     {tab === "appearance" && <section className="settings-section"><h3>{ui.appearance}</h3><div className="settings-segmented">{(["light", "dark", "system"] as Theme[]).map((x) => <button aria-pressed={theme === x} className={theme === x ? "active" : ""} onClick={() => setTheme(x)} key={x}>{t[x]}</button>)}</div></section>}
-    {tab === "language" && <section className="settings-section"><h3>{ui.language}</h3><div className="settings-segmented">{(["zh", "ja", "en"] as Locale[]).map((x) => <button aria-pressed={locale === x} className={locale === x ? "active" : ""} onClick={() => setLocale(x)} key={x}>{x === "zh" ? "中文" : x === "ja" ? "日本語" : "English"}</button>)}</div></section>}
+    {tab === "language" && <section className="settings-section"><h3>{ui.language}</h3><div className="settings-segmented">{(["zh", "ja"] as Locale[]).map((x) => <button type="button" aria-pressed={locale === x} className={locale === x ? "active" : ""} onClick={() => setLocale(x)} key={x}>{x === "zh" ? "中文" : "日本語"}</button>)}</div></section>}
     {tab === "data" && <section className="settings-section settings-data-section"><h3>{ui.csv}</h3><div className="settings-actions"><button onClick={() => csv.current?.click()}><Upload />{ja ? "CSV読込" : locale === "en" ? "Import CSV" : "导入 CSV"}</button><button onClick={() => download("careerflow-materials.csv", Papa.unparse(data.materials), "text/csv")}><Download />{ja ? "CSV書出" : locale === "en" ? "Export CSV" : "导出 CSV"}</button></div><h3>{ui.backup}</h3><BackupControls t={t} data={data} theme={theme} locale={locale} setData={setData} download={download} /><div className="settings-actions"><button onClick={() => json.current?.click()}><RotateCcw />{ja ? "バックアップファイルから復元" : locale === "en" ? "Restore from backup file" : "从备份文件恢复"}</button><button onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Archive />{ja ? "完全バックアップをダウンロード" : locale === "en" ? "Download complete backup" : "下载完整备份"}</button></div><div className="settings-danger"><h3>{sampleTitle}</h3><p>{sampleHelp}</p><button className="danger-button" onClick={() => { if (window.confirm(sampleAction + "？")) setData((d: Data) => ({ ...d, companies: d.companies.filter((x) => !x.tags.includes("sample") && !demoNames.includes(x.name)), materials: d.materials.filter((x) => !x.tags.includes("sample")) })); }}><Trash2 />{sampleAction}</button></div></section>}
     {tab === "about" && <section className="settings-section"><h3>{ui.aboutTitle}</h3><div className="settings-about-list"><p>{ui.version}</p><p>{ui.db}: v{data.schemaVersion}</p><p>{ui.pwa}</p><p>{ui.icon}</p><p>{ui.privacy}</p><p>{ui.license}</p></div></section>}
   </div></div><input hidden ref={csv} type="file" accept=".csv" onChange={importCsv} /><input hidden ref={json} type="file" accept=".json" onChange={importJson} /><input hidden ref={iconRef} type="file" accept="image/*" onChange={upload} /></SettingsDrawer>;
