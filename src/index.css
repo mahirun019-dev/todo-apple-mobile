@@ -3012,8 +3012,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .mobile-settings-layer { padding: 0; }
   .mobile-settings-backdrop { background: rgba(0,0,0,.38); }
   .mobile-settings-drawer {
-    width: 80vw;
-    max-width: 360px;
+    width: min(70vw, 320px);
+    max-width: 320px;
     height: 100dvh;
     margin: 0;
     border-radius: 0;
@@ -3030,6 +3030,69 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     transform: none;
     transition: none;
   }
+  .mobile-settings-drawer {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "PingFang SC", "Hiragino Sans", sans-serif;
+  }
+  .mobile-settings-header {
+    min-height: 56px;
+    border-bottom: 0;
+  }
+  .mobile-settings-brand strong {
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .mobile-settings-brand small {
+    margin-top: 3px;
+    font-size: 14px;
+    font-weight: 400;
+  }
+  .mobile-settings-nav {
+    margin-top: 20px;
+    gap: 0;
+  }
+  .mobile-settings-nav button {
+    min-height: 54px;
+    height: 54px;
+    margin: 0;
+    padding: 0 24px;
+    gap: 17px;
+    border-radius: 0;
+    color: #202124;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .mobile-settings-nav button svg:first-child {
+    width: 24px;
+    height: 24px;
+    color: #536471;
+    stroke-width: 2;
+  }
+  .mobile-settings-nav button.active {
+    height: 52px;
+    margin: 2px 16px;
+    padding: 0 14px;
+    border-radius: 14px;
+    color: #0f1419;
+    background: rgba(0,0,0,.045);
+    font-weight: 700;
+  }
+  .mobile-settings-nav button.active svg:first-child { color: #0f1419; }
+  .mobile-settings-nav button svg:last-child {
+    width: 16px;
+    height: 16px;
+    color: #9aa0a6;
+  }
+  .mobile-settings-divider {
+    height: 1px;
+    margin: 12px 24px;
+    background: rgba(0,0,0,.08);
+  }
+  .dark .mobile-settings-nav button { color: #e7e9ea; }
+  .dark .mobile-settings-nav button svg:first-child { color: #8b98a5; }
+  .dark .mobile-settings-nav button.active { color: #f5f5f5; background: rgba(255,255,255,.08); }
+  .dark .mobile-settings-nav button.active svg:first-child { color: #f5f5f5; }
 }
 
 /* Desktop global-create control: compact pill, separate from mobile add. */
