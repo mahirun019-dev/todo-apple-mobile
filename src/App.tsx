@@ -11,10 +11,12 @@ import {
 import Papa from "papaparse";
 import { createBackup, deleteBackup, listBackups, type BackupSnapshot } from "./backups";
 import {
+  Archive,
   BarChart3,
   BriefcaseBusiness,
   Building2,
   CalendarDays,
+  CloudUpload,
   Check,
   ChevronRight,
   Clock3,
@@ -25,6 +27,7 @@ import {
   MoreHorizontal,
   Menu,
   Plus,
+  RotateCcw,
   Settings,
   Target,
   Timer,
@@ -700,7 +703,20 @@ function clean(d: Data): Data {
       }
     : d;
 }
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(() => typeof window !== "undefined" && window.matchMedia(query).matches);
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    const update = () => setMatches(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, [query]);
+  return matches;
+}
+
 export default function App() {
+  const isMobile = useMediaQuery("(max-width: 767px)");
   const [data, setData] = useState<Data>(load);
   const [view, setView] = useState<View>("dashboard"),
     [theme, setTheme] = useState<Theme>(
@@ -1130,7 +1146,7 @@ export default function App() {
     <div className="app-shell">
       <div className={`student-app career-app ${settings ? "mobile-menu-open" : ""}`}>
         <aside className="sidebar panel">
-          <Brand icon={icon} />
+          <Brand icon={icon} showIcon={false} />
           <StableNav view={view} setView={setView} t={t} />
           <DesktopCreate
             t={t}
@@ -1245,7 +1261,7 @@ export default function App() {
           menu={menu}
           onAdd={() => (menu ? setMenu(false) : setMenu(true))}
         />
-        {menu && (
+        {isMobile && menu && (
           <ActionMenu
             t={t}
             view={view}
@@ -1253,7 +1269,7 @@ export default function App() {
             open={open}
           />
         )}{" "}
-        {settings && (
+        {isMobile && settings && (
           <MobileSettingsDrawer
             t={t}
             setView={setView}
@@ -1279,7 +1295,7 @@ export default function App() {
             download={download}
           />
         )}
-        {settings && false && (
+        {!isMobile && settings && (
           <SettingsPanel
             t={t}
             theme={theme}
@@ -1369,12 +1385,12 @@ export default function App() {
     </div>
   );
 }
-function Brand({ icon }: { icon: string }) {
+function Brand({ icon, showIcon = true }: { icon: string; showIcon?: boolean }) {
   return (
     <div className="brand">
-      <div className="brand-mark">
+      {showIcon && <div className="brand-mark">
         {icon ? <img src={icon} alt="" /> : <img src={`${import.meta.env.BASE_URL}favicon-v4.svg`} alt="" />}
-      </div>
+      </div>}
       <div>
         <strong>CareerFlow</strong>
         <span>日本就活管理</span>
@@ -1639,7 +1655,7 @@ function Dashboard({
             <Empty t={t} kind="schedule" open={() => open("schedule")} />
             )}
           </section>
-          <section>
+          {due.length > 0 && <section>
             <Title
               className="deadline-title"
               action={
@@ -1667,7 +1683,7 @@ function Dashboard({
                 <Empty t={t} />
               )}
             </div>
-          </section>
+          </section>}
         </div>
         <aside className="dashboard-sidebar">
           <section className="entity-card">
@@ -2819,7 +2835,7 @@ function MobileSettingsDrawer({
       <div className="drawer-main drawer-scroll"><nav className="mobile-settings-nav">
         <button className={selectedItem === "home" ? "active" : ""} onClick={() => { setSelectedItem("home"); setPage(null); close(); setView("dashboard"); }}><Home /><span>{t.dashboard}</span></button>
         <button className={`${page === "data" ? "expanded " : ""}${selectedItem === "data" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("data"); setPage(page === "data" ? null : "data"); }}><FileJson /><span>{t.data}</span><ChevronRight /></button>
-        {page === "data" && <div className="drawer-accordion-panel"><button onClick={() => csv.current?.click()}><Upload /><span>{t.importCsv}</span></button><button onClick={() => download("careerflow-materials.csv", Papa.unparse(data.materials), "text/csv")}><Download /><span>{t.exportCsv}</span></button><button onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Download /><span>{t.backup}</span></button><button onClick={() => json.current?.click()}><FileJson /><span>{t.restore}</span></button><button onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Download /><span>{cloudLabel}</span></button></div>}
+        {page === "data" && <div className="drawer-accordion-panel"><button onClick={() => csv.current?.click()}><Upload /><span>{t.importCsv}</span></button><button onClick={() => download("careerflow-materials.csv", Papa.unparse(data.materials), "text/csv")}><Download /><span>{t.exportCsv}</span></button><button onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Archive /><span>{t.backup}</span></button><button onClick={() => json.current?.click()}><RotateCcw /><span>{t.restore}</span></button><button onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><CloudUpload /><span>{cloudLabel}</span></button></div>}
         <button className={`${page === "appearance" ? "expanded " : ""}${selectedItem === "appearance" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("appearance"); setPage(page === "appearance" ? null : "appearance"); }}><Settings /><span>{t.appearance}</span><ChevronRight /></button>
         {page === "appearance" && <div className="drawer-accordion-panel">{(["light", "dark", "system"] as Theme[]).map((x) => <button className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}><span>{t[x]}</span>{theme === x && <Check />}</button>)}</div>}
         <button className={`${page === "language" ? "expanded " : ""}${selectedItem === "language" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("language"); setPage(page === "language" ? null : "language"); }}><Globe /><span>{t.language}</span><ChevronRight /></button>
