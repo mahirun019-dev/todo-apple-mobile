@@ -2816,7 +2816,6 @@ function MobileSettingsDrawer({
         <button className={view === "companies" ? "active" : ""} onClick={() => { setPage(null); close(); setView("companies"); }}><Building2 /><span>{t.companies}</span></button>
         <button className={view === "schedule" ? "active" : ""} onClick={() => { setPage(null); close(); setView("schedule"); }}><CalendarDays /><span>{t.schedule}</span></button>
         <button className={view === "materials" ? "active" : ""} onClick={() => { setPage(null); close(); setView("materials"); }}><FileJson /><span>{t.materials}</span></button>
-        <div className="mobile-settings-divider" />
         <button onClick={() => go("data")}><FileJson /><span>{t.data}</span><ChevronRight /></button>
         <button onClick={() => go("appearance")}><Settings /><span>{t.appearance}</span><ChevronRight /></button>
         <button onClick={() => go("language")}><MoreHorizontal /><span>{t.language}</span><ChevronRight /></button>

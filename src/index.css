@@ -3058,16 +3058,18 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     padding: 0 24px;
     gap: 17px;
     border-radius: 0;
-    color: #202124;
-    font-size: 17px;
+    color: #0f1419;
+    font-size: 18px;
     font-weight: 600;
+    line-height: 1.25;
     letter-spacing: -0.01em;
   }
   .mobile-settings-nav button svg:first-child {
     width: 24px;
     height: 24px;
-    color: #536471;
-    stroke-width: 2;
+    color: #0f1419;
+    stroke: currentColor;
+    stroke-width: 2.3;
   }
   .mobile-settings-nav button.active {
     height: 52px;
@@ -3075,22 +3077,22 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     padding: 0 14px;
     border-radius: 14px;
     color: #0f1419;
-    background: rgba(0,0,0,.045);
+    background: rgba(15,20,25,.045);
     font-weight: 700;
   }
   .mobile-settings-nav button.active svg:first-child { color: #0f1419; }
+  .mobile-settings-nav button:nth-child(n+5) { font-size: 17px; font-weight: 600; }
   .mobile-settings-nav button svg:last-child {
     width: 16px;
     height: 16px;
-    color: #9aa0a6;
+    color: #8b98a5;
+    stroke: currentColor;
+    stroke-width: 2;
   }
-  .mobile-settings-divider {
-    height: 1px;
-    margin: 12px 24px;
-    background: rgba(0,0,0,.08);
-  }
-  .dark .mobile-settings-nav button { color: #e7e9ea; }
-  .dark .mobile-settings-nav button svg:first-child { color: #8b98a5; }
+  .mobile-settings-brand strong { color: #0f1419; font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+  .mobile-settings-brand small { color: #536471; font-size: 14px; font-weight: 400; }
+  .dark .mobile-settings-nav button { color: #f5f5f5; }
+  .dark .mobile-settings-nav button svg:first-child { color: #f5f5f5; }
   .dark .mobile-settings-nav button.active { color: #f5f5f5; background: rgba(255,255,255,.08); }
   .dark .mobile-settings-nav button.active svg:first-child { color: #f5f5f5; }
 }
