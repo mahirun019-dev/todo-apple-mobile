@@ -51,6 +51,7 @@ body.settings-drawer-open { overflow: hidden; overscroll-behavior: none; }
 }
 
 @media (min-width: 981px) {
+  .settings-drawer-layer { display: flex; align-items: stretch; justify-content: flex-end; padding: 12px 0 0 28px; box-sizing: border-box; }
   .right-column .entity-card { width: 100%; min-width: 280px; }
   .right-column .section-title h2,
   .right-column .entity-card strong,
@@ -2834,7 +2835,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   opacity: 1 !important;
 }
 @media (min-width: 981px) {
-  .settings-drawer-panel { display: flex; flex-direction: column; width: min(960px, calc(100vw - 64px)); height: min(760px, calc(100vh - 48px)); max-height: min(760px, calc(100vh - 48px)); padding: 0; border-radius: 28px; overflow: hidden; background: #fff; }
+  .settings-drawer-panel { display: flex; flex-direction: column; width: min(960px, calc(100vw - 64px)); height: calc(100dvh - 12px); max-height: none; margin: 0; align-self: flex-end; padding: 0; border-radius: 28px 28px 0 0; overflow: hidden; background: #fff; }
   .settings-drawer-panel > header { height: 72px; padding: 0 28px; flex-shrink: 0; }
   .settings-drawer-scroll { min-height: 0; padding: 0; overflow: hidden; }
   .desktop-settings-layout { display: grid; grid-template-columns: 232px minmax(0, 1fr); height: 100%; min-height: 0; }
