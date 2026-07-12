@@ -2629,3 +2629,21 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .backup-cloud-actions button, .backup-panel button:not(.primary) { color: var(--text-primary); background: var(--bg-surface); border-color: var(--border-color); }
 .settings-drawer-panel { background: var(--bg-surface); }
 .settings-drawer-panel > header { border-color: var(--border-color); }
+
+/* Company selection follows the monochrome navigation system. */
+.course-nav > button.selected {
+  color: var(--text-primary);
+  font-weight: 600;
+  background: var(--nav-active-bg);
+}
+.course-nav > button.selected::before { background: #111 !important; }
+.course-nav > button > i,
+.course-nav > button:not(.selected) > i { background: #777 !important; }
+.course-nav > button.selected > i { background: #111 !important; }
+.back { color: #333; }
+.back:hover { color: #111; text-decoration: underline; }
+.dark .course-nav > button.selected::before { background: #f5f5f5 !important; }
+.dark .course-nav > button:not(.selected) > i { background: #777 !important; }
+.dark .course-nav > button.selected > i { background: #f5f5f5 !important; }
+.dark .back { color: #ddd; }
+.dark .back:hover { color: #fff; }
