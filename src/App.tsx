@@ -1504,6 +1504,21 @@ function Title({
     </div>
   );
 }
+function PrimaryActionButton({
+  children,
+  onClick,
+  className = "",
+}: {
+  children: ReactNode;
+  onClick: () => void;
+  className?: string;
+}) {
+  return (
+    <button type="button" className={`primary-action ${className}`} onClick={onClick}>
+      {children}
+    </button>
+  );
+}
 function Empty({ t, load, kind = "general", open }: { t: any; load?: () => void; kind?: "company" | "schedule" | "materials" | "general"; open?: () => void }) {
   const copy: Record<string, [string, string, string]> = t.language === "言語" ? { company: ["企業がまだ登録されていません", "応募先企業を追加して、選考状況や締切をまとめて管理できます。", t.addCompany], schedule: ["日程がまだありません", "説明会や面接の予定を登録すると、次の行動が見やすくなります。", t.addEvent], materials: ["資料・面接記録がまだありません", "ESや面接記録を登録して、就活の準備を整理しましょう。", t.addMaterial], general: [t.noData, "ここから就活の記録を追加できます。", t.new] } : t.language === "Language" ? { company: ["No companies yet", "Add companies to keep applications, stages, and deadlines together.", t.addCompany], schedule: ["No schedule yet", "Add briefings and interviews to make your next action clear.", t.addEvent], materials: ["No materials or interview records yet", "Add ES, resumes, and interview notes to organize your search.", t.addMaterial], general: [t.noData, "Start by adding your first career record.", t.new] } : { company: ["还没有企业", "添加应聘企业，集中管理选考进度和截止时间。", t.addCompany], schedule: ["还没有日程", "添加说明会或面试安排，让下一步更清晰。", t.addEvent], materials: ["还没有资料或面试记录", "添加 ES、履历书或面试记录，整理你的就活准备。", t.addMaterial], general: [t.noData, "从这里开始添加你的就活记录。", t.new] };
   if (t.language === "言語") copy.schedule[1] = "説明会、筆記試験、面接などの予定を追加して、選考スケジュールを管理しましょう。";
@@ -1513,7 +1528,7 @@ function Empty({ t, load, kind = "general", open }: { t: any; load?: () => void;
       <BriefcaseBusiness aria-hidden="true" />
       <strong>{title}</strong>
       <p>{description}</p>
-      {open && <button className="primary" onClick={open}><Plus />{action}</button>}
+      {open && <PrimaryActionButton onClick={open} className="empty-action"><Plus />{action}</PrimaryActionButton>}
       {load && (
         <button className="text-button" onClick={load}>
           {t.loadDemo}
@@ -1549,10 +1564,10 @@ function Dashboard({
           <h1>{t.title}</h1>
           <p>{t.subtitle}</p>
         </div>
-        <button className="primary" onClick={() => open("company")}>
+        <PrimaryActionButton onClick={() => open("company")}>
           <Plus />
           {t.addCompany}
-        </button>
+        </PrimaryActionButton>
       </div>
       <div className="main-dashboard-layout">
         <div className="dashboard-main">
@@ -1850,10 +1865,10 @@ function Companies({
           <h1>{t.companies}</h1>
           <p>{t.subtitle}</p>
         </div>
-        <button className="primary" onClick={() => open("company")}>
+        <PrimaryActionButton onClick={() => open("company")}>
           <Plus />
           {t.addCompany}
-        </button>
+        </PrimaryActionButton>
       </div>
       <div className="company-grid">
         {data.companies.length ? (
@@ -1898,10 +1913,10 @@ function Schedule({
           <h1>{t.schedule}</h1>
           <p>{t.scheduleSub}</p>
         </div>
-        <button className="primary" onClick={() => setForm("schedule")}>
+        <PrimaryActionButton onClick={() => setForm("schedule")}>
           <Plus />
           {t.addEvent}
-        </button>
+        </PrimaryActionButton>
       </div>
       <div className="timeline">
         {schedules.length ? (
@@ -1986,10 +2001,10 @@ function Materials({
           <h1>{t.materials}</h1>
           <p>{t.materialsSub}</p>
         </div>
-        <button className="primary" onClick={() => open("es")}>
+        <PrimaryActionButton onClick={() => open("es")}>
           <Plus />
           {t.new}
-        </button>
+        </PrimaryActionButton>
       </div>
       <div className="filter-bar entity-card">
         {[

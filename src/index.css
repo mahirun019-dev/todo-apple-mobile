@@ -2528,6 +2528,36 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   .dark .timeline > .empty-small { border-color: #2c3a4d; background: #1a2533; }
   .dark .career-app .create-entry { color: #e5f1ff; background: #285f9d; }
 }
+
+/* Shared capsule treatment for page-level and empty-state primary actions. */
+.primary-action {
+  display: inline-flex;
+  width: auto;
+  min-width: 0;
+  height: 46px;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  background: #24262b;
+  box-shadow: none;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+.primary-action:hover { background: #303238; }
+.primary-action:active { background: #1d1f23; }
+.primary-action:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.primary-action svg { width: 18px; height: 18px; flex: 0 0 18px; color: currentColor; stroke: currentColor; }
+.primary-action.empty-action { height: 48px; min-height: 48px; padding-inline: 21px; }
+.dark .primary-action { color: #111; background: #f2f2f2; }
+.dark .primary-action:hover { background: #e4e4e4; }
+.dark .primary-action:active { background: #d8d8d8; }
 .document-question-list { display: grid; gap: 10px; }
 .document-question { display: grid; gap: 8px; padding: 12px; border: 1px solid #dce4ed; border-radius: 10px; background: #f7f9fc; }
 .document-question input, .document-question textarea { width: 100%; }
