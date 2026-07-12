@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 :root {
+  --mobile-bottom-nav-height: 58px;
+}
+
+:root {
   font-family:
     Inter,
     ui-sans-serif,
@@ -83,6 +87,21 @@ body.settings-drawer-open { overflow: hidden; overscroll-behavior: none; }
   .career-app .page-head > div { min-width: 0; }
   .career-app .page-head > .primary-action { flex: 0 0 auto; }
 }
+
+/* Keep the dashboard header and its supporting column on the same desktop grid. */
+@media (min-width: 1280px) {
+  .career-app .workspace > .page-head {
+    display: grid;
+    grid-template-columns: minmax(0, 2.2fr) minmax(300px, 1fr);
+    gap: 24px;
+    align-items: center;
+  }
+  .career-app .workspace > .page-head > .primary-action,
+  .career-app .workspace > .page-head > .head-actions {
+    justify-self: end;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -3274,3 +3293,37 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .dark .course-nav > button.selected { color: #f5f5f5 !important; background: #24262a !important; }
 .dark .course-nav > button.selected::before,
 .dark .course-nav > button.selected > i { background: #f5f5f5 !important; }
+
+/* Final mobile dashboard guardrails: keep the fixed nav out of the scrollable content. */
+@media (max-width: 760px) {
+  .career-app .workspace {
+    padding-bottom: calc(var(--mobile-bottom-nav-height) + env(safe-area-inset-bottom) + 24px);
+  }
+  .career-app .overview-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .career-app .metric {
+    min-width: 0;
+    min-height: 82px;
+    gap: 8px;
+    padding: 12px 10px;
+  }
+  .career-app .metric > svg {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+  }
+  .career-app .metric strong {
+    font-size: 27px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .career-app .metric span {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 12px;
+    line-height: 1.2;
+  }
+}

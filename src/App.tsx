@@ -214,7 +214,7 @@ const tr = {
     subtitle: "日本就活进度与材料管理",
     addCompany: "新增企业",
     addEvent: "新增日程",
-    addMaterial: "添加书类",
+    addMaterial: "添加材料",
     addInterview: "新增面试记录",
     addPrep: "新增准备事项",
     interviews: "面试记录",
@@ -935,7 +935,7 @@ export default function App() {
     const f = new FormData(e.currentTarget),
       v: Material = {
         id: id(),
-        title: String(f.get("versionName") || (f.get("documentType") === "other_document" ? f.get("otherType") : f.get("documentType")) || "书类"),
+        title: String(f.get("versionName") || (f.get("documentType") === "other_document" ? f.get("otherType") : f.get("documentType")) || "材料"),
         companyId: String(f.get("company") || "") || undefined,
         type: "es",
         dueAt: String(f.get("due") || "") || undefined,
@@ -2391,7 +2391,7 @@ function MaterialForm({
   const statuses = [["not_started", label("未着手", "未着手", "Not started")], ["drafting", label("作成中", "作成中", "Drafting")], ["submitted", label("已提交", "提出済み", "Submitted")]];
   const isOtherDocument = documentType === "other_document";
   return (
-    <Modal title={label("添加书类", "書類を追加", "Add document")} close={close}>
+    <Modal title={label("添加材料", "書類を追加", "Add document")} close={close}>
       <form className="form-grid document-form" onSubmit={save}>
         <label>
           <span>{label("关联企业", "企業", "Company")} *</span>
@@ -2405,15 +2405,15 @@ function MaterialForm({
           </select>
         </label>
         <label>
-          <span>{label("书类类型", "書類の種類", "Document type")} *</span>
+          <span>{label("材料类型", "書類の種類", "Document type")} *</span>
           <select name="documentType" value={documentType} onChange={(e) => setDocumentType(e.target.value)} required>
             <option value="es">ES</option>
             <option value="resume">履歴書</option>
-            <option value="other_document">{label("其他的书类", "その他の書類", "Other documents")}</option>
+            <option value="other_document">{label("其他材料", "その他の書類", "Other documents")}</option>
           </select>
         </label>
         {isOtherDocument && <label>
-          <span>{label("具体书类类型", "書類の種類", "Specific document type")} *</span>
+          <span>{label("具体材料类型", "書類の種類", "Specific document type")} *</span>
           <select name="otherType" value={otherType} onChange={(e) => setOtherType(e.target.value)} required>
             {otherTypes.map(([value, text]) => <option key={value} value={value}>{text}</option>)}
           </select>
