@@ -3326,6 +3326,67 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .dark .course-nav > button.selected::before,
 .dark .course-nav > button.selected > i { background: #f5f5f5 !important; }
 
+.company-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 180px 180px;
+  gap: 10px;
+  margin: 0 0 16px;
+}
+.company-toolbar input,
+.company-toolbar select {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #d8dce1;
+  border-radius: 10px;
+  color: #24262b;
+  background: #fff;
+}
+.company-card { min-width: 0; min-height: 168px; text-align: left; }
+.company-card-body { min-width: 0; display: grid; gap: 6px; }
+.company-card-body h3,
+.company-card-body p,
+.company-card-body span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.company-card-body h3 { margin: 0; }
+.company-card-body p { margin: 0; color: #68717b; }
+.company-card-body span { color: #59616b; font-size: 12px; }
+.recruitment-link { display: inline-flex; width: fit-content; align-items: center; gap: 6px; color: #24262b; font-weight: 650; }
+.recruitment-link svg { width: 16px; height: 16px; }
+.record-action-wrap { position: relative; }
+.record-action-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 5; display: grid; width: 220px; overflow: hidden; border: 1px solid #d8dce1; border-radius: 10px; background: #fff; box-shadow: 0 12px 24px rgba(20,25,30,.12); }
+.record-action-menu button { min-height: 42px; padding: 0 14px; border: 0; border-top: 1px solid #eef0f2; color: #24262b; background: #fff; text-align: left; }
+.record-action-menu button:first-child { border-top: 0; }
+.record-action-menu button:hover { background: #f3f4f6; }
+.selection-empty { display: grid; justify-items: start; gap: 8px; padding: 24px 0; }
+.selection-empty svg { width: 28px; height: 28px; color: #7b838d; }
+.selection-empty strong { color: #24262b; }
+.selection-empty p { margin: 0; color: #68717b; }
+.interest-stars { display: flex; align-items: center; gap: 3px; }
+.interest-stars button { width: 30px; height: 32px; padding: 0; border: 0; color: #9aa1a9; background: transparent; font-size: 24px; line-height: 1; }
+.interest-stars button.selected { color: #24262b; }
+.interest-stars button:focus-visible { outline: 2px solid #24262b; outline-offset: 2px; border-radius: 4px; }
+.interest-stars span { margin-left: 8px; color: #68717b; font-size: 13px; }
+.dark .company-toolbar input,
+.dark .company-toolbar select,
+.dark .record-action-menu,
+.dark .record-action-menu button { border-color: #424750; color: #f2f2f2; background: #242424; }
+.dark .company-card-body p,
+.dark .company-card-body span,
+.dark .selection-empty p,
+.dark .interest-stars span { color: #b0b5bd; }
+.dark .interest-stars button.selected { color: #fff; }
+.dark .recruitment-link,
+.dark .selection-empty strong { color: #f2f2f2; }
+@media (max-width: 760px) {
+  .company-toolbar { grid-template-columns: minmax(0, 1fr) 44px; }
+  .company-toolbar select { grid-column: 1 / -1; }
+  .company-card { min-height: 146px; }
+  .company-card-body span:nth-last-child(2) { font-size: 12px; }
+  .record-action-menu { right: 0; width: min(220px, calc(100vw - 48px)); }
+  .selection-empty { padding: 18px 0; }
+}
+
 .delete-event-button {
   display: inline-flex;
   min-height: 44px;

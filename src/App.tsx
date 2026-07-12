@@ -23,6 +23,7 @@ import {
   ChevronUp,
   Clock3,
   Download,
+  ExternalLink,
   FileJson,
   Globe,
   Home,
@@ -218,6 +219,13 @@ const tr = {
     companies: "企业",
     schedule: "日程",
     materials: "ES・面试",
+    selectionRecords: "选考记录",
+    addRecord: "添加记录",
+    addTest: "添加 Web・适性测试",
+    addBriefing: "添加说明会",
+    addOtherRecord: "添加其他记录",
+    recruitmentPage: "招聘页面",
+    displayColor: "显示色",
     settings: "设置",
     new: "新建",
     title: "就活摘要",
@@ -321,6 +329,7 @@ const tr = {
     icon: "自定义图标",
     online: "线上",
     noData: "暂无事项",
+    noSchedule: "暂无日程",
     loadDemo: "载入示例数据",
     clearDemo: "清除示例数据",
     deleteCompany: "删除企业",
@@ -336,6 +345,13 @@ const tr = {
     companies: "企業",
     schedule: "日程",
     materials: "ES・面接",
+    selectionRecords: "選考記録",
+    addRecord: "記録を追加",
+    addTest: "Web・適性検査を追加",
+    addBriefing: "説明会を追加",
+    addOtherRecord: "その他の記録を追加",
+    recruitmentPage: "採用ページ",
+    displayColor: "表示色",
     settings: "設定",
     new: "新規作成",
     title: "就活サマリー",
@@ -439,6 +455,7 @@ const tr = {
     icon: "アイコン",
     online: "オンライン",
     noData: "予定なし",
+    noSchedule: "日程なし",
     loadDemo: "サンプルを読み込む",
     clearDemo: "サンプルを削除",
     deleteCompany: "企業を削除",
@@ -454,6 +471,13 @@ const tr = {
     companies: "Companies",
     schedule: "Schedule",
     materials: "ES · Interview",
+    selectionRecords: "Selection Records",
+    addRecord: "Add Record",
+    addTest: "Add Web / Aptitude Test",
+    addBriefing: "Add briefing",
+    addOtherRecord: "Add other record",
+    recruitmentPage: "Recruitment Page",
+    displayColor: "Display Color",
     settings: "Settings",
     new: "New",
     title: "Career summary",
@@ -557,6 +581,7 @@ const tr = {
     icon: "Custom icon",
     online: "Online",
     noData: "Nothing here",
+    noSchedule: "No schedule",
     loadDemo: "Load sample data",
     clearDemo: "Clear sample data",
     deleteCompany: "Delete company",
@@ -1884,6 +1909,10 @@ function Companies({
   setConfirm,
 }: any) {
   const co = selected ? byId[selected] : undefined;
+  const [query, setQuery] = useState("");
+  const [stageFilter, setStageFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("updated");
+  const [recordMenu, setRecordMenu] = useState(false);
   if (co) {
     const materials = data.materials.filter((x: any) => x.companyId === co.id),
       interviews = data.interviews.filter((x: any) => x.companyId === co.id),
@@ -1920,8 +1949,8 @@ function Companies({
             <h2>{t[co.stage]}</h2>
             <p>{co.notes || t.noData}</p>
             {co.careersUrl && (
-              <a href={co.careersUrl} target="_blank" rel="noreferrer">
-                {co.careersUrl}
+              <a className="recruitment-link" href={co.careersUrl} target="_blank" rel="noopener noreferrer" title={co.careersUrl}>
+                {t.recruitmentPage} <ExternalLink aria-hidden="true" />
               </a>
             )}
             {materials.filter((x: Material) => x.documentType).map((x: Material) => (
@@ -1933,15 +1962,17 @@ function Companies({
             ))}
           </section>
           <section className="detail-stack">
-            <Title
-              action={
-                <button className="text-button" onClick={() => open("es")}>
-                  <Plus />
-                  {t.addMaterial}
-                </button>
-              }
-            >
-              {t.materials}
+            <Title action={<div className="record-action-wrap">
+              <button className="primary" onClick={() => setRecordMenu(!recordMenu)}><Plus />{t.addRecord}</button>
+              {recordMenu && <div className="record-action-menu">
+                <button onClick={() => { setRecordMenu(false); open("es"); }}>{t.addMaterial}</button>
+                <button onClick={() => { setRecordMenu(false); open("interview"); }}>{t.addInterview}</button>
+                <button onClick={() => { setRecordMenu(false); open("schedule"); }}>{t.addTest}</button>
+                <button onClick={() => { setRecordMenu(false); open("schedule"); }}>{t.addBriefing}</button>
+                <button onClick={() => { setRecordMenu(false); open("schedule"); }}>{t.addOtherRecord}</button>
+              </div>}
+            </div>}>
+              {t.selectionRecords}
             </Title>
             <div className="deadline-list">
               {materials.map((x: any) => (
@@ -1967,15 +1998,25 @@ function Companies({
                   focus={() => {}}
                 />
               ))}
-              {!materials.length && !interviews.length && !preps.length && (
-                <Empty t={t} />
-              )}
+              {!materials.length && !interviews.length && !preps.length && <div className="selection-empty">
+                <BriefcaseBusiness aria-hidden="true" />
+                <strong>{t.language === "言語" ? "選考記録がまだありません" : t.language === "Language" ? "No selection records yet" : "还没有选考记录"}</strong>
+                <p>{t.language === "言語" ? "書類、テスト、説明会、面接から記録を始めましょう。" : t.language === "Language" ? "Start with a document, test, briefing, or interview." : "从材料、测试、说明会或面试开始记录。"}</p>
+              </div>}
             </div>
           </section>
         </div>
       </>
     );
   }
+  const filteredCompanies = data.companies
+    .filter((x: Company) => !query.trim() || x.name.toLowerCase().includes(query.trim().toLowerCase()))
+    .filter((x: Company) => stageFilter === "all" || x.stage === stageFilter)
+    .sort((a: Company, b: Company) => {
+      if (sortBy === "interest") return b.interestLevel - a.interestLevel;
+      if (sortBy === "event") return (a.nextEventAt || "9999").localeCompare(b.nextEventAt || "9999");
+      return b.updatedAt - a.updatedAt;
+    });
   return (
     <>
       <div className="page-head">
@@ -1988,21 +2029,32 @@ function Companies({
           {t.addCompany}
         </PrimaryActionButton>}
       </div>
+      {data.companies.length > 0 && <div className="company-toolbar">
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t.language === "言語" ? "企業を検索" : t.language === "Language" ? "Search companies" : "搜索企业"} aria-label={t.language === "言語" ? "企業を検索" : t.language === "Language" ? "Search companies" : "搜索企业"} />
+        <select value={stageFilter} onChange={(e) => setStageFilter(e.target.value)} aria-label={t.stage}>
+          <option value="all">{t.all}</option>
+          {stages.map((stage) => <option key={stage} value={stage}>{t[stage]}</option>)}
+        </select>
+        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} aria-label={t.language === "言語" ? "並び替え" : t.language === "Language" ? "Sort" : "排序"}>
+          <option value="updated">{t.language === "言語" ? "最近更新" : t.language === "Language" ? "Recently updated" : "最近更新"}</option>
+          <option value="interest">{t.interest}</option>
+          <option value="event">{t.event}</option>
+        </select>
+      </div>}
       <div className="company-grid">
-        {data.companies.length ? (
-          data.companies.map((x: any) => (
+        {filteredCompanies.length ? (
+          filteredCompanies.map((x: Company) => (
             <button
               className="company-card entity-card"
               onClick={() => setSelected(x.id)}
               key={x.id}
             >
               <i style={{ background: x.color }} />
-              <div>
-                <span>{t[x.stage]}</span>
-                <h3>{x.name}</h3>
-                <p>
-                  {x.industry} · {x.position}
-                </p>
+              <div className="company-card-body">
+                <h3 title={x.name}>{x.name}</h3>
+                <p>{x.industry || x.position || t.general}</p>
+                <span>{t.stage}: {t[x.stage]} · {t.interest}: {"★".repeat(x.interestLevel)}{"☆".repeat(5 - x.interestLevel)}</span>
+                <span>{x.nextEventAt ? `${t.event} · ${when(x.nextEventAt)} · ${relative(x.nextEventAt, t)}` : t.noSchedule}</span>
               </div>
               <ChevronRight />
             </button>
@@ -2354,6 +2406,7 @@ function CompanyForm({
 }) {
   const colors = ["#555555", "#777777", "#d18135", "#d4534d", "#2d9b78", "#9a6b44", "#6e7d91", "#c04f8a"];
   const [color, setColor] = useState(initial?.color || colors[0]);
+  const [interest, setInterest] = useState(Math.min(5, Math.max(1, initial?.interestLevel || 3)));
   return (
     <Modal title={initial ? t.edit : t.addCompany} close={close}>
       <form className="form-grid" onSubmit={save}>
@@ -2369,13 +2422,13 @@ function CompanyForm({
           <span>{t.position}</span>
           <input name="position" defaultValue={initial?.position} />
         </label>
-        <label>
+        <label className="interest-field">
           <span>{t.interest}</span>
-          <select name="interest" defaultValue={initial?.interestLevel || 3}>
-            {[1, 2, 3, 4, 5].map((x) => (
-              <option key={x}>{x}</option>
-            ))}
-          </select>
+          <input type="hidden" name="interest" value={interest} readOnly />
+          <div className="interest-stars" role="radiogroup" aria-label={t.interest}>
+            {[1, 2, 3, 4, 5].map((x) => <button key={x} type="button" role="radio" aria-checked={interest === x} tabIndex={interest === x ? 0 : -1} className={x <= interest ? "selected" : ""} onClick={() => setInterest(x)} onKeyDown={(e) => { if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); setInterest(Math.min(5, interest + 1)); } if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); setInterest(Math.max(1, interest - 1)); } }}>{x <= interest ? "★" : "☆"}</button>)}
+            <span>{interest} / 5</span>
+          </div>
         </label>
         <label>
           <span>{t.stage}</span>
@@ -2404,7 +2457,7 @@ function CompanyForm({
           <input name="url" type="url" defaultValue={initial?.careersUrl} />
         </label>
         <label>
-          <span>{t.language === "言語" ? "表示色" : t.language === "Language" ? "Display color" : "显示色"}</span>
+          <span>{t.displayColor}</span>
           <input name="color" type="hidden" value={color} readOnly />
           <div className="color-swatches" role="radiogroup" aria-label={t.language === "言語" ? "表示色" : "Display color"}>
             {colors.map((value) => <button type="button" key={value} className={`color-swatch ${color === value ? "active" : ""}`} style={{ background: value }} aria-label={value} aria-pressed={color === value} onClick={() => setColor(value)}>{color === value && <Check />}</button>)}
