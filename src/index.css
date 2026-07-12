@@ -2922,6 +2922,17 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   stroke: currentColor !important;
   fill: none !important;
 }
+.career-mobile-nav .nav-add,
+.career-mobile-nav .nav-add.open {
+  color: #fff !important;
+  background: #1f2329 !important;
+  border-radius: 16px;
+  box-shadow: none !important;
+}
+.career-mobile-nav .nav-add:active {
+  opacity: 0.92;
+  transform: scale(0.98);
+}
 
 /* Desktop global-create control: compact pill, separate from mobile add. */
 @media (min-width: 1024px) {
