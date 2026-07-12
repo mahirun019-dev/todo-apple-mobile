@@ -2788,6 +2788,26 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .nav-list button:focus-visible, .career-mobile-nav button:focus-visible { outline: 3px solid rgba(17,17,17,.3); outline-offset: -2px; }
 .dark .nav-list button[data-pressed="true"] { background: #41464d !important; }
 .dark .nav-list button:focus-visible, .dark .career-mobile-nav button:focus-visible { outline-color: rgba(245,245,245,.55); }
+
+/* Primary actions keep their icon color tied to the button, including inside empty states. */
+.primary-action svg {
+  color: inherit !important;
+  stroke: currentColor !important;
+  fill: none !important;
+  opacity: 1 !important;
+}
+
+/* Desktop keeps only a compact page margin; mobile owns safe-area spacing. */
+@media (min-width: 761px) {
+  .app-shell {
+    margin-top: 0;
+    padding: 16px 20px;
+  }
+
+  .student-app {
+    min-height: calc(100dvh - 32px);
+  }
+}
 .sidebar .nav-list button {
   min-height: 48px;
   padding-inline: 16px;
