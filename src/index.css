@@ -3689,3 +3689,61 @@ option { color: var(--text-primary); background: var(--bg-input); }
 .dark .segmented-control span { color: var(--text-secondary); background: transparent; border-color: var(--border-strong); }
 .dark .segmented-control input:checked + span { color: var(--text-primary); background: var(--bg-selected); border-color: var(--text-primary); }
 .dark .delete-event-button { color: var(--danger); background: transparent; border-color: var(--danger); }
+
+/* Final targeted dark-mode corrections. */
+.dark .dashboard-date,
+.dark .home-date,
+.dark .page-date { color: var(--text-primary) !important; opacity: 1; }
+.dark .career-app .primary-action,
+.dark .career-app .primary,
+.dark .career-app .create-entry,
+.dark .career-app .nav-add,
+.dark .career-app .empty-action,
+.dark .career-app .company-grid > .empty-small .primary,
+.dark .career-app .timeline > .empty-small .primary { color: #111315 !important; background: #f5f5f5 !important; border: 1px solid #f5f5f5 !important; box-shadow: none !important; }
+.dark .career-app .primary-action:hover,
+.dark .career-app .primary:hover,
+.dark .career-app .create-entry:hover,
+.dark .career-app .nav-add:hover { color: #111315 !important; background: #fff !important; }
+.dark .career-app .primary-action:active,
+.dark .career-app .primary:active,
+.dark .career-app .create-entry:active,
+.dark .career-app .nav-add:active { background: #e8e8e8 !important; }
+.dark .career-app .primary-action:disabled,
+.dark .career-app .primary:disabled,
+.dark .career-app .create-entry:disabled { color: #777d86 !important; background: #3a3d42 !important; border-color: #3a3d42 !important; opacity: 1; }
+.dark .career-app .primary-action svg,
+.dark .career-app .primary svg,
+.dark .career-app .create-entry svg,
+.dark .career-app .nav-add svg { color: currentColor !important; stroke: currentColor !important; fill: none !important; }
+
+.dark .desktop-settings-nav button.active,
+.dark .settings-nav-item.active,
+.dark .settings-nav-item[aria-selected="true"] { color: var(--text-primary) !important; background: var(--bg-selected) !important; }
+.dark .desktop-settings-nav button.active *,
+.dark .settings-nav-item.active *,
+.dark .settings-nav-item[aria-selected="true"] * { color: inherit !important; }
+.dark .desktop-settings-nav button.active svg,
+.dark .settings-nav-item.active svg { color: currentColor !important; stroke: currentColor; }
+.dark .settings-segmented button.active { color: #60a5fa !important; background: var(--accent-soft) !important; border-color: var(--accent) !important; }
+.dark .settings-segmented button { color: var(--text-primary); background: transparent; border-color: var(--border-default); }
+
+.dark .career-app .mobile-header { color: var(--text-primary); background: var(--bg-surface); border-color: var(--border-default); }
+.dark .career-app .mobile-header-title { color: var(--text-primary); }
+.dark .career-app .mobile-menu-button { color: var(--text-secondary); background: var(--bg-surface-elevated); }
+.dark .mobile-settings-drawer { background: var(--bg-sidebar) !important; }
+.dark .mobile-settings-brand { background: transparent !important; color: var(--text-primary); }
+.dark .mobile-settings-brand strong { color: var(--text-primary) !important; }
+.dark .mobile-settings-brand small { color: var(--text-secondary) !important; }
+.dark .mobile-settings-backdrop { background: rgba(0,0,0,.55) !important; }
+.dark .action-sheet { color: var(--text-primary); background: var(--bg-surface-elevated) !important; }
+.dark .bottom-sheet-layer .sheet-action { color: var(--text-primary); background: var(--bg-surface-elevated); border-color: var(--border-default); }
+.dark .bottom-sheet-layer .sheet-action svg:first-child { color: var(--text-secondary); }
+.dark .bottom-sheet-layer .sheet-action svg:last-child { color: var(--text-muted); }
+.dark .action-sheet .cancel-action { color: var(--text-primary); background: var(--bg-surface); border-color: var(--border-default); }
+
+@media (max-width: 767px) {
+  .modal-layer .drawer { max-height: calc(100dvh - env(safe-area-inset-top) - 12px); }
+  .modal-layer .drawer > form { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .modal-layer .form-actions { flex: 0 0 auto; padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+}
