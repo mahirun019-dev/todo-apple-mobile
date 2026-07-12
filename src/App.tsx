@@ -90,6 +90,7 @@ type Company = {
   updatedAt: number;
 };
 type Material = {
+  category?: "material";
   id: string;
   title: string;
   companyId?: string;
@@ -121,6 +122,10 @@ type Material = {
   revisionPoints?: string;
   question?: string;
   answer?: string;
+  saveMode?: "upload" | "text";
+  attachmentId?: string;
+  mimeType?: string;
+  fileSize?: number;
 };
 type Event = {
   id: string;
@@ -134,6 +139,7 @@ type Event = {
   createdAt: number;
 };
 type InterviewRecord = {
+  category?: "interview";
   id: string;
   companyId?: string;
   round: string;
@@ -151,6 +157,7 @@ type InterviewRecord = {
   updatedAt: number;
 };
 type Preparation = {
+  category?: "preparation";
   id: string;
   title: string;
   companyId?: string;
@@ -180,6 +187,35 @@ const KEY = "career-flow-data-v5",
   ICON = "careerflow-custom-icon";
 const demoNames = ["Rakuten Group", "三菱UFJ银行", "CyberAgent"];
 const id = () => crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+const ATTACHMENT_DB = "careerflow-attachments";
+const ATTACHMENT_STORE = "files";
+function attachmentDb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(ATTACHMENT_DB, 1);
+    request.onupgradeneeded = () => request.result.createObjectStore(ATTACHMENT_STORE);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+async function saveAttachment(key: string, file: File) {
+  const db = await attachmentDb();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(ATTACHMENT_STORE, "readwrite");
+    tx.objectStore(ATTACHMENT_STORE).put(file, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function deleteAttachment(key?: string) {
+  if (!key) return;
+  const db = await attachmentDb();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(ATTACHMENT_STORE, "readwrite");
+    tx.objectStore(ATTACHMENT_STORE).delete(key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
 const types: ItemType[] = [
   "es",
   "web_test",
@@ -224,6 +260,9 @@ const tr = {
     addTest: "添加 Web・适性测试",
     addBriefing: "添加说明会",
     addOtherRecord: "添加其他记录",
+    materialCategory: "材料",
+    interviewCategory: "面试记录",
+    preparationCategory: "准备事项",
     recruitmentPage: "招聘页面",
     displayColor: "显示色",
     settings: "设置",
@@ -337,7 +376,7 @@ const tr = {
     deleteAll: "同时删除关联数据",
     deleteOnly: "仅删除企业",
     undo: "撤销",
-    materialsSub: "ES、履历书、面试记录与准备事项",
+    materialsSub: "材料、面试记录与准备事项",
     scheduleSub: "说明会、笔试、面试与截止时间",
   },
   ja: {
@@ -350,6 +389,9 @@ const tr = {
     addTest: "Web・適性検査を追加",
     addBriefing: "説明会を追加",
     addOtherRecord: "その他の記録を追加",
+    materialCategory: "書類",
+    interviewCategory: "面接記録",
+    preparationCategory: "準備事項",
     recruitmentPage: "採用ページ",
     displayColor: "表示色",
     settings: "設定",
@@ -463,7 +505,7 @@ const tr = {
     deleteAll: "関連データも削除",
     deleteOnly: "企業のみ削除",
     undo: "元に戻す",
-    materialsSub: "ES・履歴書・面接記録・準備事項",
+    materialsSub: "書類・面接記録・準備事項",
     scheduleSub: "説明会・筆記・面接・締切",
   },
   en: {
@@ -476,6 +518,9 @@ const tr = {
     addTest: "Add Web / Aptitude Test",
     addBriefing: "Add briefing",
     addOtherRecord: "Add other record",
+    materialCategory: "Documents",
+    interviewCategory: "Interview records",
+    preparationCategory: "Preparations",
     recruitmentPage: "Recruitment Page",
     displayColor: "Display Color",
     settings: "Settings",
@@ -590,7 +635,7 @@ const tr = {
     deleteAll: "Delete related data",
     deleteOnly: "Delete company only",
     undo: "Undo",
-    materialsSub: "ES, resumes, interview records and preparations",
+    materialsSub: "Documents, interview records and preparations",
     scheduleSub: "Briefings, tests, interviews and deadlines",
   },
 };
@@ -695,6 +740,7 @@ function normalize(x: any): Data {
     companies: x.companies || [],
     materials: (x.materials || []).map((m: Material) => ({
       ...m,
+      category: "material",
       submissionStatus:
         m.submissionStatus === "review" || m.submissionStatus === "returned"
           ? "drafting"
@@ -704,8 +750,8 @@ function normalize(x: any): Data {
         : m.documentType,
     })),
     events: x.events || [],
-    interviews: x.interviews || [],
-    preparations: x.preparations || [],
+    interviews: (x.interviews || []).map((v: InterviewRecord) => ({ ...v, category: "interview" })),
+    preparations: (x.preparations || []).map((v: Preparation) => ({ ...v, category: "preparation" })),
     focusMinutes: x.focusMinutes || 0,
   };
 }
@@ -934,6 +980,7 @@ export default function App() {
       ),
     }));
   const removeMaterial = (x: Material) => {
+    deleteAttachment(x.attachmentId).catch(() => undefined);
     setData((d) => ({
       ...d,
       materials: d.materials.filter((v) => v.id !== x.id),
@@ -1007,12 +1054,15 @@ export default function App() {
     setForm(null);
     setEditCompany(undefined);
   };
-  const saveMaterial = (e: FormEvent<HTMLFormElement>) => {
+  const saveMaterial = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const f = new FormData(e.currentTarget),
+      file = f.get("attachment") instanceof File && (f.get("attachment") as File).size ? f.get("attachment") as File : undefined,
+      attachmentId = file ? id() : undefined,
       v: Material = {
+        category: "material",
         id: id(),
-        title: String(f.get("versionName") || (f.get("documentType") === "other_document" ? f.get("otherType") : f.get("documentType")) || "材料"),
+        title: String(f.get("versionName") || file?.name || (f.get("documentType") === "other_document" ? f.get("otherType") : f.get("documentType")) || "材料"),
         companyId: String(f.get("company") || "") || undefined,
         type: "es",
         dueAt: String(f.get("due") || "") || undefined,
@@ -1030,7 +1080,7 @@ export default function App() {
         submissionStatus: f.get("submissionStatus") as Material["submissionStatus"],
         submittedAt: String(f.get("submittedAt") || "") || undefined,
         versionName: String(f.get("versionName") || "") || undefined,
-        fileName: String(f.get("fileName") || "") || undefined,
+        fileName: file?.name || String(f.get("fileName") || "") || undefined,
         language: String(f.get("language") || "") || undefined,
         characterLimit: String(f.get("characterLimit") || "") || undefined,
         motivation: String(f.get("motivation") || "") || undefined,
@@ -1045,7 +1095,12 @@ export default function App() {
         revisionPoints: String(f.get("revisionPoints") || "") || undefined,
         question: String(f.get("question") || "") || undefined,
         answer: String(f.get("answer") || "") || undefined,
+        saveMode: String(f.get("saveMode") || "text") as Material["saveMode"],
+        attachmentId,
+        mimeType: file?.type,
+        fileSize: file?.size,
       };
+    if (file && attachmentId) await saveAttachment(attachmentId, file);
     setData((d) => ({ ...d, materials: [v, ...d.materials] }));
     setForm(null);
   };
@@ -1078,6 +1133,7 @@ export default function App() {
     const f = new FormData(e.currentTarget),
       base = editInterview,
       v: InterviewRecord = {
+        category: "interview",
         id: base?.id || id(),
         companyId: String(f.get("company") || "") || undefined,
         round: String(f.get("round")),
@@ -1108,6 +1164,7 @@ export default function App() {
     const f = new FormData(e.currentTarget),
       base = editPrep,
       v: Preparation = {
+        category: "preparation",
         id: base?.id || id(),
         title: String(f.get("title")),
         companyId: String(f.get("company") || "") || undefined,
@@ -1671,7 +1728,7 @@ function PrimaryActionButton({
   );
 }
 function Empty({ t, load, kind = "general", open }: { t: any; load?: () => void; kind?: "company" | "schedule" | "materials" | "general"; open?: () => void }) {
-  const copy: Record<string, [string, string, string]> = t.language === "言語" ? { company: ["企業がまだ登録されていません", "応募先企業を追加して、選考状況や締切をまとめて管理できます。", t.addCompany], schedule: ["日程がまだありません", "説明会や面接の予定を登録すると、次の行動が見やすくなります。", t.addEvent], materials: ["資料・面接記録がまだありません", "ESや面接記録を登録して、就活の準備を整理しましょう。", t.addMaterial], general: [t.noData, "ここから就活の記録を追加できます。", t.new] } : t.language === "Language" ? { company: ["No companies yet", "Add companies to keep applications, stages, and deadlines together.", t.addCompany], schedule: ["No schedule yet", "Add briefings and interviews to make your next action clear.", t.addEvent], materials: ["No materials or interview records yet", "Add ES, resumes, and interview notes to organize your search.", t.addMaterial], general: [t.noData, "Start by adding your first career record.", t.new] } : { company: ["还没有企业", "添加应聘企业，集中管理选考进度和截止时间。", t.addCompany], schedule: ["还没有日程", "添加说明会或面试安排，让下一步更清晰。", t.addEvent], materials: ["还没有资料或面试记录", "添加 ES、履历书或面试记录，整理你的就活准备。", t.addMaterial], general: [t.noData, "从这里开始添加你的就活记录。", t.new] };
+  const copy: Record<string, [string, string, string]> = t.language === "言語" ? { company: ["企業がまだ登録されていません", "応募先企業を追加して、選考状況や締切をまとめて管理できます。", t.addCompany], schedule: ["日程がまだありません", "説明会や面接の予定を登録すると、次の行動が見やすくなります。", t.addEvent], materials: ["資料・面接記録がまだありません", "ESや面接記録を登録して、就活の準備を整理しましょう。", t.addRecord], general: [t.noData, "ここから就活の記録を追加できます。", t.new] } : t.language === "Language" ? { company: ["No companies yet", "Add companies to keep applications, stages, and deadlines together.", t.addCompany], schedule: ["No schedule yet", "Add briefings and interviews to make your next action clear.", t.addEvent], materials: ["No materials or interview records yet", "Add ES, resumes, and interview notes to organize your search.", t.addRecord], general: [t.noData, "Start by adding your first career record.", t.new] } : { company: ["还没有企业", "添加应聘企业，集中管理选考进度和截止时间。", t.addCompany], schedule: ["还没有日程", "添加说明会或面试安排，让下一步更清晰。", t.addEvent], materials: ["还没有资料或面试记录", "添加 ES、履历书或面试记录，整理你的就活准备。", t.addRecord], general: [t.noData, "从这里开始添加你的就活记录。", t.new] };
   if (t.language === "言語") copy.schedule[1] = "説明会、筆記試験、面接などの予定を追加して、選考スケジュールを管理しましょう。";
   const [title, description, action] = copy[kind];
   return (
@@ -2148,22 +2205,11 @@ function Materials({
   setEditInterview,
   setEditPrep,
 }: any) {
-  const materials = data.materials.filter(
-      (x: any) =>
-        filter === "all" ||
-        (filter === "incomplete" && !x.completed) ||
-        (filter === "completed" && x.completed) ||
-        x.type === filter,
-    ),
-    interviews =
-      filter === "all" || filter === "interview" ? data.interviews : [],
-    preps = data.preparations.filter(
-      (x: any) =>
-        filter === "all" ||
-        (filter === "incomplete" && !x.completed) ||
-        (filter === "completed" && x.completed) ||
-        x.type === filter,
-    );
+  const matchesStatus = (completed: boolean) => filter !== "incomplete" && filter !== "completed" || filter === "completed" === completed;
+  const materials = data.materials.filter((x: Material) => (filter === "all" || filter === "material" || filter === "incomplete" || filter === "completed") && (filter !== "material" || x.category === "material") && matchesStatus(!!x.completed));
+  const interviews = data.interviews.filter((x: InterviewRecord) => (filter === "all" || filter === "interview" || filter === "incomplete" || filter === "completed") && (filter !== "interview" || x.category === "interview") && matchesStatus(!!x.result));
+  const preps = data.preparations.filter((x: Preparation) => (filter === "all" || filter === "preparation" || filter === "incomplete" || filter === "completed") && (filter !== "preparation" || x.category === "preparation") && matchesStatus(x.completed));
+  const [createMenu, setCreateMenu] = useState(false);
   return (
     <>
       <div className="page-head">
@@ -2171,31 +2217,30 @@ function Materials({
           <h1>{t.materials}</h1>
           <p>{t.materialsSub}</p>
         </div>
-        {(materials.length > 0 || interviews.length > 0 || preps.length > 0) && <PrimaryActionButton onClick={() => open("es")}>
-          <Plus />
-          {t.new}
-        </PrimaryActionButton>}
+        {(materials.length > 0 || interviews.length > 0 || preps.length > 0) && <div className="record-action-wrap">
+          <PrimaryActionButton onClick={() => setCreateMenu(!createMenu)}><Plus />{t.addRecord}</PrimaryActionButton>
+          {createMenu && <div className="record-action-menu">
+            <button onClick={() => open("es")}>{t.addMaterial}</button>
+            <button onClick={() => open("interview")}>{t.addInterview}</button>
+            <button onClick={() => open("preparation")}>{t.addPrep}</button>
+          </div>}
+        </div>}
       </div>
       <div className="filter-bar entity-card">
         {[
           "all",
           "incomplete",
           "completed",
-          ...types,
-          "es_fix",
-          "interview_practice",
-          "web_test_prep",
-          "documents",
-          "clothes",
-          "route",
-          "other",
+          "material",
+          "interview",
+          "preparation",
         ].map((x) => (
           <button
             className={filter === x ? "active" : ""}
             onClick={() => setFilter(x)}
             key={x}
           >
-            {t[x]}
+            {x === "material" ? t.materialCategory : x === "interview" ? t.interviewCategory : x === "preparation" ? t.preparationCategory : t[x]}
           </button>
         ))}
       </div>
@@ -2243,9 +2288,14 @@ function Materials({
             </button>
           </Swipe>
         ))}
-        {!materials.length && !interviews.length && !preps.length && (
-          <Empty t={t} kind="materials" open={() => open("es")} />
-        )}
+        {!materials.length && !interviews.length && !preps.length && <>
+          <Empty t={t} kind="materials" open={() => setCreateMenu(true)} />
+          {createMenu && <div className="record-action-menu inline-record-menu">
+            <button onClick={() => open("es")}>{t.addMaterial}</button>
+            <button onClick={() => open("interview")}>{t.addInterview}</button>
+            <button onClick={() => open("preparation")}>{t.addPrep}</button>
+          </div>}
+        </>}
       </div>
     </>
   );
@@ -2487,6 +2537,15 @@ function MaterialForm({
   const en = t.language === "Language";
   const [documentType, setDocumentType] = useState("es");
   const [otherType, setOtherType] = useState("open_es");
+  const [saveMode, setSaveMode] = useState<"upload" | "text">("text");
+  const [file, setFile] = useState<File>();
+  const [previewUrl, setPreviewUrl] = useState("");
+  useEffect(() => {
+    if (!file) { setPreviewUrl(""); return; }
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
   const label = (zh: string, jp: string, eng: string) => ja ? jp : en ? eng : zh;
   const otherTypes = [
     ["open_es", "OpenES"],
@@ -2497,6 +2556,20 @@ function MaterialForm({
   ];
   const statuses = [["not_started", label("未着手", "未着手", "Not started")], ["drafting", label("作成中", "作成中", "Drafting")], ["submitted", label("已提交", "提出済み", "Submitted")]];
   const isOtherDocument = documentType === "other_document";
+  const chooseDocumentType = (value: string) => {
+    setDocumentType(value);
+    setSaveMode(value === "es" || value === "other_document" ? "text" : "upload");
+    setFile(undefined);
+  };
+  const onFile = (next?: File) => {
+    if (!next) return;
+    const valid = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/png", "image/jpeg"];
+    if (!valid.includes(next.type) || next.size > 10 * 1024 * 1024) {
+      window.alert(label("请选择 PDF、Word、PNG 或 JPG，且文件不超过 10 MB。", "PDF、Word、PNG、JPGの10MB以下のファイルを選択してください。", "Choose a PDF, Word, PNG, or JPG file up to 10 MB."));
+      return;
+    }
+    setFile(next);
+  };
   return (
     <Modal title={label("添加材料", "書類を追加", "Add document")} close={close}>
       <form className="form-grid document-form" onSubmit={save}>
@@ -2513,12 +2586,28 @@ function MaterialForm({
         </label>
         <label>
           <span>{label("材料类型", "書類の種類", "Document type")} *</span>
-          <select name="documentType" value={documentType} onChange={(e) => setDocumentType(e.target.value)} required>
+          <select name="documentType" value={documentType} onChange={(e) => chooseDocumentType(e.target.value)} required>
             <option value="es">ES</option>
             <option value="resume">履歴書</option>
             <option value="other_document">{label("其他材料", "その他の書類", "Other documents")}</option>
           </select>
         </label>
+        <fieldset className="save-mode-field wide">
+          <legend>{label("保存方式", "保存方法", "Save method")} *</legend>
+          <div className="segmented-control">
+            <label><input type="radio" name="saveMode" value="upload" checked={saveMode === "upload"} onChange={() => setSaveMode("upload")} /><span>{label("上传文件", "ファイルをアップロード", "Upload file")}</span></label>
+            <label><input type="radio" name="saveMode" value="text" checked={saveMode === "text"} onChange={() => setSaveMode("text")} /><span>{label("直接填写", "直接入力", "Enter text")}</span></label>
+          </div>
+        </fieldset>
+        {saveMode === "upload" && <div className="attachment-field wide">
+          <label className="attachment-dropzone" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); onFile(e.dataTransfer.files[0]); }}>
+            <Upload aria-hidden="true" />
+            <strong>{label("拖拽文件到这里，或点击选择文件", "ファイルをここにドロップするか、クリックして選択", "Drop a file here or click to choose")}</strong>
+            <span>{label("支持 PDF、Word、PNG、JPG，最大 10 MB", "PDF、Word、PNG、JPG、最大10MB", "PDF, Word, PNG, JPG, up to 10 MB")}</span>
+            <input name="attachment" type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" onChange={(e) => onFile(e.target.files?.[0])} />
+          </label>
+          {file && <div className="attachment-card"><FileJson /><div><strong title={file.name}>{file.name}</strong><span>{file.type.split("/").pop()?.toUpperCase()} · {Math.ceil(file.size / 1024)} KB</span></div><a href={previewUrl} target="_blank" rel="noopener noreferrer">{file.type === "application/pdf" || file.type.startsWith("image/") ? label("预览", "プレビュー", "Preview") : label("下载查看", "ダウンロード", "Download")}</a><button type="button" onClick={() => setFile(undefined)} aria-label={label("删除附件", "添付ファイルを削除", "Remove attachment")}><Trash2 /></button></div>}
+        </div>}
         {isOtherDocument && <label>
           <span>{label("具体材料类型", "書類の種類", "Specific document type")} *</span>
           <select name="otherType" value={otherType} onChange={(e) => setOtherType(e.target.value)} required>
@@ -2539,18 +2628,18 @@ function MaterialForm({
           <span>{label("提交日期", "提出日", "Submitted on")}</span>
           <input name="submittedAt" type="date" />
         </label>
-        {documentType === "es" && <>
+        {saveMode === "text" && documentType === "es" && <>
           <label className="wide"><span>{label("题目", "設問", "Question")}</span><input name="question" /></label>
           <label className="wide"><span>{label("回答", "回答", "Answer")}</span><textarea name="answer" /></label>
           <label><span>{label("文字数限制", "文字数制限", "Character limit")}</span><input name="characterLimit" type="number" min="0" /></label>
         </>}
-        {documentType === "resume" && <>
+        {saveMode === "text" && documentType === "resume" && <>
           <label><span>{label("版本名", "バージョン名", "Version name")}</span><input name="versionName" /></label>
           <label><span>{label("文件名", "ファイル名", "File name")}</span><input name="fileName" /></label>
           <label><span>{label("使用语言", "使用言語", "Language")}</span><input name="language" placeholder="日本語 / 中文 / English" /></label>
         </>}
         {isOtherDocument && <label><span>{label("文件名", "ファイル名", "File name")}</span><input name="fileName" /></label>}
-        <Actions t={t} close={close} />
+        <Actions t={t} close={close} primaryLabel={saveMode === "upload" ? label("上传并保存", "アップロードして保存", "Upload and save") : undefined} />
       </form>
     </Modal>
   );
@@ -2813,7 +2902,7 @@ function PreparationForm({
     </Modal>
   );
 }
-function Actions({ t, close, remove }: { t: any; close: () => void; remove?: () => void }) {
+function Actions({ t, close, remove, primaryLabel }: { t: any; close: () => void; remove?: () => void; primaryLabel?: string }) {
   return (
     <>
       {remove && <button type="button" className="delete-event-button wide" onClick={remove}>
@@ -2824,7 +2913,7 @@ function Actions({ t, close, remove }: { t: any; close: () => void; remove?: () 
       <button type="button" onClick={close}>
         {t.cancel}
       </button>
-      <button className="primary">{t.save}</button>
+      <button className="primary">{primaryLabel || t.save}</button>
       </div>
     </>
   );
