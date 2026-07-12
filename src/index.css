@@ -2839,8 +2839,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .settings-drawer-scroll { min-height: 0; padding: 0; overflow: hidden; }
   .desktop-settings-layout { display: grid; grid-template-columns: 232px minmax(0, 1fr); height: 100%; min-height: 0; }
   .desktop-settings-nav { padding: 20px 14px; border-right: 1px solid var(--border-color); background: var(--bg-muted); }
-  .desktop-settings-nav button { display: block; width: 100%; height: 48px; padding: 0 14px; border: 0; border-radius: 10px; color: var(--text-secondary); background: transparent; text-align: left; font-size: 14px; }
-  .desktop-settings-nav button.active { color: var(--text-primary); background: var(--nav-active-bg); font-weight: 700; }
+  .desktop-settings-nav button { display: block; width: calc(100% - 24px); min-height: 48px; height: 48px; margin: 0 12px; padding: 0 16px; box-sizing: border-box; border: 0; border-radius: 12px; color: var(--text-secondary); background: transparent; text-align: left; font-size: 14px; }
+  .desktop-settings-nav button.active { color: #0f1419; background: rgba(15,20,25,.06); font-weight: 700; }
   .desktop-settings-content { min-width: 0; overflow-y: auto; padding: 28px 32px 36px; }
   .settings-section { display: grid; gap: 18px; max-width: 760px; }
   .settings-section h3 { margin: 0; color: var(--text-primary); font-size: 18px; }
@@ -2855,8 +2855,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .settings-data-section > h3:not(:first-child) { margin-top: 12px; padding-top: 24px; border-top: 1px solid var(--border-color); }
   .settings-data-section .backup-panel { padding: 0; border: 0; background: transparent; }
   .settings-data-section .backup-panel > section { padding: 0; border: 0; }
-  .settings-danger { margin-top: 12px; padding-top: 20px; border-top: 1px solid var(--border-color); }
-  .settings-danger .danger-button { min-height: 44px; border: 1px solid #d76b67; border-radius: 10px; color: #b74642; background: transparent; }
+  .settings-danger { display: flex; min-height: 92px; align-items: center; justify-content: space-between; gap: 24px; margin-top: 12px; padding: 20px; border: 1px solid var(--border-color); border-radius: 14px; background: #fff; }
+  .settings-danger h3 { margin: 0 0 6px; color: #111; }
+  .settings-danger p { margin: 0; color: #6b7280; font-size: 13px; line-height: 1.45; }
+  .settings-danger .danger-button { display: inline-flex; min-width: 144px; height: 42px; align-items: center; justify-content: center; gap: 8px; flex: 0 0 auto; border: 1px solid #e1a09b; border-radius: 10px; color: #b74642; background: #fff; font-weight: 600; }
+  .settings-danger .danger-button svg { width: 18px; height: 18px; }
+  .dark .settings-danger { border-color: #3a414a; background: var(--bg-surface); }
+  .dark .settings-danger h3 { color: var(--text-primary); }
+  .dark .settings-danger p { color: var(--text-secondary); }
   .settings-about-list { display: grid; gap: 0; border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden; }
   .settings-about-list p { margin: 0; padding: 15px 16px; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); }
   .settings-about-list p:last-child { border-bottom: 0; }
