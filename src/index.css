@@ -2647,3 +2647,60 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .dark .course-nav > button.selected > i { background: #f5f5f5 !important; }
 .dark .back { color: #ddd; }
 .dark .back:hover { color: #fff; }
+
+/* Softer monochrome interaction layer. */
+:root {
+  --text-primary: #17181a;
+  --text-secondary: #646a73;
+  --action-primary-bg: #24262b;
+  --action-primary-hover: #303238;
+  --action-primary-text: #fff;
+  --nav-active-bg: #e8e9eb;
+  --nav-hover-bg: #f1f2f3;
+}
+.dark {
+  --text-primary: #f5f5f5;
+  --text-secondary: #b0b5bd;
+  --action-primary-bg: #f2f2f2;
+  --action-primary-hover: #d9d9d9;
+  --action-primary-text: #111;
+  --nav-active-bg: #2f3339;
+  --nav-hover-bg: #282c32;
+}
+.nav-list button.active { background: var(--nav-active-bg) !important; color: var(--text-primary) !important; font-weight: 600; }
+.nav-list button:hover, .settings-link:hover, .course-nav > button:hover { background: var(--nav-hover-bg) !important; }
+.course-nav > button.selected { background: #e1e2e4 !important; color: var(--text-primary) !important; font-weight: 600; }
+.course-nav > button.selected::before { background: #24262b !important; }
+.course-nav > button.selected > i { background: #24262b !important; }
+.create-entry, .primary, .form-actions > .primary, .settings-actions > .primary,
+.company-grid > .empty-small .primary, .timeline > .empty-small .primary {
+  background: var(--action-primary-bg) !important;
+  color: var(--action-primary-text) !important;
+  box-shadow: 0 3px 8px rgba(0,0,0,.09);
+}
+.create-entry:hover, .primary:hover, .form-actions > .primary:hover, .settings-actions > .primary:hover { background: var(--action-primary-hover) !important; }
+.career-mobile-nav button.active:not(.nav-add) {
+  position: relative;
+  color: var(--text-primary) !important;
+  background: transparent !important;
+  font-weight: 600;
+}
+.career-mobile-nav button.active:not(.nav-add)::before {
+  position: absolute;
+  top: 0;
+  right: 30%;
+  left: 30%;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: #24262b;
+  content: "";
+}
+.career-mobile-nav button:not(.active):not(.nav-add) { color: #777 !important; background: transparent !important; }
+.career-mobile-nav .nav-add,
+.career-mobile-nav .nav-add.open { background: var(--action-primary-bg) !important; color: var(--action-primary-text) !important; }
+.career-mobile-nav .nav-add svg { color: var(--action-primary-text) !important; stroke: currentColor; }
+.dark .career-mobile-nav button.active:not(.nav-add)::before { background: #f2f2f2; }
+.dark .career-mobile-nav button:not(.active):not(.nav-add) { color: #b0b0b0 !important; }
+.dark .career-mobile-nav .nav-add,
+.dark .career-mobile-nav .nav-add.open { background: #f2f2f2 !important; color: #111 !important; }
+.dark .career-mobile-nav .nav-add svg { color: #111 !important; }
