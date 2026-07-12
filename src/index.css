@@ -2808,6 +2808,50 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .dark .sidebar .nav-list button[aria-current="page"] { color: #f5f5f5 !important; background: #24262a !important; }
 .dark .sidebar .nav-list button.active svg,
 .dark .sidebar .nav-list button[aria-current="page"] svg { color: #f5f5f5; }
+
+/* Desktop global-create control: compact pill, separate from mobile add. */
+@media (min-width: 1024px) {
+  .sidebar .desktop-create .create-entry {
+    width: 100%;
+    min-height: 50px;
+    height: 50px;
+    justify-content: flex-start;
+    gap: 11px;
+    padding: 0 16px;
+    border-radius: 999px;
+    color: #fff;
+    background: #24262b;
+    box-shadow: none;
+    font-weight: 600;
+  }
+
+  .sidebar .desktop-create .create-entry:hover {
+    background: #303238;
+  }
+
+  .sidebar .desktop-create .create-entry:active {
+    background: #1d1f23;
+  }
+
+  .sidebar .desktop-create .create-entry svg {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+  }
+
+  .dark .sidebar .desktop-create .create-entry {
+    color: #111;
+    background: #f2f2f2;
+  }
+
+  .dark .sidebar .desktop-create .create-entry:hover {
+    background: #fff;
+  }
+
+  .dark .sidebar .desktop-create .create-entry:active {
+    background: #d9d9d9;
+  }
+}
 .dark .course-nav > button:hover { color: #f5f5f5; background: #24262a !important; }
 .dark .course-nav > button:active,
 .dark .course-nav > button[data-pressed="true"] { background: #303238 !important; }
