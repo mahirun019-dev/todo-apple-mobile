@@ -3740,6 +3740,23 @@ option { color: var(--text-primary); background: var(--bg-input); }
 [data-theme="light"] .mobile-settings-header.drawer-header::before,
 [data-theme="light"] .mobile-settings-header.drawer-header::after { content: none !important; display: none !important; }
 
+/* Keep the mobile drawer flush with the dynamic iOS viewport. */
+@media (max-width: 767px) {
+  .mobile-settings-drawer.drawer-shell {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(70vw, 360px);
+    height: 100dvh;
+    min-height: 100dvh;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .mobile-settings-drawer.drawer-shell .drawer-scroll { min-height: 0; }
+}
+
 /* Final targeted dark-mode corrections. */
 [data-theme="dark"] .dashboard-date,
 [data-theme="dark"] .home-date,
