@@ -201,6 +201,17 @@ const stages: Stage[] = [
   "rejected",
   "withdrawn",
 ];
+type FunnelStage = "funnelInterested" | "funnelDocuments" | "funnelAptitude" | "funnelInterview" | "funnelFinal" | "funnelOffer";
+function funnelStageFor(stage: Company["stage"]): FunnelStage | null {
+  const value = String(stage).trim().toLowerCase();
+  if (["offer", "内定", "offer received"].includes(value)) return "funnelOffer";
+  if (["final_interview", "final selection", "final interview", "最终选考", "最終選考"].includes(value)) return "funnelFinal";
+  if (["first_interview", "second_interview", "third_interview", "group_interview", "interview", "面试", "一次面试", "二次面试", "三次面试", "小组面试", "面谈", "面接中", "面接", "interviewing"].includes(value)) return "funnelInterview";
+  if (["web_test", "spi", "玉手箱", "cab", "gab", "aptitude test", "适性検査", "适性检査", "web / aptitude test", "web・适性测试", "web・適性検査"].includes(value)) return "funnelAptitude";
+  if (["es_draft", "es_submitted", "resume", "document screening", "书类选考", "書類選考", "材料选考", "document_screening", "es"].includes(value)) return "funnelDocuments";
+  if (["saved", "briefing", "interested", "关注中", "気になる"].includes(value)) return "funnelInterested";
+  return null;
+}
 const tr = {
   zh: {
     dashboard: "主页",
@@ -245,6 +256,12 @@ const tr = {
     funnel: "选考进度",
     results: "等待结果",
     focus: "本周准备重点",
+    funnelInterested: "关注中",
+    funnelDocuments: "材料选考",
+    funnelAptitude: "Web・适性测试",
+    funnelInterview: "面试中",
+    funnelFinal: "最终选考",
+    funnelOffer: "内定",
     company: "企业",
     industry: "行业",
     position: "职位",
@@ -352,6 +369,12 @@ const tr = {
     funnel: "選考進捗",
     results: "結果待ち",
     focus: "今週の準備重点",
+    funnelInterested: "気になる",
+    funnelDocuments: "書類選考",
+    funnelAptitude: "Web・適性検査",
+    funnelInterview: "面接中",
+    funnelFinal: "最終選考",
+    funnelOffer: "内定",
     company: "企業",
     industry: "業界",
     position: "職種",
@@ -459,6 +482,12 @@ const tr = {
     funnel: "Application funnel",
     results: "Waiting for result",
     focus: "Weekly priorities",
+    funnelInterested: "Interested",
+    funnelDocuments: "Document Screening",
+    funnelAptitude: "Web / Aptitude Test",
+    funnelInterview: "Interviewing",
+    funnelFinal: "Final Selection",
+    funnelOffer: "Offer",
     company: "Company",
     industry: "Industry",
     position: "Position",
@@ -1694,29 +1723,20 @@ function Dashboard({
           <section className="entity-card">
             <Title>{t.funnel}</Title>
             <div className="funnel">
-              {[
-                "saved",
-                "es_submitted",
-                "web_test",
-                "first_interview",
-                "offer",
-              ].map((s) => (
+              {([
+                "funnelInterested",
+                "funnelDocuments",
+                "funnelAptitude",
+                "funnelInterview",
+                "funnelFinal",
+                "funnelOffer",
+              ] as FunnelStage[]).map((s) => (
                 <div key={s}>
                   <span>{t[s]}</span>
-                  <b>
-                    {
-                      data.companies.filter(
-                        (x: any) =>
-                          x.stage === s ||
-                          (s === "first_interview" &&
-                            [
-                              "first_interview",
-                              "second_interview",
-                              "final_interview",
-                            ].includes(x.stage)),
-                      ).length
-                    }
-                  </b>
+                  {(() => {
+                    const count = data.companies.filter((x: Company) => funnelStageFor(x.stage) === s).length;
+                    return <b className={count > 0 ? "has-count" : undefined}>{count}</b>;
+                  })()}
                 </div>
               ))}
             </div>

@@ -80,6 +80,38 @@ body.settings-drawer-open { overflow: hidden; overscroll-behavior: none; }
   .deadline-list .empty-small { min-height: 0; padding: 18px 16px; }
   .deadline-list .empty-small p { margin: 0; max-width: 300px; }
 }
+
+/* Dashboard funnel summaries use one fixed row and badge rhythm for all six stages. */
+.dashboard-sidebar .funnel {
+  gap: 0;
+}
+.dashboard-sidebar .funnel div {
+  min-height: 54px;
+  padding: 8px 0;
+}
+.dashboard-sidebar .funnel b {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  color: #737980;
+  background: #eef0f2;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.dashboard-sidebar .funnel b.has-count {
+  color: #24262b;
+  background: #dfe2e5;
+  font-weight: 700;
+}
+.dark .dashboard-sidebar .funnel b {
+  color: #aeb4bc;
+  background: #30343a;
+}
+.dark .dashboard-sidebar .funnel b.has-count {
+  color: #f1f2f3;
+  background: #454a52;
+}
 @media (max-width: 760px) {
   .dashboard-date { margin: 0; color: #0f1419; font-size: 32px; font-weight: 700; line-height: 1.2; }
   .dashboard-date + p { display: none; }
