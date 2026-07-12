@@ -1342,7 +1342,7 @@ function Brand({ icon }: { icon: string }) {
   return (
     <div className="brand">
       <div className="brand-mark">
-        {icon ? <img src={icon} alt="" /> : <img src={`${import.meta.env.BASE_URL}favicon-v3.svg`} alt="" />}
+        {icon ? <img src={icon} alt="" /> : <img src={`${import.meta.env.BASE_URL}favicon-v4.svg`} alt="" />}
       </div>
       <div>
         <strong>CareerFlow</strong>
@@ -1878,10 +1878,10 @@ function Companies({
           <h1>{t.companies}</h1>
           <p>{t.subtitle}</p>
         </div>
-        <PrimaryActionButton onClick={() => open("company")}>
+        {data.companies.length > 0 && <PrimaryActionButton onClick={() => open("company")}>
           <Plus />
           {t.addCompany}
-        </PrimaryActionButton>
+        </PrimaryActionButton>}
       </div>
       <div className="company-grid">
         {data.companies.length ? (
@@ -1926,10 +1926,10 @@ function Schedule({
           <h1>{t.schedule}</h1>
           <p>{t.scheduleSub}</p>
         </div>
-        <PrimaryActionButton onClick={() => setForm("schedule")}>
+        {schedules.length > 0 && <PrimaryActionButton onClick={() => setForm("schedule")}>
           <Plus />
           {t.addEvent}
-        </PrimaryActionButton>
+        </PrimaryActionButton>}
       </div>
       <div className="timeline">
         {schedules.length ? (
@@ -2014,10 +2014,10 @@ function Materials({
           <h1>{t.materials}</h1>
           <p>{t.materialsSub}</p>
         </div>
-        <PrimaryActionButton onClick={() => open("es")}>
+        {(materials.length > 0 || interviews.length > 0 || preps.length > 0) && <PrimaryActionButton onClick={() => open("es")}>
           <Plus />
           {t.new}
-        </PrimaryActionButton>
+        </PrimaryActionButton>}
       </div>
       <div className="filter-bar entity-card">
         {[
