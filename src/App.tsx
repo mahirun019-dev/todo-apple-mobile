@@ -8,7 +8,6 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
-import { flushSync } from "react-dom";
 import Papa from "papaparse";
 import { createBackup, deleteBackup, listBackups, type BackupSnapshot } from "./backups";
 import {
@@ -1349,19 +1348,17 @@ function Nav({
   setView: (v: View) => void;
   t: any;
 }) {
-  const [pendingNav, setPendingNav] = useState<View | null>(null);
+  const [activeSection, setActiveSection] = useState<View>(view);
   const [debugPhase, setDebugPhase] = useState<"idle" | "pressed" | "clicked" | "active">("idle");
-  useEffect(() => setPendingNav(null), [view]);
+  useEffect(() => setActiveSection(view), [view]);
   useEffect(() => {
     console.log("[nav] sidebar mounted", performance.now());
     return () => console.log("[nav] sidebar unmounted", performance.now());
   }, []);
   useEffect(() => {
-    console.log("[nav] render", performance.now(), { pendingNav, view, pathname: window.location.pathname });
+    console.log("[nav] render", performance.now(), { activeSection, view, pathname: window.location.pathname });
   });
-  useEffect(() => {
-    if (pendingNav === null) setDebugPhase("active");
-  }, [pendingNav]);
+  useEffect(() => setDebugPhase("active"), [view]);
   const a: [View, any, string][] = [
     ["dashboard", Home, "dashboard"],
     ["companies", Building2, "companies"],
@@ -1372,14 +1369,12 @@ function Nav({
     <div className="nav-list">
       {a.map(([v, I, k]) => (
         <button
-          className={(pendingNav ?? view) === v ? "active" : ""}
-          style={debugPhase !== "idle" && (pendingNav ?? view) === v ? { backgroundColor: debugPhase === "pressed" ? "#ef4444" : debugPhase === "clicked" ? "#22c55e" : "#9ca3af" } : undefined}
+          className={activeSection === v ? "active" : ""}
+          style={debugPhase !== "idle" && activeSection === v ? { backgroundColor: debugPhase === "pressed" ? "#ef4444" : debugPhase === "clicked" ? "#22c55e" : "#9ca3af" } : undefined}
           onClick={(e) => {
             console.log("[nav] click", performance.now(), v);
-            flushSync(() => {
-              setDebugPhase("clicked");
-              setPendingNav(v);
-            });
+            setDebugPhase("clicked");
+            setActiveSection(v);
             requestAnimationFrame(() => {
               console.log("[nav] navigate", performance.now(), v);
               setView(v);
@@ -1389,7 +1384,7 @@ function Nav({
             });
           }}
           aria-current={view === v ? "page" : undefined}
-          onPointerDown={(e) => { console.log("[nav] pointerdown", performance.now(), v); setDebugPhase("pressed"); console.log("[nav] setPendingNav", performance.now(), v); setPendingNav(v); e.currentTarget.dataset.pressed = "true"; }}
+          onPointerDown={(e) => { console.log("[nav] pointerdown", performance.now(), v); setDebugPhase("pressed"); e.currentTarget.dataset.pressed = "true"; }}
           onPointerUp={(e) => { delete e.currentTarget.dataset.pressed; }}
           onPointerLeave={(e) => { delete e.currentTarget.dataset.pressed; }}
           key={v}
