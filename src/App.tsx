@@ -19,6 +19,8 @@ import {
   CloudUpload,
   Check,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Clock3,
   Download,
   FileJson,
@@ -736,6 +738,7 @@ export default function App() {
     [editInterview, setEditInterview] = useState<InterviewRecord>(),
     [editPrep, setEditPrep] = useState<Preparation>(),
     [selected, setSelected] = useState<string>(),
+    [companiesCollapsed, setCompaniesCollapsed] = useState(() => localStorage.getItem("careerflow-companies-collapsed") === "true"),
     [confirm, setConfirm] = useState<Company>(),
     [filter, setFilter] = useState("all"),
     [toast, setToast] = useState<{ text: string; undo: () => void }>(),
@@ -1154,14 +1157,17 @@ export default function App() {
             active={desktopMenu}
             setActive={setDesktopMenu}
           />
-          <div className="course-nav">
-            <div>
-              <span>{t.companies}</span>
-              <button onClick={() => open("company")}>
-                <Plus />
-              </button>
+          <div className={`course-nav ${companiesCollapsed ? "collapsed" : ""}`}>
+            <div className="course-nav-heading" onClick={() => { const next = !companiesCollapsed; setCompaniesCollapsed(next); localStorage.setItem("careerflow-companies-collapsed", String(next)); }} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); const next = !companiesCollapsed; setCompaniesCollapsed(next); localStorage.setItem("careerflow-companies-collapsed", String(next)); } }}>
+              <span>{t.companies} <b>{data.companies.length}</b></span>
+              <span className="course-nav-heading-actions">
+                {companiesCollapsed ? <ChevronDown className="collapse-chevron" /> : <ChevronUp className="collapse-chevron" />}
+                <button onClick={(e) => { e.stopPropagation(); open("company"); }} aria-label={t.addCompany}>
+                  <Plus />
+                </button>
+              </span>
             </div>
-            {data.companies.map((x) => (
+            {!companiesCollapsed && data.companies.map((x) => (
               <button
                 className={view === "companies" && selected === x.id ? "selected" : ""}
                 title={x.name}

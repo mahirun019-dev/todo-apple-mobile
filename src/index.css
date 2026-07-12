@@ -320,6 +320,13 @@ textarea:focus-visible {
   color: #347bcf;
   background: transparent;
 }
+.course-nav-heading { cursor: pointer; }
+.course-nav-heading > span:first-child { display: inline-flex; align-items: center; gap: 5px; }
+.course-nav-heading b { font-size: 10px; font-weight: 700; }
+.course-nav-heading-actions { display: inline-flex; align-items: center; gap: 2px; }
+.course-nav-heading-actions .collapse-chevron { width: 15px; height: 15px; color: #8b98a5; }
+.course-nav-heading-actions button { flex: 0 0 24px; }
+.course-nav.collapsed > button { display: none; }
 .course-nav > div svg {
   width: 16px;
 }
