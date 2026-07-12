@@ -1244,6 +1244,54 @@ textarea:focus-visible {
   color: #d18135;
   font-size: 14px;
 }
+.drawer > header .close-button,
+.settings-drawer-panel .close-button {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  place-items: center;
+  border: 1px solid #dfe2e5;
+  border-radius: 12px;
+  color: #5f6670;
+  background: #f1f2f3;
+  cursor: pointer;
+  transition: background-color 100ms ease, color 100ms ease, border-color 100ms ease;
+}
+.drawer > header .close-button:hover,
+.settings-drawer-panel .close-button:hover {
+  background: #e5e6e8;
+}
+.drawer > header .close-button:active,
+.settings-drawer-panel .close-button:active {
+  background: #dcdde0;
+}
+.drawer > header .close-button:focus-visible,
+.settings-drawer-panel .close-button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.drawer > header .close-button svg,
+.settings-drawer-panel .close-button svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 2;
+}
+.dark .drawer > header .close-button,
+.dark .settings-drawer-panel .close-button {
+  border-color: #3b424b;
+  color: #c6ccd3;
+  background: #252a31;
+}
+.dark .drawer > header .close-button:hover,
+.dark .settings-drawer-panel .close-button:hover {
+  background: #30363e;
+}
+.dark .drawer > header .close-button:active,
+.dark .settings-drawer-panel .close-button:active {
+  background: #3a414a;
+}
 .wait-row small {
   font-size: 9px;
   font-weight: 600;

@@ -1664,26 +1664,6 @@ function Dashboard({
               <Empty t={t} />
             )}
           </section>
-          <section className="entity-card">
-            <Title>{t.focus}</Title>
-            <div className="focus-list">
-              {focus.map((x: any) => (
-                <label key={x.id}>
-                  <button
-                    className={x.completed ? "done" : ""}
-                    onClick={() => toggle(x.id)}
-                  >
-                    <Check />
-                  </button>
-                  <span>{x.title}</span>
-                  <button onClick={() => focusToggle(x.id)}>
-                    <X />
-                  </button>
-                </label>
-              ))}
-              {focus.length < 3 && <p>{t.language === "言語" ? `あと${3 - focus.length}件追加できます` : t.language === "Language" ? `${3 - focus.length} slots available` : `还可以添加 ${3 - focus.length} 项`}</p>}
-            </div>
-          </section>
         </aside>
       </div>
     </>
@@ -2207,13 +2187,25 @@ function Modal({
       <section className="drawer entity-card" role="dialog">
         <header>
           <h2>{title}</h2>
-          <button onClick={close}>
-            <X />
-          </button>
+          <CloseButton onClick={close} />
         </header>
         {children}
       </section>
     </div>
+  );
+}
+
+function CloseButton({
+  onClick,
+  label = "Close",
+}: {
+  onClick: () => void;
+  label?: string;
+}) {
+  return (
+    <button type="button" className="close-button" onClick={onClick} aria-label={label}>
+      <X aria-hidden="true" />
+    </button>
   );
 }
 function CompanyForm({
@@ -2757,7 +2749,7 @@ function SettingsDrawer({ close, children, title }: { close: () => void; childre
   const startX = useRef<number | null>(null);
   const dismiss = () => { if (closing) return; setClosing(true); window.setTimeout(close, 260); };
   useEffect(() => { const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") dismiss(); }; document.addEventListener("keydown", onKey); document.body.classList.add("settings-drawer-open"); return () => { document.removeEventListener("keydown", onKey); document.body.classList.remove("settings-drawer-open"); }; }, []);
-  return <div className={`settings-drawer-layer ${closing ? "closing" : ""}`}><button className="settings-drawer-backdrop" onClick={dismiss} aria-label="Close settings"/><aside className="settings-drawer-panel" role="dialog" aria-modal="true" aria-label={title} onTouchStart={(e) => { startX.current = e.touches[0].clientX; }} onTouchEnd={(e) => { if (startX.current !== null && e.changedTouches[0].clientX - startX.current > 70) dismiss(); startX.current = null; }}><header><h2>{title}</h2><button className="settings-close-button" onClick={dismiss} aria-label="Close settings"><X /></button></header><div className="settings-drawer-scroll">{children}</div></aside></div>;
+  return <div className={`settings-drawer-layer ${closing ? "closing" : ""}`}><button className="settings-drawer-backdrop" onClick={dismiss} aria-label="Close settings"/><aside className="settings-drawer-panel" role="dialog" aria-modal="true" aria-label={title} onTouchStart={(e) => { startX.current = e.touches[0].clientX; }} onTouchEnd={(e) => { if (startX.current !== null && e.changedTouches[0].clientX - startX.current > 70) dismiss(); startX.current = null; }}><header><h2>{title}</h2><CloseButton onClick={dismiss} label="Close settings" /></header><div className="settings-drawer-scroll">{children}</div></aside></div>;
 }
 function SettingsPanel({
   t,
