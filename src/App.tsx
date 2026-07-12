@@ -1349,6 +1349,7 @@ function Nav({
   t: any;
 }) {
   const [activeSection, setActiveSection] = useState<View>(view);
+  const [debugActive, setDebugActive] = useState(false);
   const [debugPhase, setDebugPhase] = useState<"idle" | "pressed" | "clicked" | "active">("idle");
   useEffect(() => setActiveSection(view), [view]);
   useEffect(() => {
@@ -1369,11 +1370,15 @@ function Nav({
     <div className="nav-list">
       {a.map(([v, I, k]) => (
         <button
-          className={activeSection === v ? "active" : ""}
+          className={activeSection === v || (v === "schedule" && debugActive) ? "active" : ""}
           style={debugPhase !== "idle" && activeSection === v ? { backgroundColor: debugPhase === "pressed" ? "#ef4444" : debugPhase === "clicked" ? "#22c55e" : "#9ca3af" } : undefined}
           onClick={(e) => {
             console.log("[nav] click", performance.now(), v);
             setDebugPhase("clicked");
+            if (v === "schedule") {
+              setDebugActive(true);
+              return;
+            }
             setActiveSection(v);
             requestAnimationFrame(() => {
               console.log("[nav] navigate", performance.now(), v);
