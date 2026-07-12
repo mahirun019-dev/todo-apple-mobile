@@ -1126,7 +1126,7 @@ export default function App() {
   };
   return (
     <div className="app-shell">
-      <div className="student-app career-app">
+      <div className={`student-app career-app ${settings ? "mobile-menu-open" : ""}`}>
         <aside className="sidebar panel">
           <Brand icon={icon} />
           <StableNav view={view} setView={setView} t={t} />

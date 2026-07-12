@@ -2976,15 +2976,27 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .mobile-settings-nav button.active svg:first-child { color: var(--text-primary); }
   .mobile-settings-nav > button:nth-child(-n+4) svg:last-child { display: none; }
   .mobile-settings-divider { margin: 10px 10px; }
-  .mobile-settings-layer { padding: max(8px, env(safe-area-inset-top)) 0 max(8px, env(safe-area-inset-bottom)); }
-  .mobile-settings-backdrop { background: rgba(0,0,0,.22); }
+  .mobile-settings-layer { padding: 0; }
+  .mobile-settings-backdrop { background: rgba(0,0,0,.14); }
   .mobile-settings-drawer {
-    height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px);
-    margin: 8px 0;
-    border-radius: 0 30px 30px 0;
-    box-shadow: 8px 0 24px rgba(0,0,0,.10);
+    height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
     animation: mobile-settings-in .2s ease-out;
   }
+  .mobile-menu-open > .mobile-header,
+  .mobile-menu-open > .workspace,
+  .mobile-menu-open > .career-mobile-nav {
+    position: relative;
+    z-index: 145;
+    transform: translateX(74vw) scale(.97);
+    transform-origin: left center;
+    transition: transform .2s ease-out;
+  }
+  .mobile-menu-open > .workspace { border-radius: 28px 0 0 28px; }
+  .mobile-menu-open > .mobile-header { border-radius: 28px 0 0 0; }
+  .mobile-menu-open > .career-mobile-nav { border-radius: 28px 0 0 0; }
 }
 
 /* Desktop global-create control: compact pill, separate from mobile add. */
