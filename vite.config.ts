@@ -10,8 +10,9 @@ export default defineConfig(({ command }) => ({
       registerType: "autoUpdate",
       includeAssets: ["icon.svg", "apple-touch-icon.png", "pwa-192x192.png", "pwa-512x512.png"],
       manifest: {
-        name: "Focus Glass",
-        short_name: "Focus",
+        name: "CareerFlow",
+        short_name: "CareerFlow",
+        id: "/todo-apple-mobile/",
         lang: "zh-CN",
         description: "A glass-inspired personal task manager.",
         theme_color: "#dfefff",
@@ -27,7 +28,7 @@ export default defineConfig(({ command }) => ({
         ],
       },
       workbox: {
-        cacheId: "careerflow-623d743",
+        cacheId: "careerflow-name-v2",
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,

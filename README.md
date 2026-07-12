@@ -1,6 +1,6 @@
-# Todo Apple
+# CareerFlow
 
-一个基于 React、TypeScript、Vite 和 Tailwind CSS 的响应式 Todo App。
+一个基于 React、TypeScript、Vite 和 Tailwind CSS 的日本就活管理工具。
 
 ## 功能
 

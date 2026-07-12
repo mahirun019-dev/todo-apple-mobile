@@ -165,9 +165,9 @@ const KEY = "career-flow-data-v5",
   OLD = "career-flow-data-v4",
   BACKUP = "career-flow-pre-v5-backup",
   CLEAN = "career-flow-demo-cleaned-v1",
-  THEME = "todo-apple-theme",
-  LOCALE = "todo-apple-locale",
-  ICON = "todo-apple-custom-icon";
+  THEME = "careerflow-theme",
+  LOCALE = "careerflow-locale",
+  ICON = "careerflow-custom-icon";
 const demoNames = ["Rakuten Group", "三菱UFJ银行", "CyberAgent"];
 const id = () => crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
 const types: ItemType[] = [
