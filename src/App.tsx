@@ -565,7 +565,7 @@ function demo(): Data {
         careersUrl: "",
         notes: "准备案例面试",
         tags: ["sample"],
-        color: "#2878d9",
+        color: "#555555",
         createdAt: Date.now(),
         updatedAt: Date.now(),
       },
@@ -643,7 +643,7 @@ function load(): Data {
             ...v,
             interestLevel: v.interestLevel || 3,
             tags: v.tags || [],
-            color: v.color || "#2878d9",
+            color: v.color || "#555555",
           })),
         materials: (x.materials || [])
           .filter((v: any) => !v.companyId || ids.has(v.companyId))
@@ -1536,7 +1536,7 @@ function Dashboard({
             <Title>{t.next}</Title>
             {next ? (
               <div>
-                <i style={{ background: next.company?.color || "#2878d9" }} />
+                <i style={{ background: next.company?.color || "#555555" }} />
                 <div>
                   <h3>{next.company?.name || t.general}</h3>
                   <p>
@@ -2198,7 +2198,7 @@ function CompanyForm({
   close: () => void;
   save: any;
 }) {
-  const colors = ["#2878d9", "#6b5bd6", "#d18135", "#d4534d", "#2d9b78", "#9a6b44", "#6e7d91", "#c04f8a"];
+  const colors = ["#555555", "#777777", "#d18135", "#d4534d", "#2d9b78", "#9a6b44", "#6e7d91", "#c04f8a"];
   const [color, setColor] = useState(initial?.color || colors[0]);
   return (
     <Modal title={initial ? t.edit : t.addCompany} close={close}>

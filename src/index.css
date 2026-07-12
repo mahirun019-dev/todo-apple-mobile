@@ -2573,3 +2573,59 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
 .dark .funnel div, .dark .wait-row, .dark .document-summary, .dark .exam-row { border-color: #383838; color: #ccc; }
 .dark .danger-button, .dark .head-actions > button.danger-button { border-color: #a85a56; color: #ffaaa4; background: transparent; }
 .dark .danger-button:hover, .dark .head-actions > button.danger-button:hover { background: #38292a; }
+
+/* Final theme tokens: all primary UI surfaces consume these values. */
+:root {
+  --bg-page: #f7f7f8;
+  --bg-surface: #ffffff;
+  --bg-muted: #f1f1f2;
+  --text-primary: #111111;
+  --text-secondary: #6b7280;
+  --text-muted: #8b8f97;
+  --border-color: #dedfe3;
+  --action-primary-bg: #111111;
+  --action-primary-text: #ffffff;
+  --action-primary-hover: #2a2a2a;
+  --nav-active-bg: #ececee;
+  --nav-active-text: #111111;
+  --nav-inactive-text: #5f636b;
+}
+.dark {
+  --bg-page: #0f1115;
+  --bg-surface: #181b20;
+  --bg-muted: #22262d;
+  --text-primary: #f5f5f5;
+  --text-secondary: #b0b5bd;
+  --text-muted: #7f858f;
+  --border-color: #30353d;
+  --action-primary-bg: #f5f5f5;
+  --action-primary-text: #111111;
+  --action-primary-hover: #d9d9d9;
+  --nav-active-bg: #2a2e35;
+  --nav-active-text: #ffffff;
+  --nav-inactive-text: #aeb4bd;
+}
+body, .app-shell { background: var(--bg-page); color: var(--text-primary); }
+.student-app, .career-app { background: var(--bg-surface); border-color: var(--border-color); }
+.career-app .sidebar, .panel { background: var(--bg-muted); border-color: var(--border-color); }
+.entity-card, .task-row-card, .company-card, .timeline-row { background: var(--bg-surface); border-color: var(--border-color); }
+.nav-list button, .settings-link, .course-nav > div, .course-nav > button, .career-mobile-nav button { color: var(--nav-inactive-text); }
+.nav-list button.active, .course-nav > button.selected, .career-mobile-nav button.active { color: var(--nav-active-text); background: var(--nav-active-bg); }
+.nav-list button:hover, .settings-link:hover, .course-nav > button:hover { color: var(--text-primary); background: var(--bg-muted); }
+.primary, .create-entry, .form-actions > .primary, .settings-actions > .primary, .company-grid > .empty-small .primary, .timeline > .empty-small .primary { color: var(--action-primary-text) !important; background: var(--action-primary-bg) !important; border-color: var(--action-primary-bg); }
+.primary:hover, .create-entry:hover, .form-actions > .primary:hover, .settings-actions > .primary:hover { background: var(--action-primary-hover) !important; }
+.form-actions > button:not(.primary), .settings-actions button:not(.primary), .head-actions > button { color: var(--text-primary); background: var(--bg-surface); border-color: var(--border-color); }
+.empty-small, .section-title > span, .page-head p, .metric span, .form-grid label { color: var(--text-secondary); }
+.empty-small svg { color: var(--text-secondary) !important; }
+.funnel b { color: var(--text-primary); background: var(--bg-muted); }
+.focus-star.active, .task-check.done { color: #fff; background: #2477d9; }
+.course-nav > button > i, .course-nav i { background: #555 !important; }
+.career-mobile-nav { background: var(--bg-surface); border-color: var(--border-color); }
+.career-mobile-nav .nav-add { color: var(--action-primary-text); background: var(--action-primary-bg); }
+.career-mobile-nav .nav-add.open { background: var(--action-primary-hover); }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline-color: rgba(17,17,17,.35); }
+.dark button:focus-visible, .dark input:focus-visible, .dark select:focus-visible, .dark textarea:focus-visible { outline-color: rgba(245,245,245,.45); }
+.backup-panel, .document-question { background: var(--bg-muted); border-color: var(--border-color); }
+.backup-cloud-actions button, .backup-panel button:not(.primary) { color: var(--text-primary); background: var(--bg-surface); border-color: var(--border-color); }
+.settings-drawer-panel { background: var(--bg-surface); }
+.settings-drawer-panel > header { border-color: var(--border-color); }
