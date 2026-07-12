@@ -228,6 +228,11 @@ const tr = {
     addMaterial: "添加材料",
     addInterview: "新增面试记录",
     addPrep: "新增准备事项",
+    deleteEventTitle: "删除此日程？",
+    deleteEventDescription: "删除后无法恢复。",
+    deleteAction: "删除",
+    deleteEventAction: "删除日程",
+    untitledSchedule: "未命名日程",
     interviews: "面试记录",
     preparations: "准备事项",
     round: "面试轮次",
@@ -341,6 +346,11 @@ const tr = {
     addMaterial: "書類を追加",
     addInterview: "面接記録を追加",
     addPrep: "準備事項を追加",
+    deleteEventTitle: "この日程を削除しますか？",
+    deleteEventDescription: "削除すると元に戻せません。",
+    deleteAction: "削除",
+    deleteEventAction: "日程を削除",
+    untitledSchedule: "無題の日程",
     interviews: "面接記録",
     preparations: "準備事項",
     round: "面接回数",
@@ -454,6 +464,11 @@ const tr = {
     addMaterial: "Add document",
     addInterview: "Add interview record",
     addPrep: "Add preparation",
+    deleteEventTitle: "Delete this schedule?",
+    deleteEventDescription: "This cannot be undone.",
+    deleteAction: "Delete",
+    deleteEventAction: "Delete schedule",
+    untitledSchedule: "Untitled schedule",
     interviews: "Interview records",
     preparations: "Preparations",
     round: "Interview round",
@@ -769,6 +784,7 @@ export default function App() {
     [selected, setSelected] = useState<string>(),
     [companiesCollapsed, setCompaniesCollapsed] = useState(() => localStorage.getItem("careerflow-companies-collapsed") === "true"),
     [confirm, setConfirm] = useState<Company>(),
+    [deleteEvent, setDeleteEvent] = useState<Event>(),
     [filter, setFilter] = useState("all"),
     [toast, setToast] = useState<{ text: string; undo: () => void }>(),
     [icon, setIcon] = useState(() => localStorage.getItem(ICON) || "");
@@ -846,7 +862,7 @@ export default function App() {
       kind: "event" as const,
       id: x.id,
       at: x.startsAt,
-      title: x.title,
+      title: scheduleDisplayTitle(x.title, x.type, t),
       company: byId[x.companyId || ""],
       type: x.type,
       event: x,
@@ -908,6 +924,13 @@ export default function App() {
       text: x.title,
       undo: () => setData((d) => ({ ...d, events: [x, ...d.events] })),
     });
+  };
+  const confirmRemoveEvent = () => {
+    if (!deleteEvent) return;
+    removeEvent(deleteEvent);
+    setDeleteEvent(undefined);
+    setForm(null);
+    setEditEvent(undefined);
   };
   const removeInterview = (x: InterviewRecord) => {
     setData((d) => ({
@@ -1379,6 +1402,7 @@ export default function App() {
               setEditEvent(undefined);
             }}
             save={saveEvent}
+            remove={setDeleteEvent}
           />
         )}{" "}
         {form === "interview" && (
@@ -1411,6 +1435,13 @@ export default function App() {
             company={confirm}
             close={() => setConfirm(undefined)}
             remove={deleteCompany}
+          />
+        )}{" "}
+        {deleteEvent && (
+          <DeleteEventConfirm
+            t={t}
+            close={() => setDeleteEvent(undefined)}
+            remove={confirmRemoveEvent}
           />
         )}{" "}
         {toast && (
@@ -1675,7 +1706,7 @@ function Dashboard({
               <div>
                 <i style={{ background: next.company?.color || "#555555" }} />
                 <div>
-                  <h3>{next.company?.name || t.general}</h3>
+                  <h3>{next.title || next.company?.name || t.untitledSchedule}</h3>
                   <p>
                     {t[next.type]} · {when(next.at)}
                   </p>
@@ -1838,6 +1869,9 @@ function when(s: string) {
 function relative(s: string, t: any) {
   const h = Math.ceil((new Date(s).getTime() - Date.now()) / 36e5);
   return h < 1 ? "Now" : h < 24 ? `${h}h` : `${Math.ceil(h / 24)} ${t.days}`;
+}
+function scheduleDisplayTitle(title: string | undefined, type: string | undefined, t: any) {
+  return title?.trim() || (type && t[type]) || t.untitledSchedule;
 }
 function Companies({
   t,
@@ -2031,7 +2065,7 @@ function Schedule({
                 <time>{when(x.at)}</time>
                 <i style={{ background: x.company?.color || "#d18135" }} />
                 <div>
-                  <strong>{x.title}</strong>
+                  <strong>{scheduleDisplayTitle(x.title, x.type, t)}</strong>
                   <span>
                     {x.company?.name || t.general} · {t[x.type]}
                   </span>
@@ -2474,12 +2508,14 @@ function EventForm({
   initial,
   close,
   save,
+  remove,
 }: {
   t: any;
   companies: Company[];
   initial?: Event;
   close: () => void;
   save: any;
+  remove: (event: Event) => void;
 }) {
   return (
     <Modal title={initial ? t.edit : t.addEvent} close={close}>
@@ -2540,7 +2576,7 @@ function EventForm({
           <span>{t.notes}</span>
           <textarea name="notes" defaultValue={initial?.notes} />
         </label>
-        <Actions t={t} close={close} />
+        <Actions t={t} close={close} remove={initial ? () => remove(initial) : undefined} />
       </form>
     </Modal>
   );
@@ -2724,14 +2760,20 @@ function PreparationForm({
     </Modal>
   );
 }
-function Actions({ t, close }: { t: any; close: () => void }) {
+function Actions({ t, close, remove }: { t: any; close: () => void; remove?: () => void }) {
   return (
-    <div className="form-actions wide">
+    <>
+      {remove && <button type="button" className="delete-event-button wide" onClick={remove}>
+        <Trash2 />
+        {t.deleteEventAction}
+      </button>}
+      <div className="form-actions wide">
       <button type="button" onClick={close}>
         {t.cancel}
       </button>
       <button className="primary">{t.save}</button>
-    </div>
+      </div>
+    </>
   );
 }
 function Confirm({
@@ -2754,6 +2796,25 @@ function Confirm({
         </button>
         <button onClick={() => remove(company, false)}>{t.deleteOnly}</button>
         <button onClick={close}>{t.cancel}</button>
+      </div>
+    </Modal>
+  );
+}
+function DeleteEventConfirm({
+  t,
+  close,
+  remove,
+}: {
+  t: any;
+  close: () => void;
+  remove: () => void;
+}) {
+  return (
+    <Modal title={t.deleteEventTitle} close={close}>
+      <p className="confirm-copy">{t.deleteEventDescription}</p>
+      <div className="confirm-actions">
+        <button onClick={close}>{t.cancel}</button>
+        <button className="danger-solid" onClick={remove}>{t.deleteAction}</button>
       </div>
     </Modal>
   );

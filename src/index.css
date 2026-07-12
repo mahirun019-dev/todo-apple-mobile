@@ -3326,6 +3326,31 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .dark .course-nav > button.selected::before,
 .dark .course-nav > button.selected > i { background: #f5f5f5 !important; }
 
+.delete-event-button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;
+  border: 1px solid #e3a09c;
+  border-radius: 11px;
+  color: #b7433e;
+  background: #fff;
+  font-weight: 700;
+}
+.delete-event-button:hover { background: #fff5f4; border-color: #cf7772; }
+.delete-event-button svg { width: 18px; height: 18px; }
+.danger-solid {
+  border-color: #c84d47 !important;
+  color: #fff !important;
+  background: #c84d47 !important;
+}
+.danger-solid:hover { background: #a83e39 !important; }
+.dark .delete-event-button { border-color: #9d5b57; color: #ffaaa4; background: #242424; }
+.dark .delete-event-button:hover { background: #342528; }
+
 /* Final mobile dashboard guardrails: keep the fixed nav out of the scrollable content. */
 @media (max-width: 760px) {
   .career-app .workspace {
