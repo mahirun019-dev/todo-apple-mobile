@@ -1425,6 +1425,7 @@ export default function App() {
             download={download}
           />
         )}{" "}
+        <input hidden ref={json} type="file" accept=".json,application/json" onChange={importJson} />
         {form === "company" && (
           <CompanyForm
             t={t}
@@ -3065,7 +3066,7 @@ function SettingsPanel({ t, theme, setTheme, locale, setLocale, close, data, set
     {tab === "language" && <section className="settings-section"><h3>{ui.language}</h3><div className="settings-segmented">{(["zh", "ja"] as Locale[]).map((x) => <button type="button" aria-pressed={locale === x} className={locale === x ? "active" : ""} onClick={() => setLocale(x)} key={x}>{x === "zh" ? "中文" : "日本語"}</button>)}</div></section>}
     {tab === "data" && <section className="settings-section settings-data-section"><h3>{ui.backup}</h3><BackupControls t={t} data={data} theme={theme} locale={locale} setData={setData} download={download} /><div className="settings-actions"><button type="button" onClick={() => json.current?.click()}><RotateCcw />{ja ? "バックアップファイルから復元" : locale === "en" ? "Restore from backup file" : "从备份文件恢复"}</button><button type="button" onClick={() => download("careerflow-backup.json", JSON.stringify(data, null, 2), "application/json")}><Archive />{ja ? "完全バックアップをダウンロード" : locale === "en" ? "Download complete backup" : "下载完整备份"}</button></div><div className="settings-danger"><h3>{sampleTitle}</h3><p>{sampleHelp}</p><button type="button" className="danger-button" onClick={() => { if (window.confirm(sampleAction + "？")) setData((d: Data) => ({ ...d, companies: d.companies.filter((x) => !x.tags.includes("sample") && !demoNames.includes(x.name)), materials: d.materials.filter((x) => !x.tags.includes("sample")) })); }}><Trash2 />{sampleAction}</button></div></section>}
     {tab === "about" && <section className="settings-section"><h3>{ui.aboutTitle}</h3><div className="settings-about-list"><p>{ui.version}</p><p>{ui.db}: v{data.schemaVersion}</p><p>{ui.pwa}</p><p>{ui.icon}</p><p>{ui.privacy}</p><p>{ui.license}</p></div></section>}
-  </div></div><input hidden ref={json} type="file" accept=".json,application/json" onChange={importJson} /><input hidden ref={iconRef} type="file" accept="image/*" onChange={upload} /></SettingsDrawer>;
+  </div></div><input hidden ref={iconRef} type="file" accept="image/*" onChange={upload} /></SettingsDrawer>;
 }
 function SettingsNavItem({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return <button type="button" className={`settings-nav-item ${active ? "active" : ""}`} aria-selected={active} onClick={onClick}><span className="settings-nav-label">{label}</span></button>;
