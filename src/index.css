@@ -2834,7 +2834,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   opacity: 1 !important;
 }
 @media (min-width: 981px) {
-  .settings-drawer-panel { width: min(1040px, calc(100vw - 80px)); height: min(84vh, 760px); max-height: 86vh; padding: 0; }
+  .settings-drawer-panel { width: min(960px, calc(100vw - 64px)); height: min(720px, calc(100vh - 64px)); max-height: min(720px, calc(100vh - 64px)); padding: 0; border-radius: 24px; }
   .settings-drawer-panel > header { height: 72px; padding: 0 28px; flex-shrink: 0; }
   .settings-drawer-scroll { min-height: 0; padding: 0; overflow: hidden; }
   .desktop-settings-layout { display: grid; grid-template-columns: 232px minmax(0, 1fr); height: 100%; min-height: 0; }
@@ -2860,6 +2860,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .settings-about-list { display: grid; gap: 0; border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden; }
   .settings-about-list p { margin: 0; padding: 15px 16px; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); }
   .settings-about-list p:last-child { border-bottom: 0; }
+  .desktop-settings-panel > header .close-button,
+  .settings-drawer-panel > header .close-button { width: 44px; height: 44px; min-width: 44px; min-height: 44px; border-radius: 12px; }
+  .desktop-settings-content > .settings-section { width: min(100%, 720px); }
+  .settings-data-section { padding-top: 4px; }
+  .settings-data-section > h3 { margin-top: 0; }
 }
 
 /* Desktop keeps only a compact page margin; mobile owns safe-area spacing. */
