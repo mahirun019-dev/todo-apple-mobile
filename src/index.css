@@ -2704,3 +2704,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .dark .career-mobile-nav .nav-add,
 .dark .career-mobile-nav .nav-add.open { background: #f2f2f2 !important; color: #111 !important; }
 .dark .career-mobile-nav .nav-add svg { color: #111 !important; }
+.nav-list button, .career-mobile-nav button:not(.nav-add) { transition: background-color .1s ease, color .1s ease; }
+.nav-list button[data-pressed="true"] { color: var(--text-primary) !important; background: #d9dade !important; }
+.career-mobile-nav button[data-pressed="true"]:not(.nav-add) { color: var(--text-primary) !important; background: transparent !important; }
+.career-mobile-nav button:active:not(.nav-add) { background: transparent !important; }
+.nav-list button:focus-visible, .career-mobile-nav button:focus-visible { outline: 3px solid rgba(17,17,17,.3); outline-offset: -2px; }
+.dark .nav-list button[data-pressed="true"] { background: #41464d !important; }
+.dark .nav-list button:focus-visible, .dark .career-mobile-nav button:focus-visible { outline-color: rgba(245,245,245,.55); }

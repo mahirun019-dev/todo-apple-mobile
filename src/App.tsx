@@ -1358,6 +1358,10 @@ function Nav({
         <button
           className={view === v ? "active" : ""}
           onClick={() => setView(v)}
+          aria-current={view === v ? "page" : undefined}
+          onPointerDown={(e) => { e.currentTarget.dataset.pressed = "true"; }}
+          onPointerUp={(e) => { delete e.currentTarget.dataset.pressed; }}
+          onPointerLeave={(e) => { delete e.currentTarget.dataset.pressed; }}
           key={v}
         >
           <I />
@@ -1424,6 +1428,10 @@ function MobileNav({
       <button
         className={view === "dashboard" ? "active" : ""}
         onClick={() => setView("dashboard")}
+        aria-current={view === "dashboard" ? "page" : undefined}
+        onPointerDown={(e) => { e.currentTarget.dataset.pressed = "true"; }}
+        onPointerUp={(e) => { delete e.currentTarget.dataset.pressed; }}
+        onPointerLeave={(e) => { delete e.currentTarget.dataset.pressed; }}
       >
         <Home />
         <span>{t.dashboard}</span>
@@ -1431,6 +1439,10 @@ function MobileNav({
       <button
         className={view === "companies" ? "active" : ""}
         onClick={() => setView("companies")}
+        aria-current={view === "companies" ? "page" : undefined}
+        onPointerDown={(e) => { e.currentTarget.dataset.pressed = "true"; }}
+        onPointerUp={(e) => { delete e.currentTarget.dataset.pressed; }}
+        onPointerLeave={(e) => { delete e.currentTarget.dataset.pressed; }}
       >
         <Building2 />
         <span>{t.companies}</span>
@@ -1445,6 +1457,10 @@ function MobileNav({
       <button
         className={view === "schedule" ? "active" : ""}
         onClick={() => setView("schedule")}
+        aria-current={view === "schedule" ? "page" : undefined}
+        onPointerDown={(e) => { e.currentTarget.dataset.pressed = "true"; }}
+        onPointerUp={(e) => { delete e.currentTarget.dataset.pressed; }}
+        onPointerLeave={(e) => { delete e.currentTarget.dataset.pressed; }}
       >
         <CalendarDays />
         <span>{t.schedule}</span>
@@ -1452,6 +1468,10 @@ function MobileNav({
       <button
         className={view === "materials" ? "active" : ""}
         onClick={() => setView("materials")}
+        aria-current={view === "materials" ? "page" : undefined}
+        onPointerDown={(e) => { e.currentTarget.dataset.pressed = "true"; }}
+        onPointerUp={(e) => { delete e.currentTarget.dataset.pressed; }}
+        onPointerLeave={(e) => { delete e.currentTarget.dataset.pressed; }}
       >
         <BriefcaseBusiness />
         <span>{t.materials}</span>
