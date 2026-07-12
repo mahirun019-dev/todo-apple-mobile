@@ -2978,7 +2978,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .mobile-settings-nav { margin-top: 14px; gap: 1px; }
   .mobile-settings-nav button.active { color: var(--text-primary); background: var(--nav-active-bg); font-weight: 600; }
   .mobile-settings-nav button.active svg:first-child { color: var(--text-primary); }
-  .mobile-settings-nav > button:nth-child(-n+4) svg:last-child { display: none; }
+  .mobile-settings-nav > button {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) 16px;
+    column-gap: 16px;
+    width: 100%;
+    min-width: 0;
+    align-items: center;
+  }
+  .mobile-settings-nav > button span { min-width: 0; white-space: nowrap; }
+  .mobile-settings-nav > button svg:last-child { display: block; width: 16px; height: 16px; margin-left: 0; color: #8b98a5; stroke: currentColor; stroke-width: 2; transition: transform 180ms ease; }
   .mobile-settings-divider { margin: 10px 10px; }
   .mobile-settings-layer { padding: 0; }
   .mobile-settings-backdrop { background: rgba(0,0,0,.14); }
@@ -3056,15 +3065,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .drawer-shell { height: 100dvh; min-height: 0; overflow: hidden; }
   .drawer-header { position: relative; z-index: 20; flex: 0 0 auto; background: #fff; opacity: 1; transform: none; }
   .drawer-scroll { min-height: 0; flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
-  .drawer-accordion-panel { display: grid; grid-template-rows: 1fr; overflow: hidden; margin: 0 16px 4px 58px; padding: 0; border-radius: 0; background: transparent; animation: drawer-accordion-in .2s ease-out; }
+  .drawer-accordion-panel { display: grid; grid-template-rows: 1fr; overflow: hidden; margin: 0 0 4px 52px; padding: 0; border-radius: 0; background: transparent; animation: drawer-accordion-in .2s ease-out; }
   .mobile-settings-nav > button.expanded svg:last-child { transform: rotate(90deg); }
   .drawer-accordion-panel .mobile-choice-list button,
   .drawer-accordion-panel .mobile-data-actions button { min-height: 44px; height: 44px; padding: 0 12px; font-size: 15px; font-weight: 500; }
   .drawer-accordion-panel .mobile-data-actions { gap: 0; padding: 4px 0; }
   .drawer-accordion-panel .mobile-data-actions button { gap: 10px; }
   .drawer-accordion-panel .mobile-data-actions button svg { width: 19px; height: 19px; }
-  .drawer-accordion-panel > button { min-height: 48px; height: 48px; padding: 0; gap: 12px; border: 0; border-radius: 0; color: #0f1419; background: transparent; font-size: 15px; font-weight: 500; line-height: 1.25; white-space: nowrap; text-align: left; }
-  .drawer-accordion-panel > button svg { width: 20px; height: 20px; color: #0f1419; stroke: currentColor; stroke-width: 2.2; }
+  .drawer-accordion-panel > button { display: grid; grid-template-columns: 22px minmax(0, 1fr); column-gap: 15px; min-height: 48px; height: 48px; width: 100%; min-width: 0; padding: 0; border: 0; border-radius: 0; color: #0f1419; background: transparent; font-size: 16px; font-weight: 600; line-height: 1.25; white-space: nowrap; text-align: left; }
+  .drawer-accordion-panel > button span { min-width: 0; white-space: nowrap; overflow: visible; text-overflow: clip; }
+  .drawer-accordion-panel > button svg { width: 22px; height: 22px; color: #0f1419; stroke: currentColor; stroke-width: 2.2; }
   .drawer-accordion-panel > button:hover { background: transparent; }
   .drawer-accordion-panel .mobile-about { display: grid; gap: 6px; padding: 6px 0; color: #0f1419; font-size: 14px; font-weight: 500; }
   .drawer-accordion-panel .mobile-about p { margin: 0; white-space: nowrap; }
