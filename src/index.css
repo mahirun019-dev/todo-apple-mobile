@@ -4163,4 +4163,25 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
   .app-shell main {
     background-color: transparent !important;
   }
+
+  html,
+  body,
+  #root,
+  .app-shell,
+  .app-shell > .student-app,
+  .app-shell > .student-app > .workspace {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+    box-sizing: border-box;
+  }
+
+  .app-shell,
+  .app-shell > .student-app {
+    padding-left: 0;
+    padding-right: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
 }
