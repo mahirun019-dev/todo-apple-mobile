@@ -1187,8 +1187,8 @@ export default function App() {
         municipalityCode: String(f.get("city") || base?.municipalityCode || "") || undefined,
         detailLocation: String(f.get("detailLocation") || base?.detailLocation || ""),
         locationLabel: String(f.get("manualLocation") || "") || [String(f.get("prefecture") || base?.prefecture || ""), String(f.get("city") || base?.city || ""), String(f.get("detailLocation") || base?.detailLocation || "")].filter(Boolean).join(" "),
-        latitude: locationCoordinates[`${String(f.get("prefecture") || base?.prefecture || "")}${String(f.get("city") || base?.city || "")}`]?.[0] || base?.latitude,
-        longitude: locationCoordinates[`${String(f.get("prefecture") || base?.prefecture || "")}${String(f.get("city") || base?.city || "")}`]?.[1] || base?.longitude,
+        latitude: locationCoordinates[`${String(f.get("prefecture") || base?.prefecture || "")}${String(f.get("city") || base?.city || "")}`]?.[0],
+        longitude: locationCoordinates[`${String(f.get("prefecture") || base?.prefecture || "")}${String(f.get("city") || base?.city || "")}`]?.[1],
         notes: String(f.get("notes")),
         createdAt: base?.createdAt || Date.now(),
       };
@@ -1873,7 +1873,7 @@ function Dashboard({
                     {getEventModeLabel(next.event, t.language === "言語" ? "ja" : "zh")}{next.event?.eventMode === "offline" && formatScheduleLocation(next.event) ? ` · ${formatScheduleLocation(next.event)}` : next.event?.eventMode === "online" && next.event.onlinePlatform ? ` · ${next.event.onlinePlatform}` : ""} ·{" "}
                     {relative(next.at, t)}
                   </span>
-                  <WeatherLine location={next.event?.eventMode === "offline" ? formatScheduleLocation(next.event) : undefined} latitude={next.event?.latitude} longitude={next.event?.longitude} date={next.at} locale={t.language === "言語" ? "ja" : "zh"} />
+                  <WeatherLine eventSource="home-next.event" event={next.event} location={next.event?.eventMode === "offline" ? formatScheduleLocation(next.event) : undefined} latitude={next.event?.latitude} longitude={next.event?.longitude} date={next.at} locale={t.language === "言語" ? "ja" : "zh"} />
                 </div>
               </div>
             ) : (
@@ -2031,7 +2031,7 @@ function relative(s: string, t: any) {
   const h = Math.ceil((new Date(s).getTime() - Date.now()) / 36e5);
   return h < 1 ? "Now" : h < 24 ? `${h}h` : `${Math.ceil(h / 24)} ${t.days}`;
 }
-function WeatherLine({ location, date, latitude, longitude, locale = "zh" }: { location?: string; date?: string; latitude?: number; longitude?: number; locale?: "zh" | "ja" }) {
+function WeatherLine({ location, date, latitude, longitude, locale = "zh", eventSource, event }: { location?: string; date?: string; latitude?: number; longitude?: number; locale?: "zh" | "ja"; eventSource: string; event?: Event }) {
   const [weather, setWeather] = useState<WeatherResult>();
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "out_of_range" | "unavailable" | "error">("idle");
   useEffect(() => {
@@ -2047,7 +2047,7 @@ function WeatherLine({ location, date, latitude, longitude, locale = "zh" }: { l
     request.then((value) => { setWeather(value); setStatus(value ? "success" : "unavailable"); }).catch((error) => { console.warn("[weather] request failed", error); setStatus("error"); });
   }, [location, date, latitude, longitude]);
   const place = location?.trim() || localStorage.getItem("careerflow-home-region")?.trim();
-  const debug = <div className="weather-debug"><strong>DEBUG</strong><span>location: {location || "undefined"}</span><span>prefecture: {location?.match(/北海道|青森県|岩手県|宮城県|秋田県|山形県|福島県|茨城県|栃木県|群馬県|埼玉県|千葉県|東京都|神奈川県|大阪府|京都府/)?.[0] || "undefined"}</span><span>municipality: {location?.replace(/.*?(区|市|町|村)/, (x) => x) || "undefined"}</span><span>latitude: {latitude ?? "undefined"}</span><span>longitude: {longitude ?? "undefined"}</span><span>scheduleDate: {date?.slice(0, 10) || "undefined"}</span><span>scheduleHour: {date?.slice(0, 13) || "undefined"}</span><span>weatherStatus: {status}</span><span>weatherError: {status === "error" ? "request failed" : "none"}</span><span>weatherData: {weather ? JSON.stringify(weather) : "null"}</span></div>;
+  const debug = <div className="weather-debug"><strong>DEBUG</strong><span>eventSource: {eventSource}</span><span>location: {location || "undefined"}</span><span>prefecture: {event?.prefecture || "undefined"}</span><span>municipality: {event?.municipality || event?.city || "undefined"}</span><span>latitude: {latitude ?? "undefined"}</span><span>longitude: {longitude ?? "undefined"}</span><span>scheduleDate: {date?.slice(0, 10) || "undefined"}</span><span>scheduleHour: {date?.slice(0, 13) || "undefined"}</span><span>eventMode: {event?.eventMode || "undefined"}</span><span>weatherStatus: {status}</span><span>weatherError: {status === "error" ? "request failed" : "none"}</span><span>weatherData: {weather ? JSON.stringify(weather) : "null"}</span><details><summary>event</summary><pre>{JSON.stringify(event, null, 2)}</pre></details></div>;
   if (!place || !date || /オンライン|online|webテスト|web test|オンライン面接/i.test(place)) return <>{debug}<span className="weather-line">{locale === "ja" ? "この地域の天気データはありません" : "暂无该地区天气数据"}</span></>;
   const target = new Date(`${date.slice(0, 10)}T00:00:00+09:00`).getTime();
   if (target < Date.now() - 86400000 || target > Date.now() + 7 * 86400000 || status === "out_of_range") return <>{debug}<span className="weather-line">{locale === "ja" ? "まだ天気予報の対象期間外です" : "尚未进入天气预报范围"}</span></>;
@@ -2339,7 +2339,7 @@ function Schedule({
                   <span>
                     {x.company?.name || t.general} · {t[x.type]}
                   </span>
-                  {x.kind === "event" && <><span>{eventModeText(x.event, t.language === "言語")}</span><WeatherLine location={x.event.eventMode === "offline" ? formatScheduleLocation(x.event) : undefined} latitude={x.event.latitude} longitude={x.event.longitude} date={x.at} locale={t.language === "言語" ? "ja" : "zh"} />{x.event.meetingUrl && <a className="meeting-link" href={x.event.meetingUrl} target="_blank" rel="noopener noreferrer">{t.language === "言語" ? "会議リンクを開く" : "打开会议链接"}</a>}</>}
+                  {x.kind === "event" && <><span>{eventModeText(x.event, t.language === "言語")}</span><WeatherLine eventSource="schedule-x.event" event={x.event} location={x.event.eventMode === "offline" ? formatScheduleLocation(x.event) : undefined} latitude={x.event.latitude} longitude={x.event.longitude} date={x.at} locale={t.language === "言語" ? "ja" : "zh"} />{x.event.meetingUrl && <a className="meeting-link" href={x.event.meetingUrl} target="_blank" rel="noopener noreferrer">{t.language === "言語" ? "会議リンクを開く" : "打开会议链接"}</a>}</>}
                 </div>
                 <ChevronRight />
               </button>
