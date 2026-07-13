@@ -1454,8 +1454,6 @@ export default function App() {
                 removeMaterial,
                 removePrep,
                 setEditPrep,
-                recordPickerOpen,
-                setRecordPickerOpen,
               }}
             />
           )}
@@ -1475,6 +1473,8 @@ export default function App() {
                 removePrep,
                 setEditInterview,
                 setEditPrep,
+                recordPickerOpen,
+                setRecordPickerOpen,
               }}
             />
           )}
