@@ -8,6 +8,7 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import { createBackup, type BackupSnapshot } from "./backups";
 import { geocodeCoordinates, getWeather, getWeatherByCoordinates, type WeatherResult } from "./weather";
 import prefectureData from "./data/japan-prefectures.json";
@@ -1461,13 +1462,6 @@ export default function App() {
             />
           )}
         </main>
-        <MobileNav
-          view={view}
-          setView={(next) => { setSelectedDrawerItem(null); setView(next); }}
-          t={t}
-          menu={menu}
-          onAdd={() => (menu ? setMenu(false) : setMenu(true))}
-        />
         {isMobile && menu && (
           <ActionMenu
             t={t}
@@ -1594,6 +1588,16 @@ export default function App() {
           <Toast t={t} toast={toast} close={() => setToast(undefined)} />
         )}
       </div>
+      {isMobile && createPortal(
+        <MobileNav
+          view={view}
+          setView={(next) => { setSelectedDrawerItem(null); setView(next); }}
+          t={t}
+          menu={menu}
+          onAdd={() => (menu ? setMenu(false) : setMenu(true))}
+        />,
+        document.body,
+      )}
     </div>
   );
 }
