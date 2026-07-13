@@ -2583,6 +2583,7 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   }
 }
 
+
 @media (min-width: 1024px) {
   .company-grid > .empty-small,
   .timeline > .empty-small {
@@ -2917,6 +2918,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     z-index: 1;
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
   .career-mobile-nav, .career-mobile-nav * { transition: none !important; }
 }
@@ -4108,4 +4110,50 @@ option { color: var(--text-primary); background: var(--bg-input); }
   .modal-layer .drawer { max-height: calc(100dvh - env(safe-area-inset-top) - 12px); }
   .modal-layer .drawer > form { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
   .modal-layer .form-actions { flex: 0 0 auto; padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+}
+
+/* Keep short mobile routes on the same page surface as the app shell. */
+:root { --app-page-bg: #ffffff; }
+html[data-theme="dark"] { --app-page-bg: #1f2328; }
+
+@media (max-width: 767px) {
+  html,
+  body,
+  #root {
+    margin: 0;
+    width: 100%;
+    min-height: 100%;
+    background-color: var(--app-page-bg) !important;
+  }
+
+  body,
+  #root,
+  .app-shell {
+    min-height: 100dvh;
+  }
+
+  .app-shell {
+    background-color: var(--app-page-bg) !important;
+  }
+
+  .app-shell > .student-app,
+  .app-shell > .career-app,
+  .app-shell main {
+    background-color: transparent !important;
+  }
+}
+
+/* Temporary deployment/selector diagnostic. Remove after the live check. */
+[data-app-shell="true"] {
+  background: #ff00ff !important;
+}
+.build-diagnostic {
+  position: fixed;
+  right: 8px;
+  bottom: 8px;
+  z-index: 2000;
+  padding: 4px 6px;
+  color: #fff;
+  background: #9b1c31;
+  font: 12px/1.2 monospace;
 }
