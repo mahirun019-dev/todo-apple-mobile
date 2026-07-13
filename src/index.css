@@ -89,6 +89,26 @@ body.settings-drawer-open { overflow: hidden; overscroll-behavior: none; }
   min-height: 54px;
   padding: 8px 0;
 }
+.dashboard-sidebar .funnel .funnel-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px 18px;
+  column-gap: 10px;
+  width: 100%;
+  min-height: 54px;
+  align-items: center;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid var(--border-color, #e8e8e8);
+  color: var(--text-primary, #24262b);
+  background: transparent;
+  text-align: left;
+  font-weight: 500;
+}
+.dashboard-sidebar .funnel .funnel-row > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dashboard-sidebar .funnel .funnel-row > svg { width: 18px; height: 18px; color: var(--text-muted, #8b98a5); }
+.dashboard-sidebar .funnel .funnel-row:hover { background: var(--bg-muted, #f5f5f5); }
+.dashboard-sidebar .funnel .funnel-row:active { background: var(--bg-selected, #eef0f2); }
+.dashboard-sidebar .funnel .funnel-row:focus-visible { outline: 2px solid var(--accent, #2477d9); outline-offset: -2px; border-radius: 6px; }
 .dashboard-sidebar .funnel b {
   width: 32px;
   height: 32px;

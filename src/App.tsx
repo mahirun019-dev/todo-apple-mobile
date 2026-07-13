@@ -278,6 +278,7 @@ const stages: Stage[] = [
   "rejected",
   "withdrawn",
 ];
+const funnelStages: FunnelStage[] = ["funnelInterested", "funnelDocuments", "funnelAptitude", "funnelInterview", "funnelFinal", "funnelOffer"];
 type FunnelStage = "funnelInterested" | "funnelDocuments" | "funnelAptitude" | "funnelInterview" | "funnelFinal" | "funnelOffer";
 function funnelStageFor(stage: Company["stage"]): FunnelStage | null {
   const value = String(stage).trim().toLowerCase();
@@ -1353,6 +1354,7 @@ export default function App() {
                 toggle,
                 focusToggle,
                 open,
+                setView,
               }}
             />
           )}
@@ -1779,7 +1781,12 @@ function Dashboard({
   toggle,
   focusToggle,
   open,
+  setView,
 }: any) {
+  const openFunnel = (stage: FunnelStage) => {
+    localStorage.setItem("careerflow-company-stage-filter", stage);
+    setView("companies");
+  };
   return (
     <>
       <div className="page-head">
@@ -1866,13 +1873,14 @@ function Dashboard({
                 "funnelFinal",
                 "funnelOffer",
               ] as FunnelStage[]).map((s) => (
-                <div key={s}>
+                <button type="button" className="funnel-row" key={s} onClick={() => openFunnel(s)} aria-label={`${t[s]}: ${data.companies.filter((x: Company) => funnelStageFor(x.stage) === s).length}`}>
                   <span>{t[s]}</span>
                   {(() => {
                     const count = data.companies.filter((x: Company) => funnelStageFor(x.stage) === s).length;
                     return <b className={count > 0 ? "has-count" : undefined}>{count}</b>;
                   })()}
-                </div>
+                  <ChevronRight aria-hidden="true" />
+                </button>
               ))}
             </div>
           </section>
@@ -1989,7 +1997,7 @@ function Companies({
 }: any) {
   const co = selected ? byId[selected] : undefined;
   const [query, setQuery] = useState("");
-  const [stageFilter, setStageFilter] = useState("all");
+  const [stageFilter, setStageFilter] = useState(() => localStorage.getItem("careerflow-company-stage-filter") || "all");
   const [sortBy, setSortBy] = useState("updated");
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const [draftStageFilter, setDraftStageFilter] = useState("all");
@@ -2012,6 +2020,7 @@ function Companies({
       window.scrollTo(0, scrollY);
     };
   }, [filterSheetOpen]);
+  useEffect(() => { localStorage.setItem("careerflow-company-stage-filter", stageFilter); }, [stageFilter]);
   if (co) {
     const materials = data.materials.filter((x: any) => x.companyId === co.id),
       interviews = data.interviews.filter((x: any) => x.companyId === co.id),
@@ -2110,7 +2119,7 @@ function Companies({
   }
   const filteredCompanies = data.companies
     .filter((x: Company) => !query.trim() || x.name.toLowerCase().includes(query.trim().toLowerCase()))
-    .filter((x: Company) => stageFilter === "all" || x.stage === stageFilter)
+    .filter((x: Company) => stageFilter === "all" || (stageFilter.startsWith("funnel") ? funnelStageFor(x.stage) === stageFilter : x.stage === stageFilter))
     .sort((a: Company, b: Company) => {
       if (sortBy === "interest") return b.interestLevel - a.interestLevel;
       if (sortBy === "event") return (a.nextEventAt || "9999").localeCompare(b.nextEventAt || "9999");
@@ -2134,7 +2143,7 @@ function Companies({
         <button type="button" className={`company-filter-trigger${stageFilter !== "all" || sortBy !== "updated" ? " has-filter" : ""}`} aria-label={t.language === "言語" ? "絞り込みと並び替え" : "筛选与排序"} onClick={() => { setDraftStageFilter(stageFilter); setDraftSortBy(sortBy); setFilterSheetOpen(true); }}><SlidersHorizontal /></button>
         <select value={stageFilter} onChange={(e) => setStageFilter(e.target.value)} aria-label={t.stage}>
           <option value="all">{t.all}</option>
-          {stages.map((stage) => <option key={stage} value={stage}>{t[stage]}</option>)}
+          {funnelStages.map((stage) => <option key={stage} value={stage}>{t[stage]}</option>)}
         </select>
         <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} aria-label={t.language === "言語" ? "並び替え" : t.language === "Language" ? "Sort" : "排序"}>
           <option value="updated">{t.language === "言語" ? "最近更新" : t.language === "Language" ? "Recently updated" : "最近更新"}</option>
@@ -2147,7 +2156,7 @@ function Companies({
         <section className="company-filter-sheet" role="dialog" aria-modal="true" aria-label={t.language === "言語" ? "絞り込みと並び替え" : "筛选与排序"}>
           <header className="company-filter-sheet-header"><h2>{t.language === "言語" ? "絞り込みと並び替え" : "筛选与排序"}</h2><button type="button" className="company-filter-sheet-close" onClick={() => setFilterSheetOpen(false)} aria-label={t.cancel}><X aria-hidden="true" /></button></header>
           <div className="company-filter-sheet-content"><fieldset><legend>{t.stage}</legend><div className="company-filter-options">
-            {["all", ...stages].map((stage) => <label key={stage} className={draftStageFilter === stage ? "selected" : ""}><input type="radio" name="company-stage" checked={draftStageFilter === stage} onChange={() => setDraftStageFilter(stage)} /><span>{stage === "all" ? t.all : t[stage]}</span><Check /></label>)}
+            {["all", ...funnelStages].map((stage) => <label key={stage} className={draftStageFilter === stage ? "selected" : ""}><input type="radio" name="company-stage" checked={draftStageFilter === stage} onChange={() => setDraftStageFilter(stage)} /><span>{stage === "all" ? t.all : t[stage]}</span><Check /></label>)}
           </div></fieldset><fieldset><legend>{t.language === "言語" ? "並び替え" : "排序方式"}</legend><div className="company-filter-options">
             {["updated", "event", "interest", "name"].map((sort) => <label key={sort} className={draftSortBy === sort ? "selected" : ""}><input type="radio" name="company-sort" checked={draftSortBy === sort} onChange={() => setDraftSortBy(sort)} /><span>{sort === "updated" ? (t.language === "言語" ? "最近更新" : "最近更新") : sort === "event" ? t.event : sort === "interest" ? (t.language === "言語" ? "志望度の高い順" : "志望度从高到低") : (t.language === "言語" ? "企業名" : "企业名称")}</span><Check /></label>)}
           </div></fieldset></div><footer className="company-filter-sheet-actions"><button type="button" onClick={() => { setDraftStageFilter("all"); setDraftSortBy("updated"); }}>{t.language === "言語" ? "リセット" : "重置"}</button><button type="button" className="primary" onClick={() => { setStageFilter(draftStageFilter); setSortBy(draftSortBy); setFilterSheetOpen(false); }}>{t.language === "言語" ? "適用" : "应用"}</button></footer>
