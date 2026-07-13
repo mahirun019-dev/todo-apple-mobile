@@ -12,6 +12,8 @@ import { createBackup, type BackupSnapshot } from "./backups";
 import { getWeather, getWeatherByCoordinates, type WeatherResult } from "./weather";
 import prefectureData from "./data/japan-prefectures.json";
 import municipalityData from "./data/japan-municipalities.json";
+
+const BUILD_COMMIT = "e4166b3";
 import {
   Database,
   DatabaseArrowDown,
@@ -1451,6 +1453,7 @@ export default function App() {
             />
           )}
         </main>
+        <span className="debug-build-marker">Build: {BUILD_COMMIT}</span>
         <MobileNav
           view={view}
           setView={(next) => { setSelectedDrawerItem(null); setView(next); }}
@@ -2044,14 +2047,15 @@ function WeatherLine({ location, date, latitude, longitude, locale = "zh" }: { l
     request.then((value) => { setWeather(value); setStatus(value ? "success" : "unavailable"); }).catch((error) => { console.warn("[weather] request failed", error); setStatus("error"); });
   }, [location, date, latitude, longitude]);
   const place = location?.trim() || localStorage.getItem("careerflow-home-region")?.trim();
-  if (!place || !date || /オンライン|online|webテスト|web test|オンライン面接/i.test(place)) return <span className="weather-line">{locale === "ja" ? "この地域の天気データはありません" : "暂无该地区天气数据"}</span>;
+  const debug = <div className="weather-debug"><strong>DEBUG</strong><span>location: {location || "undefined"}</span><span>prefecture: {location?.match(/北海道|青森県|岩手県|宮城県|秋田県|山形県|福島県|茨城県|栃木県|群馬県|埼玉県|千葉県|東京都|神奈川県|大阪府|京都府/)?.[0] || "undefined"}</span><span>municipality: {location?.replace(/.*?(区|市|町|村)/, (x) => x) || "undefined"}</span><span>latitude: {latitude ?? "undefined"}</span><span>longitude: {longitude ?? "undefined"}</span><span>scheduleDate: {date?.slice(0, 10) || "undefined"}</span><span>scheduleHour: {date?.slice(0, 13) || "undefined"}</span><span>weatherStatus: {status}</span><span>weatherError: {status === "error" ? "request failed" : "none"}</span><span>weatherData: {weather ? JSON.stringify(weather) : "null"}</span></div>;
+  if (!place || !date || /オンライン|online|webテスト|web test|オンライン面接/i.test(place)) return <>{debug}<span className="weather-line">{locale === "ja" ? "この地域の天気データはありません" : "暂无该地区天气数据"}</span></>;
   const target = new Date(`${date.slice(0, 10)}T00:00:00+09:00`).getTime();
-  if (target < Date.now() - 86400000 || target > Date.now() + 7 * 86400000 || status === "out_of_range") return <span className="weather-line">{locale === "ja" ? "まだ天気予報の対象期間外です" : "尚未进入天气预报范围"}</span>;
-  if (status === "loading") return <span className="weather-line">{locale === "ja" ? "天気を読み込み中…" : "天气加载中…"}</span>;
-  if (status === "error") return <span className="weather-line">{locale === "ja" ? "天気サービスに接続できません" : "天气暂时无法获取"}</span>;
-  if (!weather) return <span className="weather-line">{locale === "ja" ? "この地域の天気データはありません" : "暂无该地区天气数据"}</span>;
+  if (target < Date.now() - 86400000 || target > Date.now() + 7 * 86400000 || status === "out_of_range") return <>{debug}<span className="weather-line">{locale === "ja" ? "まだ天気予報の対象期間外です" : "尚未进入天气预报范围"}</span></>;
+  if (status === "loading") return <>{debug}<span className="weather-line">{locale === "ja" ? "天気を読み込み中…" : "天气加载中…"}</span></>;
+  if (status === "error") return <>{debug}<span className="weather-line">{locale === "ja" ? "天気サービスに接続できません" : "天气暂时无法获取"}</span></>;
+  if (!weather) return <><div className="weather-debug">{debug}</div><span className="weather-line">{locale === "ja" ? "この地域の天気データはありません" : "暂无该地区天气数据"}</span></>;
   const Icon = weather.code >= 71 && weather.code <= 86 ? CloudSnow : weather.code >= 51 || weather.code >= 80 ? CloudRain : weather.code >= 1 ? CloudSun : Cloud;
-  return <span className="weather-line"><Icon aria-hidden="true" />{weather.forecastTime.slice(11, 13)}{locale === "ja" ? "時予報" : "时预报"} · {weather.temperature}℃ · {locale === "ja" ? "降水確率" : "降水概率"} {weather.precipitation}%</span>;
+  return <>{debug}<span className="weather-line"><Icon aria-hidden="true" />{weather.forecastTime.slice(11, 13)}{locale === "ja" ? "時予報" : "时预报"} · {weather.temperature}℃ · {locale === "ja" ? "降水確率" : "降水概率"} {weather.precipitation}%</span></>;
 }
 function eventModeText(event: Event | undefined, ja: boolean) {
   if (event?.eventMode === "offline") return `${ja ? "対面" : "线下"}${formatScheduleLocation(event) ? ` · ${formatScheduleLocation(event)}` : ""}`;
