@@ -1205,8 +1205,6 @@ export default function App() {
         ? d.events.map((x) => (x.id === v.id ? v : x))
         : [v, ...d.events],
     }));
-    setForm(null);
-    setEditEvent(undefined);
   };
   const saveInterview = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -2831,10 +2829,25 @@ function EventForm({
   const [mode, setMode] = useState<Event["eventMode"]>(initial?.eventMode || "undecided");
   const [prefecture, setPrefecture] = useState(initial?.prefecture || "");
   const [city, setCity] = useState(initial?.city || "");
+  const [isSaving, setIsSaving] = useState(false);
+  const savingRef = useRef(false);
   const ja = t.language === "言語";
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSaving || savingRef.current) return;
+    savingRef.current = true;
+    setIsSaving(true);
+    try {
+      await save(event);
+      close();
+    } finally {
+      savingRef.current = false;
+      setIsSaving(false);
+    }
+  };
   return (
     <Modal title={initial ? t.edit : t.addEvent} close={close}>
-      <form className="form-grid" onSubmit={save}>
+      <form className="form-grid" onSubmit={handleSubmit}>
         <label>
           <span>{t.company}</span>
           <select name="company" defaultValue={initial?.companyId}>
@@ -2884,7 +2897,7 @@ function EventForm({
           <span>{t.notes}</span>
           <textarea name="notes" defaultValue={initial?.notes} />
         </label>
-        <Actions t={t} close={close} remove={initial ? () => remove(initial) : undefined} />
+        <Actions t={t} close={close} remove={initial ? () => remove(initial) : undefined} isSaving={isSaving} />
       </form>
     </Modal>
   );
@@ -3049,7 +3062,7 @@ function PreparationForm({
     </Modal>
   );
 }
-function Actions({ t, close, remove, primaryLabel }: { t: any; close: () => void; remove?: () => void; primaryLabel?: string }) {
+function Actions({ t, close, remove, primaryLabel, isSaving = false }: { t: any; close: () => void; remove?: () => void; primaryLabel?: string; isSaving?: boolean }) {
   return (
     <>
       {remove && <button type="button" className="delete-event-button wide" onClick={remove}>
@@ -3060,7 +3073,7 @@ function Actions({ t, close, remove, primaryLabel }: { t: any; close: () => void
       <button type="button" onClick={close}>
         {t.cancel}
       </button>
-      <button className="primary">{primaryLabel || t.save}</button>
+      <button type="submit" className="primary" disabled={isSaving} aria-busy={isSaving}>{isSaving ? "保存中…" : (primaryLabel || t.save)}</button>
       </div>
     </>
   );

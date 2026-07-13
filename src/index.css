@@ -2786,6 +2786,7 @@ body, .app-shell { background: var(--bg-page); color: var(--text-primary); }
 .nav-list button.active, .course-nav > button.selected, .career-mobile-nav button.active { color: var(--nav-active-text); background: var(--nav-active-bg); }
 .nav-list button:hover, .settings-link:hover, .course-nav > button:hover { color: var(--text-primary); background: var(--bg-muted); }
 .primary, .create-entry, .form-actions > .primary, .settings-actions > .primary, .company-grid > .empty-small .primary, .timeline > .empty-small .primary { color: var(--action-primary-text) !important; background: var(--action-primary-bg) !important; border-color: var(--action-primary-bg); }
+.form-actions > .primary:disabled { cursor: not-allowed; opacity: .58; pointer-events: none; }
 .primary:hover, .create-entry:hover, .form-actions > .primary:hover, .settings-actions > .primary:hover { background: var(--action-primary-hover) !important; }
 .form-actions > button:not(.primary), .settings-actions button:not(.primary), .head-actions > button { color: var(--text-primary); background: var(--bg-surface); border-color: var(--border-color); }
 .empty-small, .section-title > span, .page-head p, .metric span, .form-grid label { color: var(--text-secondary); }
