@@ -1601,7 +1601,7 @@ export default function App() {
           <Toast t={t} toast={toast} close={() => setToast(undefined)} />
         )}
       </div>
-      {isMobile && createPortal(
+      {isMobile && !form && !settings && !menu && !confirm && !deleteEvent && createPortal(
         <MobileNav
           view={view}
           setView={(next) => { setSelectedDrawerItem(null); setView(next); }}
