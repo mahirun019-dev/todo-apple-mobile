@@ -4198,6 +4198,48 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
 }
 
 @media (min-width: 1024px) {
+  .dashboard-company-action {
+    color: var(--text-primary) !important;
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: none !important;
+    font-weight: 600;
+  }
+
+  .dashboard-company-action:hover {
+    background: var(--bg-muted) !important;
+    border-color: var(--border-strong) !important;
+  }
+
+  .next-class .empty-small,
+  .dashboard-sidebar > .entity-card:last-child .empty-small {
+    transform: translateY(-6px);
+  }
+
+  .next-class .empty-small p,
+  .dashboard-sidebar > .entity-card:last-child .empty-small p {
+    margin-bottom: 8px;
+  }
+
+  .next-class .empty-small .empty-action,
+  .dashboard-sidebar > .entity-card:last-child .empty-small .empty-action {
+    margin-top: 8px;
+  }
+
+  [data-theme="dark"] .desktop-create-menu button {
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  [data-theme="dark"] .desktop-create-menu button svg {
+    color: rgba(255, 255, 255, 0.74) !important;
+    stroke: currentColor;
+  }
+
+  [data-theme="dark"] .desktop-create-menu button:hover,
+  [data-theme="dark"] .desktop-create-menu button:hover svg {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
   .desktop-create-menu {
     left: calc(100% + 16px);
     overflow: hidden;

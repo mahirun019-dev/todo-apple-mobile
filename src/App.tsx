@@ -374,7 +374,7 @@ const tr = {
     next: "近期日程",
     deadlines: "本周截止",
     funnel: "选考进度",
-    results: "等待结果",
+    results: "结果待办列表",
     focus: "本周准备重点",
     funnelInterested: "关注中",
     funnelDocuments: "材料选考",
@@ -499,7 +499,7 @@ const tr = {
     next: "今後の予定",
     deadlines: "今週の締切",
     funnel: "選考進捗",
-    results: "結果待ち",
+    results: "結果待ち一覧",
     focus: "今週の準備重点",
     funnelInterested: "気になる",
     funnelDocuments: "書類選考",
@@ -1361,9 +1361,6 @@ export default function App() {
               <span>{t.companies} <b>{data.companies.length}</b></span>
               <span className="course-nav-heading-actions">
                 {companiesCollapsed ? <ChevronDown className="collapse-chevron" /> : <ChevronUp className="collapse-chevron" />}
-                <button onClick={(e) => { e.stopPropagation(); open("company"); }} aria-label={t.addCompany}>
-                  <Plus />
-                </button>
               </span>
             </div>
             {!companiesCollapsed && data.companies.map((x) => (
@@ -1863,7 +1860,7 @@ function Dashboard({
             }).format(new Date())}
           </h1>
         </div>
-        <PrimaryActionButton onClick={() => open("company")}>
+        <PrimaryActionButton className="dashboard-company-action" onClick={() => open("company")}>
           <Plus />
           {t.addCompany}
         </PrimaryActionButton>
