@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { createBackup, type BackupSnapshot } from "./backups";
-import { getWeather, getWeatherByCoordinates, type WeatherResult } from "./weather";
+import { getWeather, getWeatherByCoordinates, type WeatherResult, type WeatherTrace } from "./weather";
 import prefectureData from "./data/japan-prefectures.json";
 import municipalityData from "./data/japan-municipalities.json";
 
@@ -2034,6 +2034,7 @@ function relative(s: string, t: any) {
 function WeatherLine({ location, date, latitude, longitude, locale = "zh", eventSource, event }: { location?: string; date?: string; latitude?: number; longitude?: number; locale?: "zh" | "ja"; eventSource: string; event?: Event }) {
   const [weather, setWeather] = useState<WeatherResult>();
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "out_of_range" | "unavailable" | "error">("idle");
+  const [trace, setTrace] = useState<WeatherTrace>({});
   useEffect(() => {
     const place = location?.trim() || localStorage.getItem("careerflow-home-region")?.trim();
     setWeather(undefined);
@@ -2043,11 +2044,11 @@ function WeatherLine({ location, date, latitude, longitude, locale = "zh", event
     setStatus("loading");
     const scheduleHour = `${date.slice(0, 13)}:00`;
     console.info("[weather] schedule time", { raw: date, timezone: "Asia/Tokyo", selectedHour: scheduleHour, latitude, longitude });
-    const request = latitude && longitude ? getWeatherByCoordinates(latitude, longitude, scheduleHour) : getWeather(place, scheduleHour);
+    const request = latitude && longitude ? getWeatherByCoordinates(latitude, longitude, scheduleHour, setTrace) : getWeather(place, scheduleHour);
     request.then((value) => { setWeather(value); setStatus(value ? "success" : "unavailable"); }).catch((error) => { console.warn("[weather] request failed", error); setStatus("error"); });
   }, [location, date, latitude, longitude]);
   const place = location?.trim() || localStorage.getItem("careerflow-home-region")?.trim();
-  const debug = <div className="weather-debug"><strong>DEBUG</strong><span>eventSource: {eventSource}</span><span>location: {location || "undefined"}</span><span>prefecture: {event?.prefecture || "undefined"}</span><span>municipality: {event?.municipality || event?.city || "undefined"}</span><span>latitude: {latitude ?? "undefined"}</span><span>longitude: {longitude ?? "undefined"}</span><span>scheduleDate: {date?.slice(0, 10) || "undefined"}</span><span>scheduleHour: {date?.slice(0, 13) || "undefined"}</span><span>eventMode: {event?.eventMode || "undefined"}</span><span>weatherStatus: {status}</span><span>weatherError: {status === "error" ? "request failed" : "none"}</span><span>weatherData: {weather ? JSON.stringify(weather) : "null"}</span><details><summary>event</summary><pre>{JSON.stringify(event, null, 2)}</pre></details></div>;
+  const debug = <div className="weather-debug"><strong>DEBUG</strong><span>eventSource: {eventSource}</span><span>location: {location || "undefined"}</span><span>prefecture: {event?.prefecture || "undefined"}</span><span>municipality: {event?.municipality || event?.city || "undefined"}</span><span>latitude: {latitude ?? "undefined"}</span><span>longitude: {longitude ?? "undefined"}</span><span>scheduleDate: {date?.slice(0, 10) || "undefined"}</span><span>scheduleHour: {date?.slice(0, 13) || "undefined"}</span><span>eventMode: {event?.eventMode || "undefined"}</span><span>weatherStatus: {status}</span><span>weatherError: {status === "error" ? "request failed" : "none"}</span><span>weatherData: {weather ? JSON.stringify(weather) : "null"}</span><span>requestUrl: {trace.url || "undefined"}</span><span>fetch: {trace.branch || "not-executed"}</span><span>httpStatus: {trace.status ?? "undefined"}</span><span>responseOk: {trace.responseOk == null ? "undefined" : String(trace.responseOk)}</span><span>hourlySummary: {trace.hourlySummary || "undefined"}</span><span>targetTime: {trace.target || "undefined"}</span><span>findIndex: {trace.index ?? "undefined"}</span><span>selectedTime: {trace.selectedTime || "undefined"}</span><span>cacheHit: {trace.cacheHit == null ? "undefined" : String(trace.cacheHit)}</span><span>branch: {trace.branch || "undefined"}</span><span>traceError: {trace.error || "none"}</span><details><summary>event</summary><pre>{JSON.stringify(event, null, 2)}</pre></details></div>;
   if (!place || !date || /オンライン|online|webテスト|web test|オンライン面接/i.test(place)) return <>{debug}<span className="weather-line">{locale === "ja" ? "この地域の天気データはありません" : "暂无该地区天气数据"}</span></>;
   const target = new Date(`${date.slice(0, 10)}T00:00:00+09:00`).getTime();
   if (target < Date.now() - 86400000 || target > Date.now() + 7 * 86400000 || status === "out_of_range") return <>{debug}<span className="weather-line">{locale === "ja" ? "まだ天気予報の対象期間外です" : "尚未进入天气预报范围"}</span></>;

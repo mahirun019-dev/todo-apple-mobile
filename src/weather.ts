@@ -1,4 +1,5 @@
 export type WeatherResult = { temperature: number; precipitation: number; code: number; forecastTime: string };
+export type WeatherTrace = { url?: string; cacheHit?: boolean; status?: number; responseOk?: boolean; hourlySummary?: string; target?: string; index?: number; selectedTime?: string; branch?: string; error?: string };
 
 const CACHE_KEY = "careerflow-weather-cache";
 const CACHE_TTL = 6 * 60 * 60 * 1000;
@@ -42,7 +43,7 @@ export async function getWeather(place: string, date: string): Promise<WeatherRe
   }
 }
 
-export async function getWeatherByCoordinates(latitude: number, longitude: number, date: string): Promise<WeatherResult | undefined> {
+export async function getWeatherByCoordinates(latitude: number, longitude: number, date: string, onTrace?: (trace: WeatherTrace) => void): Promise<WeatherResult | undefined> {
   const day = date.slice(0, 10);
   const hour = date.slice(0, 13);
   const target = new Date(`${day}T00:00:00+09:00`).getTime();
@@ -50,22 +51,26 @@ export async function getWeatherByCoordinates(latitude: number, longitude: numbe
   const key = `${latitude.toFixed(4)}|${longitude.toFixed(4)}|${hour}|Asia/Tokyo`;
   let cache: Record<string, Cached> = {};
   try { cache = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}"); } catch { cache = {}; }
-  if (cache[key] && Date.now() - cache[key].fetchedAt < CACHE_TTL) return cache[key].value;
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FTokyo&forecast_days=7`;
+  if (cache[key] && Date.now() - cache[key].fetchedAt < CACHE_TTL) { onTrace?.({ cacheHit: true, branch: "cache" }); return cache[key].value; }
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=weather_code,temperature_2m,precipitation_probability&timezone=Asia%2FTokyo&forecast_days=7`;
   try {
+    onTrace?.({ url, cacheHit: false, target: `${hour}:00`, branch: "fetch" });
     console.info("[weather] forecast request", { latitude, longitude, url });
     const response = await fetch(url);
     const body = await response.text();
+    onTrace?.({ url, status: response.status, responseOk: response.ok });
     console.info("[weather] forecast response", { status: response.status, body });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const hourly = JSON.parse(body).hourly;
-    const index = hourly.time.findIndex((value: string) => value.startsWith(`${hour}:00`));
-  if (index < 0) return undefined;
+    const index = hourly.time.findIndex((value: string) => value === `${hour}:00` || value.startsWith(`${hour}:00`));
+    onTrace?.({ url, hourlySummary: JSON.stringify(hourly.time?.slice(0, 3)), target: `${hour}:00`, index, selectedTime: index >= 0 ? hourly.time[index] : undefined, branch: index < 0 ? "hour-index-miss" : "matched" });
+    if (index < 0) return undefined;
     const value = { temperature: Math.round(hourly.temperature_2m[index]), precipitation: Math.round(hourly.precipitation_probability[index] || 0), code: hourly.weather_code[index], forecastTime: hourly.time[index] };
     cache[key] = { fetchedAt: Date.now(), value };
     localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
     return value;
   } catch (error) {
+    onTrace?.({ url, branch: "error", error: String(error) });
     console.warn("[weather] coordinate request failed", { latitude, longitude, url, error });
     return undefined;
   }
