@@ -2893,18 +2893,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     backdrop-filter: blur(22px) saturate(180%);
     -webkit-backdrop-filter: blur(22px) saturate(180%);
   }
-  .career-mobile-nav::before {
-    content: "";
-    position: absolute;
-    top: 1px;
-    right: 10%;
-    left: 10%;
-    height: 1px;
-    z-index: 2;
-    border-radius: 999px;
-    background: rgba(255,255,255,.40);
-    pointer-events: none;
-  }
   [data-theme="dark"] .career-mobile-nav {
     border-color: rgba(255,255,255,.10) !important;
     background: rgba(30,34,40,.82) !important;
@@ -2940,6 +2928,19 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 @media (prefers-reduced-motion: reduce) {
   .career-mobile-nav, .career-mobile-nav * { transition: none !important; }
+}
+
+/* Final mobile bottom-nav surface. The data attribute targets the mounted root directly. */
+@media (max-width: 767px) {
+  [data-testid="mobile-bottom-nav"] {
+    background: rgba(255,255,255,.20) !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+    border: 1px solid rgba(255,255,255,.34) !important;
+    box-shadow: 0 3px 12px rgba(15,23,42,.025), inset 0 1px 0 rgba(255,255,255,.36) !important;
+  }
+  [data-testid="mobile-bottom-nav"]::before,
+  [data-testid="mobile-bottom-nav"]::after { content: none !important; display: none !important; }
 }
 
 /* Global create sheet follows the neutral navigation palette. */

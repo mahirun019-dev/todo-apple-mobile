@@ -1709,7 +1709,7 @@ function MobileNav({
   menu: boolean;
 }) {
   return (
-    <nav className="mobile-nav career-mobile-nav">
+    <nav className="mobile-nav career-mobile-nav" data-testid="mobile-bottom-nav">
       <button
         className={view === "dashboard" ? "active" : ""}
         onClick={() => setView("dashboard")}
