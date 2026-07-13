@@ -938,13 +938,14 @@ export default function App() {
     [confirm, setConfirm] = useState<Company>(),
     [deleteEvent, setDeleteEvent] = useState<Event>(),
     [filter, setFilter] = useState("all"),
+    [companyFilterOpen, setCompanyFilterOpen] = useState(false),
     [toast, setToast] = useState<{ text: string; undo: () => void }>(),
     [icon, setIcon] = useState(() => localStorage.getItem(ICON) || "");
   const json = useRef<HTMLInputElement>(null),
     iconRef = useRef<HTMLInputElement>(null);
   const firstDataRender = useRef(true);
   const t = tr[locale];
-  const hasOpenOverlay = Boolean(form || settings || menu || confirm || deleteEvent || recordPickerOpen);
+  const hasOpenOverlay = Boolean(form || settings || menu || confirm || deleteEvent || recordPickerOpen || companyFilterOpen);
   useEffect(() => localStorage.setItem(KEY, JSON.stringify(data)), [data]);
   useEffect(() => {
     if (firstDataRender.current) {
@@ -1440,6 +1441,8 @@ export default function App() {
                 open,
                 setEditCompany,
                 setConfirm,
+                filterSheetOpen: companyFilterOpen,
+                setFilterSheetOpen: setCompanyFilterOpen,
               }}
             />
           )}
@@ -2158,12 +2161,13 @@ function Companies({
   open,
   setEditCompany,
   setConfirm,
+  filterSheetOpen,
+  setFilterSheetOpen,
 }: any) {
   const co = selected ? byId[selected] : undefined;
   const [query, setQuery] = useState("");
   const [stageFilter, setStageFilter] = useState(() => localStorage.getItem("careerflow-company-stage-filter") || "all");
   const [sortBy, setSortBy] = useState("updated");
-  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const [draftStageFilter, setDraftStageFilter] = useState("all");
   const [draftSortBy, setDraftSortBy] = useState("updated");
   const [recordMenu, setRecordMenu] = useState(false);
