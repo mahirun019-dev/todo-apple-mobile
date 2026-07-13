@@ -2605,7 +2605,6 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   }
 }
 
-
 @media (min-width: 1024px) {
   .company-grid > .empty-small,
   .timeline > .empty-small {
@@ -4195,5 +4194,22 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
   html[data-theme="dark"] [data-testid="mobile-bottom-nav"] > button:not(.active):not(.nav-add) svg {
     color: rgba(220, 224, 230, 0.68) !important;
     stroke: currentColor;
+  }
+}
+
+@media (min-width: 1024px) {
+  .desktop-create-menu {
+    left: calc(100% + 16px);
+    overflow: hidden;
+  }
+
+  [data-theme="dark"] .desktop-create-menu {
+    background: #202a38;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  }
+
+  [data-theme="dark"] .desktop-create-menu button {
+    background: #202a38;
   }
 }

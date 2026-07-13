@@ -43,6 +43,7 @@ import {
   Plus,
   Settings,
   Info,
+  ListChecks,
   Search,
   Sun,
   SlidersHorizontal,
@@ -1663,7 +1664,7 @@ function createActions(t: any): [CreateType, any, string][] {
     ["schedule", CalendarDays, t.addEvent],
     ["es", FileJson, t.addMaterial],
     ["interview", BriefcaseBusiness, t.addInterview],
-    ["preparation", MoreHorizontal, t.addPrep],
+    ["preparation", ListChecks, t.addPrep],
   ];
 }
 function DesktopCreate({
