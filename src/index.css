@@ -2531,6 +2531,49 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
 }
 
 @media (max-width: 767px) {
+  /* All mobile overlays must fully replace the fixed bottom navigation. */
+  body:has(.company-filter-sheet-layer),
+  body:has(.modal-layer),
+  body:has(.action-sheet-layer),
+  body:has(.bottom-sheet-layer),
+  body:has(.mobile-settings-layer) {
+    --mobile-overlay-open: 1;
+  }
+
+  body:has(.company-filter-sheet-layer) [data-testid="mobile-bottom-nav"],
+  body:has(.modal-layer) [data-testid="mobile-bottom-nav"],
+  body:has(.action-sheet-layer) [data-testid="mobile-bottom-nav"],
+  body:has(.bottom-sheet-layer) [data-testid="mobile-bottom-nav"],
+  body:has(.mobile-settings-layer) [data-testid="mobile-bottom-nav"],
+  body[data-overlay-open="true"] [data-testid="mobile-bottom-nav"] {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  .company-filter-sheet-layer,
+  .modal-layer,
+  .action-sheet-layer,
+  .bottom-sheet-layer,
+  .mobile-settings-layer {
+    z-index: 1000 !important;
+  }
+
+  .company-filter-sheet,
+  .modal-layer > .drawer,
+  .action-sheet,
+  .bottom-sheet,
+  .mobile-settings-drawer {
+    z-index: 1010 !important;
+  }
+
+  .company-filter-sheet-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 1020;
+    background: var(--bg-surface-elevated, #fff);
+  }
+
   body[data-overlay-open="true"] [data-testid="mobile-bottom-nav"] {
     display: none !important;
     pointer-events: none !important;
