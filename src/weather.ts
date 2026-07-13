@@ -24,7 +24,7 @@ export async function getWeather(place: string, date: string): Promise<WeatherRe
   if (cache[key] && now < cache[key].expiresAt) return cache[key].value;
   try {
     const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(place)}&count=1&language=en&format=json`);
-    console.info("[weather] geocode response", { place, status: geo.status });
+    if (import.meta.env.DEV) console.info("[weather] geocode response", { place, status: geo.status });
     if (!geo.ok) throw new Error("geocoding failed");
     const location = (await geo.json()).results?.[0];
     if (!location) throw new Error("place not found");
@@ -38,7 +38,7 @@ export async function getWeather(place: string, date: string): Promise<WeatherRe
     localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
     return value;
   } catch (error) {
-    console.warn("[weather] lookup failed", { place, date, error });
+    if (import.meta.env.DEV) console.warn("[weather] lookup failed", { place, date, error });
     delete cache[key];
     try { localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); } catch { /* cache is optional */ }
     return undefined;
@@ -62,11 +62,11 @@ export async function getWeatherByCoordinates(latitude: number, longitude: numbe
     let selectedUrl = "";
     for (const url of urls) {
       onTrace?.({ url, cacheHit: false, cacheKey: key, target: `${hour}:00`, branch: url.includes("/jma?") ? "jma-fetch" : "forecast-fallback", provider: url.includes("/jma?") ? "jma" : "open-meteo-general" });
-      console.info("[weather] forecast request", { latitude, longitude, url });
+      if (import.meta.env.DEV) console.info("[weather] forecast request", { latitude, longitude, url });
       const response = await fetch(url);
       const body = await response.text();
       onTrace?.({ url, status: response.status, responseOk: response.ok });
-      console.info("[weather] forecast response", { status: response.status, body });
+      if (import.meta.env.DEV) console.info("[weather] forecast response", { status: response.status, body });
       if (!response.ok) continue;
       const parsed = JSON.parse(body);
       if (!parsed.hourly) continue;
@@ -88,7 +88,7 @@ export async function getWeatherByCoordinates(latitude: number, longitude: numbe
     return value;
   } catch (error) {
     onTrace?.({ branch: "error", error: String(error) });
-    console.warn("[weather] coordinate request failed", { latitude, longitude, error });
+    if (import.meta.env.DEV) console.warn("[weather] coordinate request failed", { latitude, longitude, error });
     return undefined;
   }
 }

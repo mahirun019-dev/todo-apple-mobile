@@ -2049,9 +2049,9 @@ function WeatherLine({ location, date, latitude, longitude, locale = "zh" }: { l
     if (target < Date.now() - 86400000 || target > Date.now() + 7 * 86400000) { setStatus("out_of_range"); return; }
     setStatus("loading");
     const scheduleHour = `${date.slice(0, 13)}:00`;
-    console.info("[weather] schedule time", { raw: date, timezone: "Asia/Tokyo", selectedHour: scheduleHour, latitude, longitude });
+    if (import.meta.env.DEV) console.info("[weather] schedule time", { raw: date, timezone: "Asia/Tokyo", selectedHour: scheduleHour, latitude, longitude });
     const request = latitude && longitude ? getWeatherByCoordinates(latitude, longitude, scheduleHour) : getWeather(place, scheduleHour);
-    request.then((value) => { setWeather(value); setStatus(value ? "success" : "unavailable"); }).catch((error) => { console.warn("[weather] request failed", error); setStatus("error"); });
+    request.then((value) => { setWeather(value); setStatus(value ? "success" : "unavailable"); }).catch((error) => { if (import.meta.env.DEV) console.warn("[weather] request failed", error); setStatus("error"); });
   }, [location, date, latitude, longitude]);
   const place = location?.trim() || localStorage.getItem("careerflow-home-region")?.trim();
   if (!place || !date || /オンライン|online|webテスト|web test|オンライン面接/i.test(place)) return null;
@@ -2059,7 +2059,7 @@ function WeatherLine({ location, date, latitude, longitude, locale = "zh" }: { l
   if (target < Date.now() - 86400000 || target > Date.now() + 7 * 86400000 || status !== "success" || !weather) return null;
   const Icon = weather.code >= 71 && weather.code <= 86 ? CloudSnow : weather.code >= 51 || weather.code >= 80 ? CloudRain : weather.code >= 1 ? CloudSun : Cloud;
   const description = weather.code === 0 ? (locale === "ja" ? "晴れ" : "晴") : weather.code <= 3 ? (locale === "ja" ? "曇り" : "多云") : weather.code >= 51 ? (locale === "ja" ? "雨の可能性" : "有降雨可能") : (locale === "ja" ? "天気の変化" : "天气变化");
-  return <><span className="weather-line"><Icon aria-hidden="true" />{weather.forecastTime.slice(11, 13)}{locale === "ja" ? "時ごろ" : "时左右"} · {description}</span>{location?.includes("鹿沼市") && <span className="kanuma-weather-debug">KANUMA DEBUG · latitude: {latitude} · longitude: {longitude} · forecastTime: {weather.forecastTime} · provider: {weather.provider} · weatherStatus: {status} · weatherData: {JSON.stringify(weather)}</span>}</>;
+  return <span className="weather-line"><Icon aria-hidden="true" />{weather.forecastTime.slice(11, 13)}{locale === "ja" ? "時ごろ" : "时左右"} · {description}</span>;
 }
 function eventModeText(event: Event | undefined, ja: boolean) {
   if (event?.eventMode === "offline") return `${ja ? "対面" : "线下"}${formatScheduleLocation(event) ? ` · ${formatScheduleLocation(event)}` : ""}`;

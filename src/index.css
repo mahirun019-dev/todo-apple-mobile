@@ -3541,7 +3541,6 @@ option { color: var(--text-primary); background: var(--bg-input); }
 .dashboard-upcoming-item > div { display: grid; gap: 4px; min-width: 0; }
 .dashboard-upcoming-item h3, .dashboard-upcoming-item p, .dashboard-upcoming-item span { margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dashboard-upcoming-item .weather-line { white-space: nowrap; }
-.kanuma-weather-debug { color: #8b2020; font: 10px/1.3 ui-monospace, monospace; }
 .home-region-setting { display: grid; gap: 6px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color); }
 .home-region-setting label { display: grid; gap: 8px; color: var(--text-primary); font-weight: 650; }
 .home-region-setting select { width: 100%; height: 44px; padding: 0 12px; border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-primary); background: var(--bg-surface); }
