@@ -3607,6 +3607,8 @@ option { color: var(--text-primary); background: var(--bg-input); }
     inset: 0;
     border: 0;
     background: rgba(16, 25, 38, .38);
+    overscroll-behavior: none;
+    touch-action: none;
   }
   .company-filter-sheet {
     position: relative;
@@ -3619,9 +3621,13 @@ option { color: var(--text-primary); background: var(--bg-input); }
     border-radius: 25px 25px 0 0;
     background: var(--bg-surface-elevated, #fafbfd);
     color: var(--text-primary, #24262b);
+    overflow: hidden;
   }
-  .company-filter-sheet h2 { margin: 4px 0 20px; font-size: 18px; }
-  .company-filter-sheet-content { min-height: 0; overflow-y: auto; padding-bottom: 8px; }
+  .company-filter-sheet-header { display: grid; grid-template-columns: minmax(0, 1fr) 44px; min-height: 56px; align-items: center; gap: 8px; flex: 0 0 auto; }
+  .company-filter-sheet h2 { margin: 0; font-size: 18px; }
+  .company-filter-sheet-close { display: inline-flex; width: 44px; height: 44px; align-items: center; justify-content: center; border: 0; border-radius: 12px; color: var(--text-secondary, #68717b); background: transparent; }
+  .company-filter-sheet-close svg { width: 22px; height: 22px; }
+  .company-filter-sheet-content { min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding-bottom: 8px; }
   .company-filter-sheet fieldset { margin: 0 0 18px; padding: 0; border: 0; }
   .company-filter-sheet legend { margin-bottom: 6px; font-size: 13px; font-weight: 700; color: var(--text-secondary, #68717b); }
   .company-filter-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -3630,8 +3636,8 @@ option { color: var(--text-primary); background: var(--bg-input); }
   .company-filter-options input { position: absolute; opacity: 0; pointer-events: none; }
   .company-filter-options svg { width: 17px; height: 17px; margin-left: auto; opacity: 0; }
   .company-filter-options label.selected svg { opacity: 1; }
-  .company-filter-sheet-actions { display: grid; grid-template-columns: 1fr 1fr; flex: 0 0 auto; gap: 10px; margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--border-color, #d8dce1); }
-  .company-filter-sheet-actions button { min-height: 48px; border: 1px solid var(--border-color, #d8dce1); border-radius: 12px; background: transparent; color: inherit; font-weight: 650; }
+  .company-filter-sheet-actions { display: grid; grid-template-columns: 1fr 1fr; flex: 0 0 auto; gap: 10px; margin-top: 8px; padding: 10px 0 calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border-color, #d8dce1); background: inherit; }
+  .company-filter-sheet-actions button { min-height: 52px; height: 52px; border: 1px solid var(--border-color, #d8dce1); border-radius: 12px; background: transparent; color: inherit; font-size: 16px; font-weight: 600; line-height: 1; }
   .company-filter-sheet-actions .primary { border-color: var(--action-primary-bg, #24262b); background: var(--action-primary-bg, #24262b); color: var(--action-primary-text, #fff); }
   [data-theme="dark"] .company-filter-sheet { background: #1c2634; }
   [data-theme="dark"] .company-filter-options label.selected { border-color: #60a5fa; background: rgba(96,165,250,.18); color: #f5f5f5; }
