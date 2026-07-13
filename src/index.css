@@ -3544,7 +3544,9 @@ option { color: var(--text-primary); background: var(--bg-input); }
 .mode-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .mode-options label { display: flex; min-height: 44px; align-items: center; justify-content: center; border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-primary); background: var(--bg-surface); font-weight: 600; }
 .mode-options label.selected { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
-.mode-options input { position: absolute; opacity: 0; }
+.mode-options input { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.mode-options label { cursor: pointer; pointer-events: auto; }
+.mode-options input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
 .meeting-link { color: var(--accent); font-size: 12px; }
 .company-card-body p { margin: 0; color: #68717b; }
 .company-card-body span { color: #59616b; font-size: 12px; }
