@@ -146,6 +146,7 @@ type Event = {
   startsAt: string;
   locationOrOnline: string;
   eventMode?: "offline" | "online" | "undecided";
+  isOnline?: boolean;
   location?: string;
   onlinePlatform?: string;
   meetingUrl?: string;
@@ -789,7 +790,7 @@ function normalize(x: any): Data {
     })),
     events: (x.events || []).map((event: Event) => {
       const legacy = String(event.locationOrOnline || "");
-      const mode = event.eventMode || (/zoom|teams|meet|online|オンライン|线上|https?:\/\//i.test(legacy) ? "online" : "undecided");
+      const mode = event.eventMode || (event.isOnline === true ? "online" : event.isOnline === false && (event.location || legacy) ? "offline" : event.location ? "offline" : event.meetingUrl || event.onlinePlatform || /zoom|teams|meet|online|オンライン|线上|https?:\/\//i.test(legacy) ? "online" : "undecided");
       return { ...event, eventMode: mode, location: event.location || (mode === "offline" ? legacy : ""), onlinePlatform: event.onlinePlatform || (mode === "online" ? legacy : ""), meetingUrl: event.meetingUrl || (/https?:\/\//i.test(legacy) ? legacy : "") };
     }),
     interviews: (x.interviews || []).map((v: InterviewRecord) => ({ ...v, category: "interview" })),
@@ -1150,7 +1151,7 @@ export default function App() {
       v: Event = {
         id: base?.id || id(),
         companyId: String(f.get("company") || "") || undefined,
-        title: String(f.get("title")),
+        title: String(f.get("type")),
         type: f.get("type") as ItemType,
         stage: f.get("stage") as Stage,
         startsAt: String(f.get("startsAt")),
@@ -1839,10 +1840,10 @@ function Dashboard({
                     {t[next.type]} · {when(next.at)}
                   </p>
                   <span>
-                    {next.company?.locationOrOnline || t.online} ·{" "}
+                    {getEventModeLabel(next.event, t.language === "言語" ? "ja" : "zh")}{next.event?.eventMode === "offline" && next.event.location ? ` · ${next.event.location}` : next.event?.eventMode === "online" && next.event.onlinePlatform ? ` · ${next.event.onlinePlatform}` : ""} ·{" "}
                     {relative(next.at, t)}
                   </span>
-                  <WeatherLine location={next.eventMode === "offline" ? (next.location || next.company?.locationOrOnline) : undefined} date={next.at} locale={t.language === "言語" ? "ja" : "zh"} />
+                  <WeatherLine location={next.event?.eventMode === "offline" ? next.event.location : undefined} date={next.at} locale={t.language === "言語" ? "ja" : "zh"} />
                 </div>
               </div>
             ) : (
@@ -2016,8 +2017,12 @@ function eventModeText(event: Event | undefined, ja: boolean) {
   if (event?.eventMode === "online") return `${ja ? "オンライン" : "线上"}${event.onlinePlatform ? ` · ${event.onlinePlatform}` : ""}`;
   return ja ? "形式未定" : "形式未确定";
 }
+function getEventModeLabel(event: Event | undefined, locale: "zh" | "ja") {
+  return event?.eventMode === "offline" ? (locale === "ja" ? "対面" : "线下") : event?.eventMode === "online" ? (locale === "ja" ? "オンライン" : "线上") : (locale === "ja" ? "未定" : "未确定");
+}
 function scheduleDisplayTitle(title: string | undefined, type: string | undefined, t: any) {
-  return title?.trim() || (type && t[type]) || t.untitledSchedule;
+  if (type === "general") return title?.trim() || t.general;
+  return (type && t[type]) || t.untitledSchedule;
 }
 function stageDisplayLabel(stage: string | undefined, t: any) {
   const value = String(stage || "").trim().toLowerCase();
@@ -2758,14 +2763,6 @@ function EventForm({
   return (
     <Modal title={initial ? t.edit : t.addEvent} close={close}>
       <form className="form-grid" onSubmit={save}>
-        <label className="wide">
-          <span>{t.fieldTitle}</span>
-          <input
-            name="title"
-            defaultValue={initial?.title}
-            required
-          />
-        </label>
         <label>
           <span>{t.company}</span>
           <select name="company" defaultValue={initial?.companyId}>
