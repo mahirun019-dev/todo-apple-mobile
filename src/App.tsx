@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { createBackup, type BackupSnapshot } from "./backups";
+import { getWeather, type WeatherResult } from "./weather";
 import {
   Database,
   DatabaseArrowDown,
@@ -22,6 +23,10 @@ import {
   ChevronDown,
   ChevronUp,
   Clock3,
+  Cloud,
+  CloudRain,
+  CloudSnow,
+  CloudSun,
   ExternalLink,
   FileJson,
   Globe,
@@ -1825,6 +1830,7 @@ function Dashboard({
                     {next.company?.locationOrOnline || t.online} ·{" "}
                     {relative(next.at, t)}
                   </span>
+                  <WeatherLine location={next.company?.locationOrOnline || next.locationOrOnline} date={next.at} locale={t.language === "言語" ? "ja" : "zh"} />
                 </div>
               </div>
             ) : (
@@ -1981,6 +1987,17 @@ function when(s: string) {
 function relative(s: string, t: any) {
   const h = Math.ceil((new Date(s).getTime() - Date.now()) / 36e5);
   return h < 1 ? "Now" : h < 24 ? `${h}h` : `${Math.ceil(h / 24)} ${t.days}`;
+}
+function WeatherLine({ location, date, locale = "zh" }: { location?: string; date?: string; locale?: "zh" | "ja" }) {
+  const [weather, setWeather] = useState<WeatherResult>();
+  useEffect(() => {
+    const place = location?.trim() || localStorage.getItem("careerflow-home-region")?.trim();
+    if (!place || !date || /オンライン|online|webテスト|web test|オンライン面接/i.test(place)) return;
+    getWeather(place, date.slice(0, 10)).then(setWeather);
+  }, [location, date]);
+  if (!weather) return null;
+  const Icon = weather.code >= 71 && weather.code <= 86 ? CloudSnow : weather.code >= 51 || weather.code >= 80 ? CloudRain : weather.code >= 1 ? CloudSun : Cloud;
+  return <span className="weather-line"><Icon aria-hidden="true" />{weather.temperature}℃ · {locale === "ja" ? "降水確率" : "降水概率"} {weather.precipitation}%</span>;
 }
 function scheduleDisplayTitle(title: string | undefined, type: string | undefined, t: any) {
   return title?.trim() || (type && t[type]) || t.untitledSchedule;
@@ -2247,6 +2264,7 @@ function Schedule({
                   <span>
                     {x.company?.name || t.general} · {t[x.type]}
                   </span>
+                  {x.kind === "event" && <WeatherLine location={x.event.locationOrOnline || x.company?.locationOrOnline} date={x.at} locale={t.language === "言語" ? "ja" : "zh"} />}
                 </div>
                 <ChevronRight />
               </button>
@@ -3124,11 +3142,12 @@ function SettingsDrawer({ close, children, title }: { close: () => void; childre
 }
 function SettingsPanel({ t, theme, setTheme, locale, setLocale, close, data, setData, iconRef, json, upload, importJson, download }: any) {
   const [tab, setTab] = useState("general");
+  const [homeRegion, setHomeRegion] = useState(() => localStorage.getItem("careerflow-home-region") || "");
   const ja = locale === "ja";
   const ui = locale === "ja" ? { general:"一般", appearance:"表示", language:"言語", data:"データとバックアップ", about:"CareerFlowについて", storage:"このデバイスの保存状況", backup:"バックアップ", aboutTitle:"CareerFlowについて", version:"CareerFlow バージョン 1.0", db:"データベースバージョン", pwa:"PWA ステータス: standalone 対応", icon:"アイコン: CareerFlow ブランドアイコン", privacy:"プライバシー: データは主にこのデバイスに保存されます。", license:"オープンソースライセンス: MIT License" } : locale === "en" ? { general:"General", appearance:"Appearance", language:"Language", data:"Data & backups", about:"About CareerFlow", storage:"Device storage", backup:"Backup", aboutTitle:"About CareerFlow", version:"CareerFlow version 1.0", db:"Database version", pwa:"PWA status: standalone supported", icon:"Icon: CareerFlow brand icon", privacy:"Privacy: Data is mainly stored on this device.", license:"Open-source license: MIT License" } : { general:"常规", appearance:"外观", language:"语言", data:"数据与备份", about:"关于 CareerFlow", storage:"当前设备存储", backup:"备份", aboutTitle:"关于 CareerFlow", version:"CareerFlow 版本 1.0", db:"数据库版本", pwa:"PWA 状态：支持 standalone", icon:"图标：CareerFlow 品牌图标", privacy:"隐私：数据主要保存在当前设备。", license:"开源许可：MIT License" };
   const tabs = [["general", ui.general, Settings], ["appearance", ui.appearance, Palette], ["language", ui.language, Globe], ["data", ui.data, Database], ["about", ui.about, Info]] as const;
   return <SettingsDrawer title={t.settings} close={close}><div className="desktop-settings-layout"><nav className="desktop-settings-nav settings-sidebar"><div className="settings-nav-list">{tabs.map(([key, text, Icon]) => <SettingsNavItem key={key} label={text} icon={Icon} active={tab === key} onClick={() => setTab(key)} />)}</div></nav><div className="desktop-settings-content">
-    {tab === "general" && <section className="settings-section"><h3>{ui.storage}</h3><div className="settings-stats">{[[ja ? "企業数" : locale === "en" ? "Companies" : "企业数", data.companies.length], [ja ? "日程数" : locale === "en" ? "Schedules" : "日程数", data.events.length], [ja ? "資料数" : locale === "en" ? "Resources" : "资料数", data.materials.length], [ja ? "面接記録数" : locale === "en" ? "Interviews" : "面试记录数", data.interviews.length], [ja ? "準備事項数" : locale === "en" ? "Preparations" : "准备事项数", data.preparations.length], [ui.db, "v" + data.schemaVersion]].map(([label, value]) => <div key={String(label)}><span>{label}</span><strong>{value}</strong></div>)}</div></section>}
+    {tab === "general" && <section className="settings-section"><h3>{ui.storage}</h3><div className="settings-stats">{[[ja ? "企業数" : locale === "en" ? "Companies" : "企业数", data.companies.length], [ja ? "日程数" : locale === "en" ? "Schedules" : "日程数", data.events.length], [ja ? "資料数" : locale === "en" ? "Resources" : "资料数", data.materials.length], [ja ? "面接記録数" : locale === "en" ? "Interviews" : "面试记录数", data.interviews.length], [ja ? "準備事項数" : locale === "en" ? "Preparations" : "准备事项数", data.preparations.length], [ui.db, "v" + data.schemaVersion]].map(([label, value]) => <div key={String(label)}><span>{label}</span><strong>{value}</strong></div>)}</div><div className="home-region-setting"><label>{ja ? "常駐就活地域" : "常驻就活地区"}<select value={homeRegion} onChange={(e) => { setHomeRegion(e.target.value); localStorage.setItem("careerflow-home-region", e.target.value); }}><option value="">{ja ? "未設定" : "未设置"}</option>{["東京都", "大阪府", "愛知県", "福岡県", "北海道", "宮城県", "広島県", "京都府"].map((region) => <option key={region} value={region}>{region}</option>)}</select></label><p>{ja ? "日程に詳しい場所がない場合、地域の天気と移動の目安に使用します。" : "当日程没有填写详细地点时，用于显示当地天气和出行提醒。"}</p></div></section>}
     {tab === "appearance" && <section className="settings-section"><h3>{ui.appearance}</h3><div className="settings-segmented">{(["light", "dark", "system"] as Theme[]).map((x) => { const Icon = x === "light" ? Sun : x === "dark" ? Moon : Monitor; return <button aria-pressed={theme === x} className={theme === x ? "active" : ""} onClick={() => setTheme(x)} key={x}><Icon aria-hidden="true" />{t[x]}</button>; })}</div></section>}
     {tab === "language" && <section className="settings-section"><h3>{ui.language}</h3><div className="settings-segmented">{(["zh", "ja"] as Locale[]).map((x) => <button type="button" aria-pressed={locale === x} className={locale === x ? "active" : ""} onClick={() => setLocale(x)} key={x}>{x === "zh" ? "中文" : "日本語"}</button>)}</div></section>}
     {tab === "data" && <section className="settings-section settings-data-section"><h3>{ui.backup}</h3><BackupControls data={data} theme={theme} locale={locale} setData={setData} /></section>}

@@ -3533,6 +3533,12 @@ option { color: var(--text-primary); background: var(--bg-input); }
 .company-card-body p,
 .company-card-body span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .company-card-body h3 { margin: 0; }
+.weather-line { display: inline-flex; min-width: 0; align-items: center; gap: 5px; overflow: hidden; color: var(--text-secondary, #68717b); font-size: 12px; white-space: nowrap; text-overflow: ellipsis; }
+.weather-line svg { width: 16px; height: 16px; flex: 0 0 16px; }
+.home-region-setting { display: grid; gap: 6px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color); }
+.home-region-setting label { display: grid; gap: 8px; color: var(--text-primary); font-weight: 650; }
+.home-region-setting select { width: 100%; height: 44px; padding: 0 12px; border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-primary); background: var(--bg-surface); }
+.home-region-setting p { margin: 0; color: var(--text-secondary); font-size: 13px; line-height: 1.45; }
 .company-card-body p { margin: 0; color: #68717b; }
 .company-card-body span { color: #59616b; font-size: 12px; }
 .recruitment-link { display: inline-flex; width: fit-content; align-items: center; gap: 6px; color: #24262b; font-weight: 650; }
