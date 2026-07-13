@@ -10,7 +10,9 @@ import {
 } from "react";
 import { createBackup, type BackupSnapshot } from "./backups";
 import {
-  Archive,
+  Database,
+  DatabaseArrowDown,
+  DatabaseArrowUp,
   BarChart3,
   BriefcaseBusiness,
   Building2,
@@ -30,7 +32,6 @@ import {
   Moon,
   Palette,
   Plus,
-  RotateCcw,
   Settings,
   Info,
   Search,
@@ -3088,8 +3089,8 @@ function MobileSettingsDrawer({
       </header>
       <div className="drawer-main drawer-scroll"><nav className="mobile-settings-nav">
         <button className={selectedItem === "home" ? "active" : ""} onClick={() => { setSelectedItem("home"); setPage(null); close(); setView("dashboard"); }}><Home /><span>{t.dashboard}</span></button>
-        <button className={`${page === "data" ? "expanded " : ""}${selectedItem === "data" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("data"); setPage(page === "data" ? null : "data"); }}><FileJson /><span>{t.data}</span><ChevronRight /></button>
-        {page === "data" && <div className="drawer-accordion-panel"><button type="button" onClick={() => download("careerflow-backup.json", JSON.stringify(makeBackupSnapshot(data, theme, locale), null, 2), "application/json")}><Archive /><span>{t.backup}</span></button><button type="button" onClick={() => json.current?.click()}><RotateCcw /><span>{t.restore}</span></button></div>}
+        <button className={`${page === "data" ? "expanded " : ""}${selectedItem === "data" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("data"); setPage(page === "data" ? null : "data"); }}><Database /><span>{t.data}</span><ChevronRight /></button>
+        {page === "data" && <div className="drawer-accordion-panel"><button type="button" onClick={() => download("careerflow-backup.json", JSON.stringify(makeBackupSnapshot(data, theme, locale), null, 2), "application/json")}><DatabaseArrowUp /><span>{t.backup}</span></button><button type="button" onClick={() => json.current?.click()}><DatabaseArrowDown /><span>{t.restore}</span></button></div>}
         <button className={`${page === "appearance" ? "expanded " : ""}${selectedItem === "appearance" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("appearance"); setPage(page === "appearance" ? null : "appearance"); }}><Palette /><span>{t.appearance}</span><ChevronRight /></button>
         {page === "appearance" && <div className="drawer-accordion-panel">{(["light", "dark", "system"] as Theme[]).map((x) => { const Icon = x === "light" ? Sun : x === "dark" ? Moon : Monitor; return <button className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}><Icon aria-hidden="true" /><span>{t[x]}</span>{theme === x && <Check />}</button>; })}</div>}
         <button className={`${page === "language" ? "expanded " : ""}${selectedItem === "language" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("language"); setPage(page === "language" ? null : "language"); }}><Globe /><span>{t.language}</span><ChevronRight /></button>
