@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { createBackup, type BackupSnapshot } from "./backups";
-import { getWeather, getWeatherByCoordinates, type WeatherResult } from "./weather";
+import { geocodeCoordinates, getWeather, getWeatherByCoordinates, type WeatherResult } from "./weather";
 import prefectureData from "./data/japan-prefectures.json";
 import municipalityData from "./data/japan-municipalities.json";
 
@@ -1164,10 +1164,17 @@ export default function App() {
     setData((d) => ({ ...d, materials: [v, ...d.materials] }));
     setForm(null);
   };
-  const saveEvent = (e: FormEvent<HTMLFormElement>) => {
+  const saveEvent = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const f = new FormData(e.currentTarget),
       base = editEvent,
+      prefecture = String(f.get("prefecture") || base?.prefecture || "") || undefined,
+      municipality = String(f.get("city") || base?.municipality || base?.city || "") || undefined,
+      detailLocation = String(f.get("detailLocation") || base?.detailLocation || ""),
+      generatedLocation = [prefecture, municipality].filter(Boolean).join("") + (detailLocation ? `・${detailLocation}` : ""),
+      coordinateKey = `${prefecture || ""}${municipality || ""}`,
+      localCoordinates = locationCoordinates[coordinateKey],
+      coordinates = localCoordinates || (prefecture && municipality ? await geocodeCoordinates(`${municipality}, ${prefecture}, Japan`) : undefined),
       v: Event = {
         id: base?.id || id(),
         companyId: String(f.get("company") || "") || undefined,
@@ -1175,20 +1182,20 @@ export default function App() {
         type: f.get("type") as ItemType,
         stage: f.get("stage") as Stage,
         startsAt: String(f.get("startsAt")),
-        locationOrOnline: String(f.get("location") || f.get("onlinePlatform") || base?.locationOrOnline || ""),
+        locationOrOnline: String(f.get("location") || f.get("onlinePlatform") || (String(f.get("eventMode") || base?.eventMode) === "offline" ? generatedLocation : base?.locationOrOnline || "")),
         eventMode: String(f.get("eventMode") || base?.eventMode || "undecided") as Event["eventMode"],
-        location: String(f.get("location") || base?.location || ""),
+        location: String(f.get("location") || (String(f.get("eventMode") || base?.eventMode) === "offline" ? generatedLocation : base?.location || "")),
         onlinePlatform: String(f.get("onlinePlatform") || base?.onlinePlatform || ""),
         meetingUrl: String(f.get("meetingUrl") || base?.meetingUrl || ""),
         attendanceMode: String(f.get("eventMode") || base?.eventMode || "undecided") as Event["attendanceMode"],
-        prefecture: String(f.get("prefecture") || base?.prefecture || "") || undefined,
-        city: String(f.get("city") || base?.city || "") || undefined,
-        municipality: String(f.get("city") || base?.municipality || base?.city || "") || undefined,
+        prefecture,
+        city: municipality,
+        municipality,
         municipalityCode: String(f.get("city") || base?.municipalityCode || "") || undefined,
-        detailLocation: String(f.get("detailLocation") || base?.detailLocation || ""),
-        locationLabel: String(f.get("manualLocation") || "") || [String(f.get("prefecture") || base?.prefecture || ""), String(f.get("city") || base?.city || ""), String(f.get("detailLocation") || base?.detailLocation || "")].filter(Boolean).join(" "),
-        latitude: locationCoordinates[`${String(f.get("prefecture") || base?.prefecture || "")}${String(f.get("city") || base?.city || "")}`]?.[0],
-        longitude: locationCoordinates[`${String(f.get("prefecture") || base?.prefecture || "")}${String(f.get("city") || base?.city || "")}`]?.[1],
+        detailLocation,
+        locationLabel: String(f.get("manualLocation") || "") || generatedLocation,
+        latitude: coordinates?.[0],
+        longitude: coordinates?.[1],
         notes: String(f.get("notes")),
         createdAt: base?.createdAt || Date.now(),
       };
@@ -1878,7 +1885,7 @@ function Dashboard({
                   <span>
                     {getEventModeLabel(item.event, t.language === "言語" ? "ja" : "zh")}{item.event?.eventMode === "offline" && formatScheduleLocation(item.event) ? ` · ${formatScheduleLocation(item.event)}` : item.event?.eventMode === "online" && item.event.onlinePlatform ? ` · ${item.event.onlinePlatform}` : ""} · {relative(item.at, t)}
                   </span>
-                  <WeatherLine location={item.event?.eventMode === "offline" ? formatScheduleLocation(item.event) : undefined} latitude={item.event?.latitude} longitude={item.event?.longitude} date={item.at} locale={t.language === "言語" ? "ja" : "zh"} />
+                  <WeatherLine location={item.event?.eventMode === "offline" ? formatScheduleLocation(item.event) : undefined} prefecture={item.event?.prefecture} municipality={item.event?.municipality || item.event?.city} latitude={item.event?.latitude} longitude={item.event?.longitude} date={item.at} locale={t.language === "言語" ? "ja" : "zh"} />
                 </div>
                 </button>)}
                 {upcoming.length > 3 && <button type="button" className="text-button" onClick={() => setView("schedule")}>{t.language === "言語" ? "すべての予定を見る" : "查看全部日程"}</button>}
@@ -2038,11 +2045,11 @@ function relative(s: string, t: any) {
   const h = Math.ceil((new Date(s).getTime() - Date.now()) / 36e5);
   return h < 1 ? "Now" : h < 24 ? `${h}h` : `${Math.ceil(h / 24)} ${t.days}`;
 }
-function WeatherLine({ location, date, latitude, longitude, locale = "zh" }: { location?: string; date?: string; latitude?: number; longitude?: number; locale?: "zh" | "ja" }) {
+function WeatherLine({ location, prefecture, municipality, date, latitude, longitude, locale = "zh" }: { location?: string; prefecture?: string; municipality?: string; date?: string; latitude?: number; longitude?: number; locale?: "zh" | "ja" }) {
   const [weather, setWeather] = useState<WeatherResult>();
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "out_of_range" | "unavailable" | "error">("idle");
   useEffect(() => {
-    const place = location?.trim() || localStorage.getItem("careerflow-home-region")?.trim();
+    const place = prefecture && municipality ? `${municipality}, ${prefecture}, Japan` : location?.trim() || localStorage.getItem("careerflow-home-region")?.trim();
     setWeather(undefined);
     if (!place || !date || /オンライン|online|webテスト|web test|オンライン面接/i.test(place)) { setStatus("unavailable"); return; }
     const target = new Date(`${date.slice(0, 10)}T00:00:00+09:00`).getTime();
@@ -2050,10 +2057,16 @@ function WeatherLine({ location, date, latitude, longitude, locale = "zh" }: { l
     setStatus("loading");
     const scheduleHour = `${date.slice(0, 13)}:00`;
     if (import.meta.env.DEV) console.info("[weather] schedule time", { raw: date, timezone: "Asia/Tokyo", selectedHour: scheduleHour, latitude, longitude });
-    const request = latitude && longitude ? getWeatherByCoordinates(latitude, longitude, scheduleHour) : getWeather(place, scheduleHour);
-    request.then((value) => { setWeather(value); setStatus(value ? "success" : "unavailable"); }).catch((error) => { if (import.meta.env.DEV) console.warn("[weather] request failed", error); setStatus("error"); });
-  }, [location, date, latitude, longitude]);
-  const place = location?.trim() || localStorage.getItem("careerflow-home-region")?.trim();
+    let cancelled = false;
+    (async () => {
+      const coordinates = latitude && longitude ? [latitude, longitude] as [number, number] : await geocodeCoordinates(place);
+      if (cancelled) return;
+      const value = coordinates ? await getWeatherByCoordinates(coordinates[0], coordinates[1], scheduleHour) : await getWeather(place, scheduleHour);
+      if (!cancelled) { setWeather(value); setStatus(value ? "success" : "unavailable"); }
+    })().catch((error) => { if (import.meta.env.DEV) console.warn("[weather] request failed", error); if (!cancelled) setStatus("error"); });
+    return () => { cancelled = true; };
+  }, [location, prefecture, municipality, date, latitude, longitude]);
+  const place = prefecture && municipality ? `${municipality}, ${prefecture}, Japan` : location?.trim() || localStorage.getItem("careerflow-home-region")?.trim();
   if (!place || !date || /オンライン|online|webテスト|web test|オンライン面接/i.test(place)) return null;
   const target = new Date(`${date.slice(0, 10)}T00:00:00+09:00`).getTime();
   if (target < Date.now() - 86400000 || target > Date.now() + 7 * 86400000 || status !== "success" || !weather) return null;
@@ -2343,7 +2356,7 @@ function Schedule({
                   <span>
                     {x.company?.name || t.general} · {t[x.type]}
                   </span>
-                  {x.kind === "event" && <><span>{eventModeText(x.event, t.language === "言語")}</span><WeatherLine location={x.event.eventMode === "offline" ? formatScheduleLocation(x.event) : undefined} latitude={x.event.latitude} longitude={x.event.longitude} date={x.at} locale={t.language === "言語" ? "ja" : "zh"} />{x.event.meetingUrl && <a className="meeting-link" href={x.event.meetingUrl} target="_blank" rel="noopener noreferrer">{t.language === "言語" ? "会議リンクを開く" : "打开会议链接"}</a>}</>}
+                  {x.kind === "event" && <><span>{eventModeText(x.event, t.language === "言語")}</span><WeatherLine location={x.event.eventMode === "offline" ? formatScheduleLocation(x.event) : undefined} prefecture={x.event.prefecture} municipality={x.event.municipality || x.event.city} latitude={x.event.latitude} longitude={x.event.longitude} date={x.at} locale={t.language === "言語" ? "ja" : "zh"} />{x.event.meetingUrl && <a className="meeting-link" href={x.event.meetingUrl} target="_blank" rel="noopener noreferrer">{t.language === "言語" ? "会議リンクを開く" : "打开会议链接"}</a>}</>}
                 </div>
                 <ChevronRight />
               </button>

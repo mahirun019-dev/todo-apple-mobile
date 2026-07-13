@@ -8,6 +8,28 @@ type Cached = { fetchedAt: number; expiresAt: number; provider: "jma" | "open-me
 const WEATHER_CACHE_VERSION = "weather:jma:v2";
 const NETWORK_VERIFY_KEY = "careerflow-weather-jma-network-verified";
 
+export async function geocodeCoordinates(place: string): Promise<[number, number] | undefined> {
+  const query = place.trim();
+  if (!query) return undefined;
+  try {
+    const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`);
+    if (response.ok) {
+      const result = (await response.json()).results?.[0];
+      if (typeof result?.latitude === "number" && typeof result?.longitude === "number") return [result.latitude, result.longitude];
+    }
+  } catch { /* try the Japanese administrative geocoder below */ }
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=jp&q=${encodeURIComponent(query)}`, { headers: { Accept: "application/json" } });
+    if (!response.ok) return undefined;
+    const result = (await response.json())?.[0];
+    const latitude = Number(result?.lat);
+    const longitude = Number(result?.lon);
+    return Number.isFinite(latitude) && Number.isFinite(longitude) ? [latitude, longitude] : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function cacheKey(place: string, date: string) {
   return `${place.trim().toLowerCase()}|${date}`;
 }
