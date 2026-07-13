@@ -1673,7 +1673,6 @@ textarea:focus-visible {
   .empty-small strong, .empty-small .primary { white-space: nowrap; }
   .empty-small .primary { min-width: 140px; min-height: 48px; padding-inline: 16px; }
   .deadline-title .text-button { display: none; }
-  .career-app .workspace { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
   .career-app .metric { min-height: 66px; padding: 9px; }
   .career-app .metric strong { font-size: 18px; }
   .career-app .metric span { font-size: 9px; }
@@ -1764,7 +1763,7 @@ textarea:focus-visible {
     background: rgba(255, 255, 255, 0.08);
   }
   .workspace {
-    padding: 20px 14px calc(88px + env(safe-area-inset-bottom));
+    padding: 20px 14px 0;
   }
   .page-head {
     align-items: flex-start;
@@ -1964,9 +1963,6 @@ textarea:focus-visible {
 }
 
 @media (max-width: 760px) {
-  .career-app .workspace {
-    padding-bottom: calc(96px + env(safe-area-inset-bottom));
-  }
   .career-mobile-nav {
     position: fixed;
     right: 0;
@@ -2315,7 +2311,6 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   .empty-small strong, .empty-small .primary { white-space: nowrap; }
   .empty-small .primary { min-width: 140px; min-height: 48px; padding-inline: 16px; }
   .deadline-title .text-button { display: none; }
-  .career-app .workspace { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
   .career-app .metric { min-height: 66px; padding: 9px; }
   .career-app .metric strong { font-size: 18px; }
   .career-app .metric span { font-size: 9px; }
@@ -2469,9 +2464,6 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   }
 }
 @media (max-width: 760px) {
-  .career-app .workspace {
-    padding-bottom: calc(96px + env(safe-area-inset-bottom));
-  }
   .dashboard-sidebar { margin-top: 20px; }
   .dashboard-sidebar > .entity-card { margin-bottom: 0; }
 }
@@ -2877,7 +2869,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 /* Mobile navigation: a single floating Liquid Glass surface. */
 @media (max-width: 767px) {
-  .career-app .workspace { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
   .career-mobile-nav {
     right: 12px !important;
     bottom: calc(12px + env(safe-area-inset-bottom)) !important;
