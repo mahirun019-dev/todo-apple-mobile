@@ -13,7 +13,7 @@ import { getWeather, getWeatherByCoordinates, type WeatherResult } from "./weath
 import prefectureData from "./data/japan-prefectures.json";
 import municipalityData from "./data/japan-municipalities.json";
 
-const BUILD_COMMIT = "e4166b3";
+const BUILD_COMMIT = "58c4e2f";
 import {
   Database,
   DatabaseArrowDown,
