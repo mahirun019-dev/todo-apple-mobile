@@ -2003,12 +2003,22 @@ function relative(s: string, t: any) {
 }
 function WeatherLine({ location, date, locale = "zh" }: { location?: string; date?: string; locale?: "zh" | "ja" }) {
   const [weather, setWeather] = useState<WeatherResult>();
+  const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
   useEffect(() => {
     const place = location?.trim() || localStorage.getItem("careerflow-home-region")?.trim();
     if (!place || !date || /オンライン|online|webテスト|web test|オンライン面接/i.test(place)) return;
-    getWeather(place, date.slice(0, 10)).then(setWeather);
+    const target = new Date(`${date.slice(0, 10)}T00:00:00+09:00`).getTime();
+    if (target < Date.now() - 86400000 || target > Date.now() + 7 * 86400000) return;
+    setLoading(true);
+    getWeather(place, date.slice(0, 10)).then((value) => { setWeather(value); setFailed(!value); }).catch((error) => { console.warn("[weather] request failed", error); setFailed(true); }).finally(() => setLoading(false));
   }, [location, date]);
-  if (!weather) return null;
+  const place = location?.trim() || localStorage.getItem("careerflow-home-region")?.trim();
+  if (!place || !date || /オンライン|online|webテスト|web test|オンライン面接/i.test(place)) return null;
+  const target = new Date(`${date.slice(0, 10)}T00:00:00+09:00`).getTime();
+  if (target < Date.now() - 86400000 || target > Date.now() + 7 * 86400000) return <span className="weather-line">{locale === "ja" ? "その日の予報はまだありません" : "暂未提供该日期的天气预报"}</span>;
+  if (loading) return <span className="weather-line">{locale === "ja" ? "天気を読み込み中…" : "天气加载中…"}</span>;
+  if (!weather || failed) return <span className="weather-line">{locale === "ja" ? "天気を取得できません" : "天气暂时无法获取"}</span>;
   const Icon = weather.code >= 71 && weather.code <= 86 ? CloudSnow : weather.code >= 51 || weather.code >= 80 ? CloudRain : weather.code >= 1 ? CloudSun : Cloud;
   return <span className="weather-line"><Icon aria-hidden="true" />{weather.temperature}℃ · {locale === "ja" ? "降水確率" : "降水概率"} {weather.precipitation}%</span>;
 }

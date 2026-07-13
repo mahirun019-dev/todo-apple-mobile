@@ -31,7 +31,8 @@ export async function getWeather(place: string, date: string): Promise<WeatherRe
     cache[key] = { fetchedAt: now, value };
     localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
     return value;
-  } catch {
+  } catch (error) {
+    console.warn("[weather] lookup failed", { place, date, error });
     cache[key] = { fetchedAt: now };
     try { localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); } catch { /* cache is optional */ }
     return undefined;
