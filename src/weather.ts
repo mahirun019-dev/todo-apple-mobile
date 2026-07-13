@@ -1,11 +1,12 @@
 export type WeatherResult = { temperature: number; precipitation: number; code: number; forecastTime: string; provider: "jma" | "open-meteo-general" };
-export type WeatherTrace = { url?: string; cacheHit?: boolean; cacheKey?: string; cachedAt?: number; expiresAt?: number; provider?: string; status?: number; responseOk?: boolean; hourlySummary?: string; target?: string; index?: number; selectedTime?: string; branch?: string; error?: string };
+export type WeatherTrace = { url?: string; cacheHit?: boolean; cacheKey?: string; cachedAt?: number; expiresAt?: number; provider?: string; status?: number; responseOk?: boolean; hourlySummary?: string; selectedProbability?: number; target?: string; index?: number; selectedTime?: string; branch?: string; error?: string };
 
 const CACHE_KEY = "careerflow-weather-cache";
 const CACHE_TTL = 6 * 60 * 60 * 1000;
 
 type Cached = { fetchedAt: number; expiresAt: number; provider: "jma" | "open-meteo-general"; value: WeatherResult };
 const WEATHER_CACHE_VERSION = "weather:jma:v2";
+const NETWORK_VERIFY_KEY = "careerflow-weather-jma-network-verified";
 
 function cacheKey(place: string, date: string) {
   return `${place.trim().toLowerCase()}|${date}`;
@@ -52,7 +53,8 @@ export async function getWeatherByCoordinates(latitude: number, longitude: numbe
   const key = `${WEATHER_CACHE_VERSION}:${latitude.toFixed(4)}:${longitude.toFixed(4)}:${hour}:Asia/Tokyo`;
   let cache: Record<string, Cached> = {};
   try { cache = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}"); } catch { cache = {}; }
-  if (cache[key] && Date.now() < cache[key].expiresAt) { onTrace?.({ cacheHit: true, cacheKey: key, cachedAt: cache[key].fetchedAt, expiresAt: cache[key].expiresAt, provider: cache[key].provider, branch: "cache" }); return cache[key].value; }
+  const forceNetwork = localStorage.getItem(NETWORK_VERIFY_KEY) !== "true";
+  if (!forceNetwork && cache[key] && Date.now() < cache[key].expiresAt) { onTrace?.({ cacheHit: true, cacheKey: key, cachedAt: cache[key].fetchedAt, expiresAt: cache[key].expiresAt, provider: cache[key].provider, branch: "cache" }); return cache[key].value; }
   try {
     const params = `latitude=${latitude}&longitude=${longitude}&hourly=weather_code,temperature_2m,precipitation_probability&timezone=Asia%2FTokyo&forecast_days=7`;
     const urls = [`https://api.open-meteo.com/v1/jma?${params}`, `https://api.open-meteo.com/v1/forecast?${params}`];
@@ -74,12 +76,13 @@ export async function getWeatherByCoordinates(latitude: number, longitude: numbe
     }
     if (!hourly) throw new Error("JMA and forecast endpoints failed");
     const index = hourly.time.findIndex((value: string) => value === `${hour}:00` || value.startsWith(`${hour}:00`));
-    onTrace?.({ url: selectedUrl, hourlySummary: JSON.stringify(hourly.time?.slice(0, 3)), target: `${hour}:00`, index, selectedTime: index >= 0 ? hourly.time[index] : undefined, branch: index < 0 ? "hour-index-miss" : "matched" });
+    onTrace?.({ url: selectedUrl, hourlySummary: JSON.stringify({ time: hourly.time?.slice(0, 3), precipitation_probability: hourly.precipitation_probability?.slice(0, 3) }), selectedProbability: index >= 0 ? hourly.precipitation_probability[index] : undefined, target: `${hour}:00`, index, selectedTime: index >= 0 ? hourly.time[index] : undefined, branch: index < 0 ? "hour-index-miss" : "matched" });
     if (index < 0) return undefined;
     const provider: "jma" | "open-meteo-general" = selectedUrl.includes("/jma?") ? "jma" : "open-meteo-general";
     const fetchedAt = Date.now();
     const value = { temperature: Math.round(hourly.temperature_2m[index]), precipitation: Math.round(hourly.precipitation_probability[index] || 0), code: hourly.weather_code[index], forecastTime: hourly.time[index], provider };
     cache[key] = { fetchedAt, expiresAt: fetchedAt + CACHE_TTL, provider, value };
+    if (provider === "jma") localStorage.setItem(NETWORK_VERIFY_KEY, "true");
     onTrace?.({ cacheKey: key, cachedAt: fetchedAt, expiresAt: fetchedAt + CACHE_TTL, provider });
     localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
     return value;
