@@ -10,6 +10,8 @@ import {
 } from "react";
 import { createBackup, type BackupSnapshot } from "./backups";
 import { getWeather, getWeatherByCoordinates, type WeatherResult } from "./weather";
+import prefectureData from "./data/japan-prefectures.json";
+import municipalityData from "./data/japan-municipalities.json";
 import {
   Database,
   DatabaseArrowDown,
@@ -295,8 +297,8 @@ const stages: Stage[] = [
   "rejected",
   "withdrawn",
 ];
-const prefectures = ["北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県", "茨城県", "栃木県", "群馬県", "埼玉県", "千葉県", "東京都", "神奈川県", "新潟県", "富山県", "石川県", "福井県", "山梨県", "長野県", "岐阜県", "静岡県", "愛知県", "三重県", "滋賀県", "京都府", "大阪府", "兵庫県", "奈良県", "和歌山県", "鳥取県", "島根県", "岡山県", "広島県", "山口県", "徳島県", "香川県", "愛媛県", "高知県", "福岡県", "佐賀県", "長崎県", "熊本県", "大分県", "宮崎県", "鹿児島県", "沖縄県"];
-const cityOptions: Record<string, string[]> = { "東京都": ["新宿区", "渋谷区", "千代田区", "中央区", "港区", "豊島区", "品川区", "文京区", "台東区", "墨田区"], "大阪府": ["大阪市", "堺市", "吹田市", "豊中市"], "神奈川県": ["横浜市", "川崎市"], "埼玉県": ["さいたま市", "川越市"], "千葉県": ["千葉市", "船橋市"] };
+const prefectures = prefectureData as string[];
+const cityOptions = Object.fromEntries(Object.entries(municipalityData).map(([prefecture, municipalities]) => [prefecture, (municipalities as { name: string }[]).map((x) => x.name)])) as Record<string, string[]>;
 const locationCoordinates: Record<string, [number, number]> = { "東京都渋谷区": [35.6618, 139.7041], "東京都新宿区": [35.6938, 139.7034], "東京都豊島区": [35.7263, 139.7169], "東京都千代田区": [35.6938, 139.7532], "東京都港区": [35.6581, 139.7516], "大阪府大阪市": [34.6937, 135.5023], "神奈川県横浜市": [35.4437, 139.638], "埼玉県さいたま市": [35.8617, 139.6455], "千葉県千葉市": [35.6073, 140.1063] };
 const funnelStages: FunnelStage[] = ["funnelInterested", "funnelDocuments", "funnelAptitude", "funnelInterview", "funnelFinal", "funnelOffer"];
 type FunnelStage = "funnelInterested" | "funnelDocuments" | "funnelAptitude" | "funnelInterview" | "funnelFinal" | "funnelOffer";
@@ -1178,7 +1180,7 @@ export default function App() {
         prefecture: String(f.get("prefecture") || base?.prefecture || "") || undefined,
         city: String(f.get("city") || base?.city || "") || undefined,
         detailLocation: String(f.get("detailLocation") || base?.detailLocation || ""),
-        locationLabel: [String(f.get("prefecture") || base?.prefecture || ""), String(f.get("city") || base?.city || ""), String(f.get("detailLocation") || base?.detailLocation || "")].filter(Boolean).join(" "),
+        locationLabel: String(f.get("manualLocation") || "") || [String(f.get("prefecture") || base?.prefecture || ""), String(f.get("city") || base?.city || ""), String(f.get("detailLocation") || base?.detailLocation || "")].filter(Boolean).join(" "),
         latitude: locationCoordinates[`${String(f.get("prefecture") || base?.prefecture || "")}${String(f.get("city") || base?.city || "")}`]?.[0] || base?.latitude,
         longitude: locationCoordinates[`${String(f.get("prefecture") || base?.prefecture || "")}${String(f.get("city") || base?.city || "")}`]?.[1] || base?.longitude,
         notes: String(f.get("notes")),
@@ -2840,7 +2842,7 @@ function EventForm({
         <fieldset className="wide event-mode-field"><legend>{ja ? "開催形式" : "举办形式"}</legend><div className="mode-options">
           {(["offline", "online", "undecided"] as const).map((value) => { const inputId = `event-mode-${value}`; return <label key={value} htmlFor={inputId} className={mode === value ? "selected" : ""}><input id={inputId} type="radio" name="eventMode" value={value} checked={mode === value} onChange={() => setMode(value)} /><span>{value === "offline" ? (ja ? "対面" : "线下") : value === "online" ? (ja ? "オンライン" : "线上") : (ja ? "未定" : "未确定")}</span></label>; })}
         </div></fieldset>
-        {mode === "offline" && <><label><span>{ja ? "都道府県" : "都道府县"}</span><select name="prefecture" value={prefecture} onChange={(e) => { setPrefecture(e.target.value); setCity(""); }}><option value="">{ja ? "選択してください" : "请选择"}</option>{prefectures.map((value) => <option key={value} value={value}>{value}</option>)}</select></label><label><span>{ja ? "市区町村／主要エリア" : "市区町村／主要区域"}</span><select name="city" value={city} onChange={(e) => setCity(e.target.value)}><option value="">{ja ? "選択してください" : "请选择"}</option>{(cityOptions[prefecture] || []).map((value) => <option key={value} value={value}>{value}</option>)}</select></label><label className="wide"><span>{ja ? "詳細な場所" : "详细地点"}</span><input name="detailLocation" defaultValue={initial?.detailLocation} placeholder={ja ? "渋谷駅、○○ビル 3F" : "渋谷站、○○大楼 3F"} /></label></>}
+        {mode === "offline" && <><label><span>{ja ? "都道府県" : "都道府县"}</span><select name="prefecture" value={prefecture} onChange={(e) => { setPrefecture(e.target.value); setCity(""); }}><option value="">{ja ? "選択してください" : "请选择"}</option>{prefectures.map((value) => <option key={value} value={value}>{value}</option>)}<option value="__other">{ja ? "その他／手入力" : "其他／手动输入"}</option></select></label>{prefecture === "__other" ? <label className="wide"><span>{ja ? "住所" : "完整地址"}</span><input name="manualLocation" defaultValue={initial?.locationLabel || initial?.location} /></label> : <><label><span>{ja ? "市区町村／主要エリア" : "市区町村／主要区域"}</span><select name="city" value={city} onChange={(e) => setCity(e.target.value)}><option value="">{ja ? "選択してください" : "请选择"}</option>{(cityOptions[prefecture] || []).map((value) => <option key={value} value={value}>{value}</option>)}</select></label><label className="wide"><span>{ja ? "詳細な場所" : "详细地点"}</span><input name="detailLocation" defaultValue={initial?.detailLocation} placeholder={ja ? "渋谷駅、○○ビル 3F" : "渋谷站、○○大楼 3F"} /></label></>}</>}
         {mode === "online" && <><label><span>{ja ? "オンラインプラットフォーム" : "线上平台"}</span><select name="onlinePlatform" defaultValue={initial?.onlinePlatform || ""}><option value="">—</option>{["Zoom", "Microsoft Teams", "Google Meet", ja ? "企業専用システム" : "企业专用系统", ja ? "電話" : "电话", ja ? "その他" : "其他"].map((x) => <option key={x} value={x}>{x}</option>)}</select></label><label><span>{ja ? "会議リンク" : "会议链接"}</span><input name="meetingUrl" type="url" defaultValue={initial?.meetingUrl || ""} /></label></>}
         <label className="wide">
           <span>{t.notes}</span>
