@@ -302,7 +302,7 @@ const stages: Stage[] = [
 ];
 const prefectures = prefectureData as string[];
 const cityOptions = Object.fromEntries(Object.entries(municipalityData).map(([prefecture, municipalities]) => [prefecture, (municipalities as { name: string }[]).map((x) => x.name)])) as Record<string, string[]>;
-const locationCoordinates: Record<string, [number, number]> = { "東京都渋谷区": [35.6618, 139.7041], "東京都新宿区": [35.6938, 139.7034], "東京都豊島区": [35.7263, 139.7169], "東京都千代田区": [35.6938, 139.7532], "東京都港区": [35.6581, 139.7516], "大阪府大阪市": [34.6937, 135.5023], "神奈川県横浜市": [35.4437, 139.638], "埼玉県さいたま市": [35.8617, 139.6455], "千葉県千葉市": [35.6073, 140.1063] };
+const locationCoordinates: Record<string, [number, number]> = { "東京都渋谷区": [35.6618, 139.7041], "東京都新宿区": [35.6938, 139.7034], "東京都豊島区": [35.7263, 139.7169], "東京都千代田区": [35.6938, 139.7532], "東京都港区": [35.6581, 139.7516], "栃木県鹿沼市": [36.5671, 139.7454], "大阪府大阪市": [34.6937, 135.5023], "神奈川県横浜市": [35.4437, 139.638], "埼玉県さいたま市": [35.8617, 139.6455], "千葉県千葉市": [35.6073, 140.1063] };
 const funnelStages: FunnelStage[] = ["funnelInterested", "funnelDocuments", "funnelAptitude", "funnelInterview", "funnelFinal", "funnelOffer"];
 type FunnelStage = "funnelInterested" | "funnelDocuments" | "funnelAptitude" | "funnelInterview" | "funnelFinal" | "funnelOffer";
 function funnelStageFor(stage: Company["stage"]): FunnelStage | null {
@@ -369,7 +369,7 @@ const tr = {
     inProgress: "选考中",
     dueWeek: "本周截止",
     waiting: "等待结果",
-    next: "下一项重要日程",
+    next: "近期日程",
     deadlines: "本周截止",
     funnel: "选考进度",
     results: "等待结果",
@@ -494,7 +494,7 @@ const tr = {
     inProgress: "選考中",
     dueWeek: "今週の締切",
     waiting: "結果待ち",
-    next: "次の重要日程",
+    next: "今後の予定",
     deadlines: "今週の締切",
     funnel: "選考進捗",
     results: "結果待ち",
@@ -1021,6 +1021,7 @@ export default function App() {
       })),
   ].sort((a, b) => a.at.localeCompare(b.at));
   const next = schedules[0];
+  const upcoming = schedules.filter((x) => x.kind === "event" && new Date(x.at).getTime() >= Date.now());
   const toggle = (x: string) =>
     setData((d) => ({
       ...d,
@@ -1395,12 +1396,15 @@ export default function App() {
                 due,
                 waiting,
                 next,
+                upcoming,
                 focus,
                 byId,
                 toggle,
                 focusToggle,
                 open,
                 setView,
+                setEditEvent,
+                setForm,
               }}
             />
           )}
@@ -1822,12 +1826,15 @@ function Dashboard({
   due,
   waiting,
   next,
+  upcoming,
   focus,
   byId,
   toggle,
   focusToggle,
   open,
   setView,
+  setEditEvent,
+  setForm,
 }: any) {
   const openFunnel = (stage: FunnelStage) => {
     localStorage.setItem("careerflow-company-stage-filter", stage);
@@ -1859,20 +1866,22 @@ function Dashboard({
           </div>
           <section className="entity-card next-class">
             <Title>{t.next}</Title>
-            {next ? (
-              <div>
-                <i style={{ background: next.company?.color || "#555555" }} />
+            {upcoming.length ? (
+              <div className="dashboard-upcoming-list">
+                {upcoming.slice(0, 3).map((item: any) => <button type="button" className="dashboard-upcoming-item" key={item.id} onClick={() => { setEditEvent(item.event); setForm("schedule"); }}>
+                <i style={{ background: item.company?.color || "#555555" }} />
                 <div>
-                  <h3>{next.title || next.company?.name || t.untitledSchedule}</h3>
+                  <h3>{item.title || item.company?.name || t.untitledSchedule}</h3>
                   <p>
-                    {t[next.type]} · {when(next.at)}
+                    {t[item.type]} · {when(item.at)}
                   </p>
                   <span>
-                    {getEventModeLabel(next.event, t.language === "言語" ? "ja" : "zh")}{next.event?.eventMode === "offline" && formatScheduleLocation(next.event) ? ` · ${formatScheduleLocation(next.event)}` : next.event?.eventMode === "online" && next.event.onlinePlatform ? ` · ${next.event.onlinePlatform}` : ""} ·{" "}
-                    {relative(next.at, t)}
+                    {getEventModeLabel(item.event, t.language === "言語" ? "ja" : "zh")}{item.event?.eventMode === "offline" && formatScheduleLocation(item.event) ? ` · ${formatScheduleLocation(item.event)}` : item.event?.eventMode === "online" && item.event.onlinePlatform ? ` · ${item.event.onlinePlatform}` : ""} · {relative(item.at, t)}
                   </span>
-                  <WeatherLine location={next.event?.eventMode === "offline" ? formatScheduleLocation(next.event) : undefined} latitude={next.event?.latitude} longitude={next.event?.longitude} date={next.at} locale={t.language === "言語" ? "ja" : "zh"} />
+                  <WeatherLine location={item.event?.eventMode === "offline" ? formatScheduleLocation(item.event) : undefined} latitude={item.event?.latitude} longitude={item.event?.longitude} date={item.at} locale={t.language === "言語" ? "ja" : "zh"} />
                 </div>
+                </button>)}
+                {upcoming.length > 3 && <button type="button" className="text-button" onClick={() => setView("schedule")}>{t.language === "言語" ? "すべての予定を見る" : "查看全部日程"}</button>}
               </div>
             ) : (
             <Empty t={t} kind="schedule" open={() => open("schedule")} />
