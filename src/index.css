@@ -2939,9 +2939,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   --bottom-nav-active-border: rgba(255,255,255,.12);
 }
 @media (max-width: 767px) {
+  :root { --page-bg: #f7f7f8; }
+  html[data-theme="dark"] { --page-bg: #1f2328; }
+  html, body, #root { min-height: 100%; height: auto; margin: 0; background: var(--page-bg); }
   .app-shell { min-height: 100dvh; height: auto; }
   .student-app { min-height: 0; height: auto; }
-  .career-app .workspace { height: auto; min-height: 0; padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+  .app-shell, .student-app, .career-app, .career-app .workspace { background: var(--page-bg); }
+  .career-app .workspace { height: auto; min-height: 0; padding-bottom: calc(96px + env(safe-area-inset-bottom)); box-sizing: border-box; }
   [data-testid="mobile-bottom-nav"] {
     position: fixed !important;
     left: 22px !important;
