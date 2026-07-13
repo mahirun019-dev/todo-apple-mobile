@@ -22,6 +22,7 @@ import {
   BriefcaseBusiness,
   Building2,
   CalendarDays,
+  CalendarClock,
   Check,
   ChevronRight,
   ChevronDown,
@@ -33,8 +34,10 @@ import {
   CloudSun,
   ExternalLink,
   FileJson,
+  FileText,
   Globe,
   Home,
+  Hourglass,
   MoreHorizontal,
   Menu,
   Monitor,
@@ -375,6 +378,10 @@ const tr = {
     deadlines: "本周截止",
     funnel: "选考进度",
     results: "结果待办列表",
+    actionRequired: "待处理", actionRequiredList: "待处理事项", viewAll: "查看全部",
+    actionDeadline: "截止", actionSchedule: "日程", actionWaiting: "等待结果", actionPreparation: "准备", actionMaterial: "材料",
+    dueToday: "今天截止", dueTomorrow: "明天截止", overdueLabel: "已逾期",
+    waitingDays: (n: number) => `等待结果第${n}天`, noActions: "暂无需要处理的事项",
     focus: "本周准备重点",
     funnelInterested: "关注中",
     funnelDocuments: "材料选考",
@@ -500,6 +507,10 @@ const tr = {
     deadlines: "今週の締切",
     funnel: "選考進捗",
     results: "結果待ち一覧",
+    actionRequired: "要対応", actionRequiredList: "要対応一覧", viewAll: "すべて見る",
+    actionDeadline: "締切", actionSchedule: "日程", actionWaiting: "結果待ち", actionPreparation: "準備", actionMaterial: "書類",
+    dueToday: "今日締切", dueTomorrow: "明日締切", overdueLabel: "期限超過",
+    waitingDays: (n: number) => `結果待ち ${n}日目`, noActions: "現在、対応が必要な項目はありません",
     focus: "今週の準備重点",
     funnelInterested: "気になる",
     funnelDocuments: "書類選考",
@@ -625,6 +636,10 @@ const tr = {
     deadlines: "Due this week",
     funnel: "Application funnel",
     results: "Waiting for result",
+    actionRequired: "Needs attention", actionRequiredList: "Needs attention", viewAll: "View all",
+    actionDeadline: "Deadline", actionSchedule: "Schedule", actionWaiting: "Waiting", actionPreparation: "Preparation", actionMaterial: "Documents",
+    dueToday: "Due today", dueTomorrow: "Due tomorrow", overdueLabel: "Overdue",
+    waitingDays: (n: number) => `Waiting ${n} days`, noActions: "No items need attention right now",
     focus: "Weekly priorities",
     funnelInterested: "Interested",
     funnelDocuments: "Document Screening",
@@ -1848,31 +1863,24 @@ function Dashboard({
     localStorage.setItem("careerflow-company-stage-filter", stage);
     setView("companies");
   };
+  const daysUntil = (at: string) => Math.ceil((new Date(at).getTime() - Date.now()) / 864e5);
   const actionItems = [
-    ...due.map((x: any) => ({
-      id: `due-${x.id}`,
-      label: t[x.type] || ("isWeeklyFocus" in x ? t.preparations : t.documents),
-      company: byId[x.companyId || ""]?.name || t.general,
-      detail: x.title,
-      at: x.dueAt,
-    })),
-    ...upcoming.map((x: any) => ({
-      id: `event-${x.id}`,
-      label: t[x.type] || t.schedule,
-      company: x.company?.name || t.general,
-      detail: x.event?.eventMode === "online" ? t.online : t.offline,
-      at: x.at,
-    })),
-    ...waiting.map((x: any) => ({
-      id: `waiting-${x.id}`,
-      label: t.waiting,
-      company: x.name,
-      detail: `${Math.max(1, Math.floor((Date.now() - x.updatedAt) / 864e5))}${t.days}`,
-      at: undefined,
-    })),
-  ].slice(0, 3);
-  const actionTitle = t.language === "言語" ? "要対応" : t.language === "Language" ? "Needs attention" : "要处理";
-  const actionMore = t.language === "言語" ? "すべて見る" : t.language === "Language" ? "View all" : "查看全部";
+    ...due.map((x: any) => {
+      const days = daysUntil(x.dueAt);
+      const isMaterial = "isWeeklyFocus" in x;
+      return { id: `due-${x.id}`, kind: isMaterial ? "material" : "preparation", label: isMaterial ? t.actionMaterial : t.actionPreparation, company: byId[x.companyId || ""]?.name || t.general, detail: x.title, at: x.dueAt, urgency: days <= 0 ? "urgent" : days === 1 ? "warning" : "normal", meta: days < 0 ? t.overdueLabel : days === 0 ? t.dueToday : days === 1 ? t.dueTomorrow : when(x.dueAt) };
+    }),
+    ...upcoming.map((x: any) => ({ id: `event-${x.id}`, kind: "schedule", label: t.actionSchedule, company: x.company?.name || t.general, detail: t[x.type] || t.schedule, at: x.at, urgency: daysUntil(x.at) <= 0 ? "urgent" : daysUntil(x.at) === 1 ? "warning" : "normal", meta: when(x.at) })),
+    ...waiting.map((x: any) => {
+      const days = Math.max(1, Math.floor((Date.now() - x.updatedAt) / 864e5));
+      return days > 7 ? { id: `waiting-${x.id}`, kind: "waiting", label: t.actionWaiting, company: x.name, detail: t.waitingDays(days), at: undefined, urgency: days >= 14 ? "urgent" : "warning", meta: t.waitingDays(days) } : null;
+    }).filter(Boolean),
+  ].sort((a: any, b: any) => {
+    const priority: Record<string, number> = { urgent: 0, warning: 1, normal: 2 };
+    return priority[a.urgency] - priority[b.urgency] || String(a.at || "9999").localeCompare(String(b.at || "9999"));
+  });
+  const actionTitle = t.actionRequired;
+  const actionMore = t.viewAll;
   return (
     <>
       <div className="page-head">
@@ -1923,14 +1931,14 @@ function Dashboard({
           {actionItems.length > 0 && <section className="entity-card mobile-action-required">
             <Title>{actionTitle}</Title>
             <div className="mobile-action-list">
-              {actionItems.map((item) => <article key={item.id} className="mobile-action-item">
-                <span className="mobile-action-kind">{item.label}</span>
+              {actionItems.slice(0, 3).map((item: any) => <article key={item.id} className={`mobile-action-item ${item.urgency}`}>
+                <span className="mobile-action-kind"><span className="mobile-action-icon">{item.kind === "material" ? <FileText /> : item.kind === "preparation" ? <ListChecks /> : item.kind === "schedule" ? <CalendarClock /> : <Hourglass />}</span>{item.label}</span>
                 <strong>{item.company}</strong>
                 <p>{item.detail}</p>
-                <time>{item.at ? when(item.at) : item.detail}</time>
+                <time>{item.meta}</time>
               </article>)}
             </div>
-            {(due.length + upcoming.length + waiting.length) > 3 && <button type="button" className="text-button mobile-action-more" onClick={() => setView("schedule")}>{actionMore}</button>}
+            {actionItems.length > 3 && <button type="button" className="text-button mobile-action-more" onClick={() => { localStorage.setItem("careerflow-action-filter", "required"); setView("schedule"); }}>{actionMore}</button>}
           </section>}
           {due.length > 0 && <section>
             <Title
