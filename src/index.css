@@ -4132,13 +4132,30 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     min-height: 100dvh;
   }
 
-  .app-shell {
-    background-color: var(--app-page-bg) !important;
-  }
+.app-shell {
+  background-color: var(--app-page-bg) !important;
+}
 
   .app-shell > .student-app,
   .app-shell > .career-app,
   .app-shell main {
     background-color: transparent !important;
   }
+}
+
+.layout-diagnostics {
+  position: fixed;
+  z-index: 3000;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  max-height: 42vh;
+  margin: 0;
+  padding: 8px;
+  overflow: auto;
+  color: #111;
+  background: rgba(255, 247, 196, .96);
+  border: 2px solid #9a6700;
+  font: 10px/1.25 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: pre-wrap;
 }
