@@ -1345,7 +1345,6 @@ export default function App() {
   };
   return (
     <div className="app-shell" data-app-shell="true">
-      <div className="build-diagnostic">Build: bg-fix-20260713-1454</div>
       <div className={`student-app career-app ${settings ? "mobile-menu-open" : ""}`}>
         <aside className="sidebar panel">
           <Brand icon={icon} showIcon={false} />

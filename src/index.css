@@ -4142,18 +4142,3 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     background-color: transparent !important;
   }
 }
-
-/* Temporary deployment/selector diagnostic. Remove after the live check. */
-[data-app-shell="true"] {
-  background: #ff00ff !important;
-}
-.build-diagnostic {
-  position: fixed;
-  right: 8px;
-  bottom: 8px;
-  z-index: 2000;
-  padding: 4px 6px;
-  color: #fff;
-  background: #9b1c31;
-  font: 12px/1.2 monospace;
-}
