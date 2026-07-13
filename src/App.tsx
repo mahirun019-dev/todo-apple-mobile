@@ -946,6 +946,11 @@ export default function App() {
   const firstDataRender = useRef(true);
   const t = tr[locale];
   const hasOpenOverlay = Boolean(form || settings || menu || confirm || deleteEvent || recordPickerOpen || companyFilterOpen);
+  useEffect(() => {
+    if (hasOpenOverlay) document.body.dataset.overlayOpen = "true";
+    else delete document.body.dataset.overlayOpen;
+    return () => { delete document.body.dataset.overlayOpen; };
+  }, [hasOpenOverlay]);
   useEffect(() => localStorage.setItem(KEY, JSON.stringify(data)), [data]);
   useEffect(() => {
     if (firstDataRender.current) {
