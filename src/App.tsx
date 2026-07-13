@@ -145,6 +145,10 @@ type Event = {
   stage: Stage;
   startsAt: string;
   locationOrOnline: string;
+  eventMode?: "offline" | "online" | "undecided";
+  location?: string;
+  onlinePlatform?: string;
+  meetingUrl?: string;
   notes: string;
   createdAt: number;
 };
@@ -783,7 +787,11 @@ function normalize(x: any): Data {
         ? "other_document"
         : m.documentType,
     })),
-    events: x.events || [],
+    events: (x.events || []).map((event: Event) => {
+      const legacy = String(event.locationOrOnline || "");
+      const mode = event.eventMode || (/zoom|teams|meet|online|オンライン|线上|https?:\/\//i.test(legacy) ? "online" : "undecided");
+      return { ...event, eventMode: mode, location: event.location || (mode === "offline" ? legacy : ""), onlinePlatform: event.onlinePlatform || (mode === "online" ? legacy : ""), meetingUrl: event.meetingUrl || (/https?:\/\//i.test(legacy) ? legacy : "") };
+    }),
     interviews: (x.interviews || []).map((v: InterviewRecord) => ({ ...v, category: "interview" })),
     preparations: (x.preparations || []).map((v: Preparation) => ({ ...v, category: "preparation" })),
     focusMinutes: x.focusMinutes || 0,
@@ -1146,7 +1154,11 @@ export default function App() {
         type: f.get("type") as ItemType,
         stage: f.get("stage") as Stage,
         startsAt: String(f.get("startsAt")),
-        locationOrOnline: String(f.get("place")),
+        locationOrOnline: String(f.get("location") || f.get("onlinePlatform") || base?.locationOrOnline || ""),
+        eventMode: String(f.get("eventMode") || base?.eventMode || "undecided") as Event["eventMode"],
+        location: String(f.get("location") || base?.location || ""),
+        onlinePlatform: String(f.get("onlinePlatform") || base?.onlinePlatform || ""),
+        meetingUrl: String(f.get("meetingUrl") || base?.meetingUrl || ""),
         notes: String(f.get("notes")),
         createdAt: base?.createdAt || Date.now(),
       };
@@ -1830,7 +1842,7 @@ function Dashboard({
                     {next.company?.locationOrOnline || t.online} ·{" "}
                     {relative(next.at, t)}
                   </span>
-                  <WeatherLine location={next.company?.locationOrOnline || next.locationOrOnline} date={next.at} locale={t.language === "言語" ? "ja" : "zh"} />
+                  <WeatherLine location={next.eventMode === "offline" ? (next.location || next.company?.locationOrOnline) : undefined} date={next.at} locale={t.language === "言語" ? "ja" : "zh"} />
                 </div>
               </div>
             ) : (
@@ -1998,6 +2010,11 @@ function WeatherLine({ location, date, locale = "zh" }: { location?: string; dat
   if (!weather) return null;
   const Icon = weather.code >= 71 && weather.code <= 86 ? CloudSnow : weather.code >= 51 || weather.code >= 80 ? CloudRain : weather.code >= 1 ? CloudSun : Cloud;
   return <span className="weather-line"><Icon aria-hidden="true" />{weather.temperature}℃ · {locale === "ja" ? "降水確率" : "降水概率"} {weather.precipitation}%</span>;
+}
+function eventModeText(event: Event | undefined, ja: boolean) {
+  if (event?.eventMode === "offline") return `${ja ? "対面" : "线下"}${event.location ? ` · ${event.location}` : ""}`;
+  if (event?.eventMode === "online") return `${ja ? "オンライン" : "线上"}${event.onlinePlatform ? ` · ${event.onlinePlatform}` : ""}`;
+  return ja ? "形式未定" : "形式未确定";
 }
 function scheduleDisplayTitle(title: string | undefined, type: string | undefined, t: any) {
   return title?.trim() || (type && t[type]) || t.untitledSchedule;
@@ -2264,7 +2281,7 @@ function Schedule({
                   <span>
                     {x.company?.name || t.general} · {t[x.type]}
                   </span>
-                  {x.kind === "event" && <WeatherLine location={x.event.locationOrOnline || x.company?.locationOrOnline} date={x.at} locale={t.language === "言語" ? "ja" : "zh"} />}
+                  {x.kind === "event" && <><span>{eventModeText(x.event, t.language === "言語")}</span><WeatherLine location={x.event.eventMode === "offline" ? x.event.location : undefined} date={x.at} locale={t.language === "言語" ? "ja" : "zh"} />{x.event.meetingUrl && <a className="meeting-link" href={x.event.meetingUrl} target="_blank" rel="noopener noreferrer">{t.language === "言語" ? "会議リンクを開く" : "打开会议链接"}</a>}</>}
                 </div>
                 <ChevronRight />
               </button>
@@ -2580,10 +2597,6 @@ function CompanyForm({
           />
         </label>
         <label>
-          <span>{t.place}</span>
-          <input name="place" defaultValue={initial?.locationOrOnline} />
-        </label>
-        <label>
           <span>{t.url}</span>
           <input name="url" type="url" defaultValue={initial?.careersUrl} />
         </label>
@@ -2740,6 +2753,8 @@ function EventForm({
   save: any;
   remove: (event: Event) => void;
 }) {
+  const [mode, setMode] = useState<Event["eventMode"]>(initial?.eventMode || "undecided");
+  const ja = t.language === "言語";
   return (
     <Modal title={initial ? t.edit : t.addEvent} close={close}>
       <form className="form-grid" onSubmit={save}>
@@ -2791,10 +2806,11 @@ function EventForm({
             required
           />
         </label>
-        <label>
-          <span>{t.place}</span>
-          <input name="place" defaultValue={initial?.locationOrOnline} />
-        </label>
+        <fieldset className="wide event-mode-field"><legend>{ja ? "開催形式" : "举办形式"}</legend><div className="mode-options">
+          {(["offline", "online", "undecided"] as const).map((value) => <label key={value} className={mode === value ? "selected" : ""}><input type="radio" name="eventMode" value={value} checked={mode === value} onChange={() => setMode(value)} /><span>{value === "offline" ? (ja ? "対面" : "线下") : value === "online" ? (ja ? "オンライン" : "线上") : (ja ? "未定" : "未确定")}</span></label>)}
+        </div></fieldset>
+        {mode === "offline" && <label className="wide"><span>地点</span><input name="location" defaultValue={initial?.location || (initial?.eventMode === "offline" ? initial.locationOrOnline : "")} placeholder={ja ? "会場・住所・最寄り駅を入力" : "请输入会场、地址或车站"} /></label>}
+        {mode === "online" && <><label><span>{ja ? "オンラインプラットフォーム" : "线上平台"}</span><select name="onlinePlatform" defaultValue={initial?.onlinePlatform || ""}><option value="">—</option>{["Zoom", "Microsoft Teams", "Google Meet", ja ? "企業専用システム" : "企业专用系统", ja ? "電話" : "电话", ja ? "その他" : "其他"].map((x) => <option key={x} value={x}>{x}</option>)}</select></label><label><span>{ja ? "会議リンク" : "会议链接"}</span><input name="meetingUrl" type="url" defaultValue={initial?.meetingUrl || ""} /></label></>}
         <label className="wide">
           <span>{t.notes}</span>
           <textarea name="notes" defaultValue={initial?.notes} />
