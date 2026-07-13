@@ -1848,6 +1848,31 @@ function Dashboard({
     localStorage.setItem("careerflow-company-stage-filter", stage);
     setView("companies");
   };
+  const actionItems = [
+    ...due.map((x: any) => ({
+      id: `due-${x.id}`,
+      label: t[x.type] || ("isWeeklyFocus" in x ? t.preparations : t.documents),
+      company: byId[x.companyId || ""]?.name || t.general,
+      detail: x.title,
+      at: x.dueAt,
+    })),
+    ...upcoming.map((x: any) => ({
+      id: `event-${x.id}`,
+      label: t[x.type] || t.schedule,
+      company: x.company?.name || t.general,
+      detail: x.event?.eventMode === "online" ? t.online : t.offline,
+      at: x.at,
+    })),
+    ...waiting.map((x: any) => ({
+      id: `waiting-${x.id}`,
+      label: t.waiting,
+      company: x.name,
+      detail: `${Math.max(1, Math.floor((Date.now() - x.updatedAt) / 864e5))}${t.days}`,
+      at: undefined,
+    })),
+  ].slice(0, 3);
+  const actionTitle = t.language === "言語" ? "要対応" : t.language === "Language" ? "Needs attention" : "要处理";
+  const actionMore = t.language === "言語" ? "すべて見る" : t.language === "Language" ? "View all" : "查看全部";
   return (
     <>
       <div className="page-head">
@@ -1895,6 +1920,18 @@ function Dashboard({
             <Empty t={t} kind="schedule" open={() => open("schedule")} />
             )}
           </section>
+          {actionItems.length > 0 && <section className="entity-card mobile-action-required">
+            <Title>{actionTitle}</Title>
+            <div className="mobile-action-list">
+              {actionItems.map((item) => <article key={item.id} className="mobile-action-item">
+                <span className="mobile-action-kind">{item.label}</span>
+                <strong>{item.company}</strong>
+                <p>{item.detail}</p>
+                <time>{item.at ? when(item.at) : item.detail}</time>
+              </article>)}
+            </div>
+            {(due.length + upcoming.length + waiting.length) > 3 && <button type="button" className="text-button mobile-action-more" onClick={() => setView("schedule")}>{actionMore}</button>}
+          </section>}
           {due.length > 0 && <section>
             <Title
               className="deadline-title"

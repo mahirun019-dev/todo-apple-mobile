@@ -2605,6 +2605,37 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   }
 }
 
+.mobile-action-required { display: none; }
+@media (max-width: 767px) {
+  .mobile-action-required {
+    display: block;
+  }
+
+  .dashboard-sidebar > .entity-card:last-child {
+    display: none;
+  }
+
+  .mobile-action-list {
+    display: grid;
+    gap: 0;
+  }
+
+  .mobile-action-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 3px 8px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .mobile-action-item:last-child { border-bottom: 0; }
+  .mobile-action-kind { color: var(--text-secondary); font-size: 12px; }
+  .mobile-action-item strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+  .mobile-action-item p { grid-column: 1 / 3; margin: 0; color: var(--text-secondary); font-size: 12px; }
+  .mobile-action-item time { color: var(--text-secondary); font-size: 12px; white-space: nowrap; }
+  .mobile-action-more { display: block; margin: 10px auto 0; }
+}
+
 @media (min-width: 1024px) {
   .company-grid > .empty-small,
   .timeline > .empty-small {
