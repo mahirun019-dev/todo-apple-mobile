@@ -2531,6 +2531,17 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
 }
 
 @media (max-width: 767px) {
+  [data-testid="mobile-bottom-nav"] {
+    z-index: 100 !important;
+  }
+
+  .modal-layer,
+  .company-filter-sheet-layer,
+  .bottom-sheet-layer,
+  .action-sheet-layer {
+    z-index: 1000;
+  }
+
   .modal-layer {
     z-index: 1000;
   }

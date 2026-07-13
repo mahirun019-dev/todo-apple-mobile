@@ -928,6 +928,7 @@ export default function App() {
     [mobileSettingsPage, setMobileSettingsPage] = useState<string | null>(null),
     [selectedDrawerItem, setSelectedDrawerItem] = useState<string | null>(null),
     [form, setForm] = useState<CreateType | null>(null),
+    [recordPickerOpen, setRecordPickerOpen] = useState(false),
     [editCompany, setEditCompany] = useState<Company>(),
     [editEvent, setEditEvent] = useState<Event>(),
     [editInterview, setEditInterview] = useState<InterviewRecord>(),
@@ -943,6 +944,7 @@ export default function App() {
     iconRef = useRef<HTMLInputElement>(null);
   const firstDataRender = useRef(true);
   const t = tr[locale];
+  const hasOpenOverlay = Boolean(form || settings || menu || confirm || deleteEvent || recordPickerOpen);
   useEffect(() => localStorage.setItem(KEY, JSON.stringify(data)), [data]);
   useEffect(() => {
     if (firstDataRender.current) {
@@ -1452,6 +1454,8 @@ export default function App() {
                 removeMaterial,
                 removePrep,
                 setEditPrep,
+                recordPickerOpen,
+                setRecordPickerOpen,
               }}
             />
           )}
@@ -1601,7 +1605,7 @@ export default function App() {
           <Toast t={t} toast={toast} close={() => setToast(undefined)} />
         )}
       </div>
-      {isMobile && !form && !settings && !menu && !confirm && !deleteEvent && createPortal(
+      {isMobile && !hasOpenOverlay && createPortal(
         <MobileNav
           view={view}
           setView={(next) => { setSelectedDrawerItem(null); setView(next); }}
@@ -2429,15 +2433,16 @@ function Materials({
   removePrep,
   setEditInterview,
   setEditPrep,
+  recordPickerOpen,
+  setRecordPickerOpen,
 }: any) {
   const matchesStatus = (completed: boolean) => filter !== "incomplete" && filter !== "completed" || filter === "completed" === completed;
   const materials = data.materials.filter((x: Material) => (filter === "all" || filter === "material" || filter === "incomplete" || filter === "completed") && (filter !== "material" || x.category === "material") && matchesStatus(!!x.completed));
   const interviews = data.interviews.filter((x: InterviewRecord) => (filter === "all" || filter === "interview" || filter === "incomplete" || filter === "completed") && (filter !== "interview" || x.category === "interview") && matchesStatus(!!x.result));
   const preps = data.preparations.filter((x: Preparation) => (filter === "all" || filter === "preparation" || filter === "incomplete" || filter === "completed") && (filter !== "preparation" || x.category === "preparation") && matchesStatus(x.completed));
-  const [createPickerOpen, setCreatePickerOpen] = useState(false);
-  const openCreateRecordPicker = () => setCreatePickerOpen(true);
+  const openCreateRecordPicker = () => setRecordPickerOpen(true);
   const chooseCreateRecord = (kind: CreateType) => {
-    setCreatePickerOpen(false);
+    setRecordPickerOpen(false);
     open(kind);
   };
   return (
@@ -2515,7 +2520,7 @@ function Materials({
           <Empty t={t} kind="materials" open={openCreateRecordPicker} />
         </>}
       </div>
-      {createPickerOpen && <CreateRecordPicker t={t} close={() => setCreatePickerOpen(false)} choose={chooseCreateRecord} />}
+      {recordPickerOpen && <CreateRecordPicker t={t} close={() => setRecordPickerOpen(false)} choose={chooseCreateRecord} />}
     </>
   );
 }
