@@ -2038,7 +2038,9 @@ function WeatherLine({ location, date, latitude, longitude, locale = "zh" }: { l
     const target = new Date(`${date.slice(0, 10)}T00:00:00+09:00`).getTime();
     if (target < Date.now() - 86400000 || target > Date.now() + 7 * 86400000) return;
     setLoading(true);
-    const request = latitude && longitude ? getWeatherByCoordinates(latitude, longitude, date.slice(0, 10)) : getWeather(place, date.slice(0, 10));
+    const scheduleHour = `${date.slice(0, 13)}:00`;
+    console.info("[weather] schedule time", { raw: date, timezone: "Asia/Tokyo", selectedHour: scheduleHour, latitude, longitude });
+    const request = latitude && longitude ? getWeatherByCoordinates(latitude, longitude, scheduleHour) : getWeather(place, scheduleHour);
     request.then((value) => { setWeather(value); setFailed(!value); }).catch((error) => { console.warn("[weather] request failed", error); setFailed(true); }).finally(() => setLoading(false));
   }, [location, date, latitude, longitude]);
   const place = location?.trim() || localStorage.getItem("careerflow-home-region")?.trim();
@@ -2048,7 +2050,7 @@ function WeatherLine({ location, date, latitude, longitude, locale = "zh" }: { l
   if (loading) return <span className="weather-line">{locale === "ja" ? "天気を読み込み中…" : "天气加载中…"}</span>;
   if (!weather || failed) return <span className="weather-line">{locale === "ja" ? "天気を取得できません" : "天气暂时无法获取"}</span>;
   const Icon = weather.code >= 71 && weather.code <= 86 ? CloudSnow : weather.code >= 51 || weather.code >= 80 ? CloudRain : weather.code >= 1 ? CloudSun : Cloud;
-  return <span className="weather-line"><Icon aria-hidden="true" />{weather.temperature}℃ · {locale === "ja" ? "降水確率" : "降水概率"} {weather.precipitation}%</span>;
+  return <span className="weather-line"><Icon aria-hidden="true" />{weather.forecastTime.slice(11, 13)}{locale === "ja" ? "時予報" : "时预报"} · {weather.temperature}℃ · {locale === "ja" ? "降水確率" : "降水概率"} {weather.precipitation}%</span>;
 }
 function eventModeText(event: Event | undefined, ja: boolean) {
   if (event?.eventMode === "offline") return `${ja ? "対面" : "线下"}${formatScheduleLocation(event) ? ` · ${formatScheduleLocation(event)}` : ""}`;
