@@ -1345,7 +1345,6 @@ export default function App() {
   };
   return (
     <div className="app-shell" data-app-shell="true">
-      <LayoutDiagnostics />
       <div className={`student-app career-app ${settings ? "mobile-menu-open" : ""}`}>
         <aside className="sidebar panel">
           <Brand icon={icon} showIcon={false} />
@@ -1603,73 +1602,6 @@ export default function App() {
   );
 }
 
-function LayoutDiagnostics() {
-  const enabled = new URLSearchParams(window.location.search).get("layout-debug") === "1";
-  const [snapshot, setSnapshot] = useState("");
-
-  useEffect(() => {
-    if (!enabled) return;
-    const measure = () => {
-      const element = (selector: string) => document.querySelector<HTMLElement>(selector);
-      const dimensions = (el: HTMLElement | null) => el ? {
-        clientHeight: el.clientHeight,
-        scrollHeight: el.scrollHeight,
-        rect: Math.round(el.getBoundingClientRect().height),
-        className: el.className,
-      } : null;
-      const bottoms = [...document.body.querySelectorAll<HTMLElement>("*")]
-        .map((el) => {
-          const rect = el.getBoundingClientRect();
-          const style = getComputedStyle(el);
-          return {
-            tag: el.tagName,
-            id: el.id,
-            className: typeof el.className === "string" ? el.className : el.getAttribute("class"),
-            top: Math.round(rect.top + window.scrollY),
-            bottom: Math.round(rect.bottom + window.scrollY),
-            height: Math.round(rect.height),
-            position: style.position,
-            display: style.display,
-            minHeight: style.minHeight,
-            heightStyle: style.height,
-            paddingBottom: style.paddingBottom,
-            marginBottom: style.marginBottom,
-            transform: style.transform,
-          };
-        })
-        .filter((item) => item.height > 0)
-        .sort((a, b) => b.bottom - a.bottom)
-        .slice(0, 15);
-      setSnapshot(JSON.stringify({
-        pathname: window.location.pathname,
-        innerHeight: window.innerHeight,
-        visualViewportHeight: window.visualViewport?.height,
-        clientHeight: document.documentElement.clientHeight,
-        scrollHeight: document.documentElement.scrollHeight,
-        bodyClientHeight: document.body.clientHeight,
-        bodyScrollHeight: document.body.scrollHeight,
-        root: dimensions(element("#root")),
-        appShell: dimensions(element(".app-shell")),
-        main: dimensions(element("main")),
-        route: dimensions(element(".workspace")),
-        pageRoot: dimensions(element(".workspace > :first-child")),
-        bottomElements: bottoms,
-      }, null, 2));
-    };
-    measure();
-    window.addEventListener("resize", measure);
-    window.visualViewport?.addEventListener("resize", measure);
-    window.addEventListener("scroll", measure, { passive: true });
-    return () => {
-      window.removeEventListener("resize", measure);
-      window.visualViewport?.removeEventListener("resize", measure);
-      window.removeEventListener("scroll", measure);
-    };
-  }, [enabled]);
-
-  if (!enabled) return null;
-  return <pre className="layout-diagnostics" aria-label="Layout diagnostics">{snapshot}</pre>;
-}
 function Brand({ icon, showIcon = true }: { icon: string; showIcon?: boolean }) {
   return (
     <div className="brand">
