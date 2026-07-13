@@ -4185,3 +4185,15 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     box-shadow: none;
   }
 }
+
+/* Dark mobile navigation: lift only inactive icon and label contrast. */
+@media (max-width: 767px) {
+  html[data-theme="dark"] [data-testid="mobile-bottom-nav"] > button:not(.active):not(.nav-add) {
+    color: rgba(220, 224, 230, 0.62) !important;
+  }
+
+  html[data-theme="dark"] [data-testid="mobile-bottom-nav"] > button:not(.active):not(.nav-add) svg {
+    color: rgba(220, 224, 230, 0.68) !important;
+    stroke: currentColor;
+  }
+}
