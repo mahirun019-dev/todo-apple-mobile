@@ -38,3 +38,23 @@ export async function getWeather(place: string, date: string): Promise<WeatherRe
     return undefined;
   }
 }
+
+export async function getWeatherByCoordinates(latitude: number, longitude: number, date: string): Promise<WeatherResult | undefined> {
+  const target = new Date(`${date}T00:00:00+09:00`).getTime();
+  if (target < Date.now() - 86400000 || target > Date.now() + 7 * 86400000) return undefined;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FTokyo&forecast_days=7`;
+  try {
+    console.info("[weather] forecast request", { latitude, longitude, url });
+    const response = await fetch(url);
+    const body = await response.text();
+    console.info("[weather] forecast response", { status: response.status, body });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const daily = JSON.parse(body).daily;
+    const index = daily.time.indexOf(date);
+    if (index < 0) return undefined;
+    return { temperature: Math.round(daily.temperature_2m_max[index]), precipitation: Math.round(daily.precipitation_probability_max[index] || 0), code: daily.weather_code[index] };
+  } catch (error) {
+    console.warn("[weather] coordinate request failed", { latitude, longitude, url, error });
+    return undefined;
+  }
+}

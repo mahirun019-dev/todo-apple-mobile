@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { createBackup, type BackupSnapshot } from "./backups";
-import { getWeather, type WeatherResult } from "./weather";
+import { getWeather, getWeatherByCoordinates, type WeatherResult } from "./weather";
 import {
   Database,
   DatabaseArrowDown,
@@ -150,6 +150,13 @@ type Event = {
   location?: string;
   onlinePlatform?: string;
   meetingUrl?: string;
+  attendanceMode?: "offline" | "online" | "undecided";
+  prefecture?: string;
+  city?: string;
+  detailLocation?: string;
+  locationLabel?: string;
+  latitude?: number;
+  longitude?: number;
   notes: string;
   createdAt: number;
 };
@@ -288,6 +295,9 @@ const stages: Stage[] = [
   "rejected",
   "withdrawn",
 ];
+const prefectures = ["北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県", "茨城県", "栃木県", "群馬県", "埼玉県", "千葉県", "東京都", "神奈川県", "新潟県", "富山県", "石川県", "福井県", "山梨県", "長野県", "岐阜県", "静岡県", "愛知県", "三重県", "滋賀県", "京都府", "大阪府", "兵庫県", "奈良県", "和歌山県", "鳥取県", "島根県", "岡山県", "広島県", "山口県", "徳島県", "香川県", "愛媛県", "高知県", "福岡県", "佐賀県", "長崎県", "熊本県", "大分県", "宮崎県", "鹿児島県", "沖縄県"];
+const cityOptions: Record<string, string[]> = { "東京都": ["新宿区", "渋谷区", "千代田区", "中央区", "港区", "豊島区", "品川区", "文京区", "台東区", "墨田区"], "大阪府": ["大阪市", "堺市", "吹田市", "豊中市"], "神奈川県": ["横浜市", "川崎市"], "埼玉県": ["さいたま市", "川越市"], "千葉県": ["千葉市", "船橋市"] };
+const locationCoordinates: Record<string, [number, number]> = { "東京都渋谷区": [35.6618, 139.7041], "東京都新宿区": [35.6938, 139.7034], "東京都豊島区": [35.7263, 139.7169], "東京都千代田区": [35.6938, 139.7532], "東京都港区": [35.6581, 139.7516], "大阪府大阪市": [34.6937, 135.5023], "神奈川県横浜市": [35.4437, 139.638], "埼玉県さいたま市": [35.8617, 139.6455], "千葉県千葉市": [35.6073, 140.1063] };
 const funnelStages: FunnelStage[] = ["funnelInterested", "funnelDocuments", "funnelAptitude", "funnelInterview", "funnelFinal", "funnelOffer"];
 type FunnelStage = "funnelInterested" | "funnelDocuments" | "funnelAptitude" | "funnelInterview" | "funnelFinal" | "funnelOffer";
 function funnelStageFor(stage: Company["stage"]): FunnelStage | null {
@@ -791,7 +801,11 @@ function normalize(x: any): Data {
     events: (x.events || []).map((event: Event) => {
       const legacy = String(event.locationOrOnline || "");
       const mode = event.eventMode || (event.isOnline === true ? "online" : event.isOnline === false && (event.location || legacy) ? "offline" : event.location ? "offline" : event.meetingUrl || event.onlinePlatform || /zoom|teams|meet|online|オンライン|线上|https?:\/\//i.test(legacy) ? "online" : "undecided");
-      return { ...event, eventMode: mode, location: event.location || (mode === "offline" ? legacy : ""), onlinePlatform: event.onlinePlatform || (mode === "online" ? legacy : ""), meetingUrl: event.meetingUrl || (/https?:\/\//i.test(legacy) ? legacy : "") };
+      const locationLabel = event.locationLabel || event.location || legacy;
+      const prefecture = event.prefecture || prefectures.find((value) => locationLabel.includes(value));
+      const city = event.city || (prefecture && cityOptions[prefecture]?.find((value) => locationLabel.includes(value)));
+      const coords = event.latitude && event.longitude ? [event.latitude, event.longitude] : locationCoordinates[`${prefecture || ""}${city || ""}`];
+      return { ...event, eventMode: mode, attendanceMode: event.attendanceMode || mode, prefecture, city, detailLocation: event.detailLocation || (city ? locationLabel.replace(prefecture || "", "").replace(city, "").replace(/^・/, "") : ""), location: event.location || legacy, locationLabel, latitude: coords?.[0], longitude: coords?.[1], onlinePlatform: event.onlinePlatform || (mode === "online" ? legacy : ""), meetingUrl: event.meetingUrl || (/https?:\/\//i.test(legacy) ? legacy : "") };
     }),
     interviews: (x.interviews || []).map((v: InterviewRecord) => ({ ...v, category: "interview" })),
     preparations: (x.preparations || []).map((v: Preparation) => ({ ...v, category: "preparation" })),
@@ -1160,6 +1174,13 @@ export default function App() {
         location: String(f.get("location") || base?.location || ""),
         onlinePlatform: String(f.get("onlinePlatform") || base?.onlinePlatform || ""),
         meetingUrl: String(f.get("meetingUrl") || base?.meetingUrl || ""),
+        attendanceMode: String(f.get("eventMode") || base?.eventMode || "undecided") as Event["attendanceMode"],
+        prefecture: String(f.get("prefecture") || base?.prefecture || "") || undefined,
+        city: String(f.get("city") || base?.city || "") || undefined,
+        detailLocation: String(f.get("detailLocation") || base?.detailLocation || ""),
+        locationLabel: [String(f.get("prefecture") || base?.prefecture || ""), String(f.get("city") || base?.city || ""), String(f.get("detailLocation") || base?.detailLocation || "")].filter(Boolean).join(" "),
+        latitude: locationCoordinates[`${String(f.get("prefecture") || base?.prefecture || "")}${String(f.get("city") || base?.city || "")}`]?.[0] || base?.latitude,
+        longitude: locationCoordinates[`${String(f.get("prefecture") || base?.prefecture || "")}${String(f.get("city") || base?.city || "")}`]?.[1] || base?.longitude,
         notes: String(f.get("notes")),
         createdAt: base?.createdAt || Date.now(),
       };
@@ -1843,7 +1864,7 @@ function Dashboard({
                     {getEventModeLabel(next.event, t.language === "言語" ? "ja" : "zh")}{next.event?.eventMode === "offline" && next.event.location ? ` · ${next.event.location}` : next.event?.eventMode === "online" && next.event.onlinePlatform ? ` · ${next.event.onlinePlatform}` : ""} ·{" "}
                     {relative(next.at, t)}
                   </span>
-                  <WeatherLine location={next.event?.eventMode === "offline" ? next.event.location : undefined} date={next.at} locale={t.language === "言語" ? "ja" : "zh"} />
+                  <WeatherLine location={next.event?.eventMode === "offline" ? next.event.location : undefined} latitude={next.event?.latitude} longitude={next.event?.longitude} date={next.at} locale={t.language === "言語" ? "ja" : "zh"} />
                 </div>
               </div>
             ) : (
@@ -2001,7 +2022,7 @@ function relative(s: string, t: any) {
   const h = Math.ceil((new Date(s).getTime() - Date.now()) / 36e5);
   return h < 1 ? "Now" : h < 24 ? `${h}h` : `${Math.ceil(h / 24)} ${t.days}`;
 }
-function WeatherLine({ location, date, locale = "zh" }: { location?: string; date?: string; locale?: "zh" | "ja" }) {
+function WeatherLine({ location, date, latitude, longitude, locale = "zh" }: { location?: string; date?: string; latitude?: number; longitude?: number; locale?: "zh" | "ja" }) {
   const [weather, setWeather] = useState<WeatherResult>();
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -2011,8 +2032,9 @@ function WeatherLine({ location, date, locale = "zh" }: { location?: string; dat
     const target = new Date(`${date.slice(0, 10)}T00:00:00+09:00`).getTime();
     if (target < Date.now() - 86400000 || target > Date.now() + 7 * 86400000) return;
     setLoading(true);
-    getWeather(place, date.slice(0, 10)).then((value) => { setWeather(value); setFailed(!value); }).catch((error) => { console.warn("[weather] request failed", error); setFailed(true); }).finally(() => setLoading(false));
-  }, [location, date]);
+    const request = latitude && longitude ? getWeatherByCoordinates(latitude, longitude, date.slice(0, 10)) : getWeather(place, date.slice(0, 10));
+    request.then((value) => { setWeather(value); setFailed(!value); }).catch((error) => { console.warn("[weather] request failed", error); setFailed(true); }).finally(() => setLoading(false));
+  }, [location, date, latitude, longitude]);
   const place = location?.trim() || localStorage.getItem("careerflow-home-region")?.trim();
   if (!place || !date || /オンライン|online|webテスト|web test|オンライン面接/i.test(place)) return null;
   const target = new Date(`${date.slice(0, 10)}T00:00:00+09:00`).getTime();
@@ -2296,7 +2318,7 @@ function Schedule({
                   <span>
                     {x.company?.name || t.general} · {t[x.type]}
                   </span>
-                  {x.kind === "event" && <><span>{eventModeText(x.event, t.language === "言語")}</span><WeatherLine location={x.event.eventMode === "offline" ? x.event.location : undefined} date={x.at} locale={t.language === "言語" ? "ja" : "zh"} />{x.event.meetingUrl && <a className="meeting-link" href={x.event.meetingUrl} target="_blank" rel="noopener noreferrer">{t.language === "言語" ? "会議リンクを開く" : "打开会议链接"}</a>}</>}
+                  {x.kind === "event" && <><span>{eventModeText(x.event, t.language === "言語")}</span><WeatherLine location={x.event.eventMode === "offline" ? x.event.location : undefined} latitude={x.event.latitude} longitude={x.event.longitude} date={x.at} locale={t.language === "言語" ? "ja" : "zh"} />{x.event.meetingUrl && <a className="meeting-link" href={x.event.meetingUrl} target="_blank" rel="noopener noreferrer">{t.language === "言語" ? "会議リンクを開く" : "打开会议链接"}</a>}</>}
                 </div>
                 <ChevronRight />
               </button>
@@ -2769,6 +2791,8 @@ function EventForm({
   remove: (event: Event) => void;
 }) {
   const [mode, setMode] = useState<Event["eventMode"]>(initial?.eventMode || "undecided");
+  const [prefecture, setPrefecture] = useState(initial?.prefecture || "");
+  const [city, setCity] = useState(initial?.city || "");
   const ja = t.language === "言語";
   return (
     <Modal title={initial ? t.edit : t.addEvent} close={close}>
@@ -2816,7 +2840,7 @@ function EventForm({
         <fieldset className="wide event-mode-field"><legend>{ja ? "開催形式" : "举办形式"}</legend><div className="mode-options">
           {(["offline", "online", "undecided"] as const).map((value) => { const inputId = `event-mode-${value}`; return <label key={value} htmlFor={inputId} className={mode === value ? "selected" : ""}><input id={inputId} type="radio" name="eventMode" value={value} checked={mode === value} onChange={() => setMode(value)} /><span>{value === "offline" ? (ja ? "対面" : "线下") : value === "online" ? (ja ? "オンライン" : "线上") : (ja ? "未定" : "未确定")}</span></label>; })}
         </div></fieldset>
-        {mode === "offline" && <label className="wide"><span>地点</span><input name="location" defaultValue={initial?.location || (initial?.eventMode === "offline" ? initial.locationOrOnline : "")} placeholder={ja ? "会場・住所・最寄り駅を入力" : "请输入会场、地址或车站"} /></label>}
+        {mode === "offline" && <><label><span>{ja ? "都道府県" : "都道府县"}</span><select name="prefecture" value={prefecture} onChange={(e) => { setPrefecture(e.target.value); setCity(""); }}><option value="">{ja ? "選択してください" : "请选择"}</option>{prefectures.map((value) => <option key={value} value={value}>{value}</option>)}</select></label><label><span>{ja ? "市区町村／主要エリア" : "市区町村／主要区域"}</span><select name="city" value={city} onChange={(e) => setCity(e.target.value)}><option value="">{ja ? "選択してください" : "请选择"}</option>{(cityOptions[prefecture] || []).map((value) => <option key={value} value={value}>{value}</option>)}</select></label><label className="wide"><span>{ja ? "詳細な場所" : "详细地点"}</span><input name="detailLocation" defaultValue={initial?.detailLocation} placeholder={ja ? "渋谷駅、○○ビル 3F" : "渋谷站、○○大楼 3F"} /></label></>}
         {mode === "online" && <><label><span>{ja ? "オンラインプラットフォーム" : "线上平台"}</span><select name="onlinePlatform" defaultValue={initial?.onlinePlatform || ""}><option value="">—</option>{["Zoom", "Microsoft Teams", "Google Meet", ja ? "企業専用システム" : "企业专用系统", ja ? "電話" : "电话", ja ? "その他" : "其他"].map((x) => <option key={x} value={x}>{x}</option>)}</select></label><label><span>{ja ? "会議リンク" : "会议链接"}</span><input name="meetingUrl" type="url" defaultValue={initial?.meetingUrl || ""} /></label></>}
         <label className="wide">
           <span>{t.notes}</span>
