@@ -2887,7 +2887,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     box-sizing: border-box;
     border: 1px solid rgba(255,255,255,.55) !important;
     border-radius: 24px !important;
-    background: rgba(255,255,255,.72) !important;
+    background: rgba(255,255,255,.68) !important;
     box-shadow: 0 6px 24px rgba(15,23,42,.08), inset 0 1px 0 rgba(255,255,255,.7) !important;
     backdrop-filter: blur(18px) saturate(160%);
     -webkit-backdrop-filter: blur(18px) saturate(160%);
@@ -3788,7 +3788,9 @@ option { color: var(--text-primary); background: var(--bg-input); }
 /* Final mobile dashboard guardrails: keep the fixed nav out of the scrollable content. */
 @media (max-width: 760px) {
   .career-app .workspace {
-    padding-bottom: calc(var(--mobile-bottom-nav-height) + env(safe-area-inset-bottom) + 24px);
+    min-height: auto;
+    height: auto;
+    padding-bottom: calc(70px + env(safe-area-inset-bottom));
   }
   .career-app .overview-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
