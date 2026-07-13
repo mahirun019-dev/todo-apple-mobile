@@ -2886,12 +2886,24 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     padding: 7px 8px !important;
     box-sizing: border-box;
     position: fixed !important;
-    border: 1px solid rgba(255,255,255,.58) !important;
+    border: 1px solid rgba(255,255,255,.42) !important;
     border-radius: 24px !important;
     background: rgba(255,255,255,.28) !important;
-    box-shadow: 0 4px 16px rgba(15,23,42,.045), inset 0 1px 0 rgba(255,255,255,.42) !important;
-    backdrop-filter: blur(18px) saturate(170%);
-    -webkit-backdrop-filter: blur(18px) saturate(170%);
+    box-shadow: 0 4px 14px rgba(15,23,42,.035), inset 0 1px 0 rgba(255,255,255,.48), inset 0 -1px 0 rgba(255,255,255,.10) !important;
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+  }
+  .career-mobile-nav::before {
+    content: "";
+    position: absolute;
+    top: 1px;
+    right: 10%;
+    left: 10%;
+    height: 1px;
+    z-index: 2;
+    border-radius: 999px;
+    background: rgba(255,255,255,.40);
+    pointer-events: none;
   }
   [data-theme="dark"] .career-mobile-nav {
     border-color: rgba(255,255,255,.10) !important;
@@ -2906,8 +2918,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   }
   .career-mobile-nav > button.active:not(.nav-add) {
     border: 1px solid rgba(255,255,255,.22) !important;
-    background: rgba(255,255,255,.18) !important;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.26) !important;
+    background: rgba(255,255,255,.12) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.24) !important;
     color: var(--text-primary) !important;
   }
   [data-theme="dark"] .career-mobile-nav > button.active:not(.nav-add) {
