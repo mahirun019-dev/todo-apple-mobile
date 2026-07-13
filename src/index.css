@@ -3524,8 +3524,9 @@ option { color: var(--text-primary); background: var(--bg-input); }
 }
 .company-filter-trigger,
 .company-filter-sheet-layer { display: none; }
-.company-search-field { min-width: 0; }
-.company-search-field > svg { display: none; }
+.company-search-field { position: relative; min-width: 0; }
+.company-search-field > svg { position: absolute; top: 50%; left: 12px; display: block; width: 19px; height: 19px; color: var(--text-secondary, #68717b); pointer-events: none; transform: translateY(-50%); }
+.company-search-field input { padding-left: 40px; }
 .company-card { min-width: 0; min-height: 168px; text-align: left; }
 .company-card-body { min-width: 0; display: grid; gap: 6px; }
 .company-card-body h3,
@@ -3561,6 +3562,18 @@ option { color: var(--text-primary); background: var(--bg-input); }
 [data-theme="dark"] .interest-stars button.selected { color: #fff; }
 [data-theme="dark"] .recruitment-link,
 [data-theme="dark"] .selection-empty strong { color: #f2f2f2; }
+@media (min-width: 761px) {
+  .company-card { transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease; }
+  .company-card:hover { border-color: #b9c0c8; box-shadow: 0 5px 14px rgba(20, 25, 30, .08); transform: translateY(-1px); }
+  .company-card:hover > svg { transform: translateX(2px); }
+  .company-card:active { transform: translateY(0); }
+  .company-card:focus-visible { outline: 2px solid var(--accent, #2477d9); outline-offset: 2px; }
+  .company-card > svg { transition: transform 180ms ease; }
+  [data-theme="dark"] .company-card:hover { border-color: #626a75; box-shadow: 0 5px 14px rgba(0, 0, 0, .22); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .company-card, .company-card > svg { transition: none; }
+}
 @media (max-width: 760px) {
   .company-toolbar {
     grid-template-columns: minmax(0, 1fr) 52px;

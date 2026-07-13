@@ -364,7 +364,7 @@ const tr = {
     place: "地点或线上方式",
     url: "招聘页面",
     notes: "备注",
-    saved: "收藏",
+    saved: "关注中",
     briefing: "说明会",
     es_draft: "ES 准备",
     es_submitted: "ES 已提交",
@@ -1985,6 +1985,11 @@ function relative(s: string, t: any) {
 function scheduleDisplayTitle(title: string | undefined, type: string | undefined, t: any) {
   return title?.trim() || (type && t[type]) || t.untitledSchedule;
 }
+function stageDisplayLabel(stage: string | undefined, t: any) {
+  const value = String(stage || "").trim().toLowerCase();
+  if (value === "favorite" || value === "收藏" || value === "saved") return t.saved;
+  return t[stage as keyof typeof t] || t.saved;
+}
 function Companies({
   t,
   data,
@@ -2054,7 +2059,7 @@ function Companies({
         <div className="course-detail">
           <section className="entity-card course-profile">
             <i style={{ background: co.color }} />
-            <h2>{t[co.stage]}</h2>
+            <h2>{stageDisplayLabel(co.stage, t)}</h2>
             <p>{co.notes || t.noData}</p>
             {co.careersUrl && (
               <a className="recruitment-link" href={co.careersUrl} target="_blank" rel="noopener noreferrer" title={co.careersUrl}>
@@ -2174,7 +2179,7 @@ function Companies({
               <div className="company-card-body">
                 <h3 title={x.name}>{x.name}</h3>
                 <p>{x.industry || x.position || t.general}</p>
-                <span>{t.stage}: {t[x.stage]} · {t.interest}: {"★".repeat(x.interestLevel)}{"☆".repeat(5 - x.interestLevel)}</span>
+                <span>{stageDisplayLabel(x.stage, t)} · {t.interest} {"★".repeat(x.interestLevel)}{"☆".repeat(5 - x.interestLevel)}</span>
                 <span>{x.nextEventAt ? `${t.event} · ${when(x.nextEventAt)} · ${relative(x.nextEventAt, t)}` : t.noSchedule}</span>
               </div>
               <ChevronRight />
