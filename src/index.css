@@ -4604,9 +4604,9 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     align-items: center;
     justify-content: center;
     padding: 50px 60px;
-    background: rgba(20, 24, 30, 0.16);
-    backdrop-filter: blur(6px) saturate(105%);
-    -webkit-backdrop-filter: blur(6px) saturate(105%);
+    background: rgba(20, 24, 30, 0.10);
+    backdrop-filter: blur(4px) saturate(103%);
+    -webkit-backdrop-filter: blur(4px) saturate(103%);
   }
 
   .settings-drawer-backdrop {
@@ -4626,7 +4626,7 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     padding: 0;
     border: 1px solid rgba(0, 0, 0, 0.07);
     border-radius: 20px;
-    background: rgba(255, 255, 255, 0.97);
+    background: rgba(255, 255, 255, 0.985);
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.20);
     overflow: hidden;
     opacity: 1;
@@ -4766,9 +4766,9 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
   }
 
   [data-theme="dark"] .settings-drawer-layer {
-    background: rgba(0, 0, 0, 0.20);
-    backdrop-filter: blur(6px) saturate(105%);
-    -webkit-backdrop-filter: blur(6px) saturate(105%);
+    background: rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(4px) saturate(103%);
+    -webkit-backdrop-filter: blur(4px) saturate(103%);
   }
 
   [data-theme="dark"] .settings-drawer-panel {
