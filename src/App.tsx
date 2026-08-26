@@ -1556,7 +1556,7 @@ export default function App() {
   };
   return (
     <div className="app-shell" data-app-shell="true">
-      <div className={`student-app career-app ${settings ? "mobile-menu-open" : ""}`}>
+      <div className="student-app career-app">
         <aside className="sidebar panel">
           <Brand icon={icon} showIcon={false} />
           <StableNav view={view} setView={setView} t={t} />
@@ -1594,8 +1594,8 @@ export default function App() {
           </button>
         </aside>
         <header className="mobile-header glass-lite">
-          <button className="mobile-menu-button" onClick={() => setSettings(true)} aria-label={t.settings}>
-            <Menu />
+          <button className="mobile-menu-button" onClick={() => setSettings((open) => !open)} aria-label={settings ? t.cancel : t.settings}>
+            {settings ? <X /> : <Menu />}
           </button>
           <strong className="mobile-header-title">CareerFlow</strong>
           <span className="mobile-header-action-slot" aria-hidden="true" />
@@ -3620,36 +3620,59 @@ function BackupControls({ data, theme, locale, setData }: any) {
 function MobileSettingsDrawer({
   t, page, setPage, close, setView, view, selectedItem, setSelectedItem, theme, setTheme, locale, setLocale, data, setData, json, download,
 }: any) {
+  const [closing, setClosing] = useState(false);
   const label = "CareerFlow";
   const about = locale === "ja"
     ? { title: "CareerFlowについて", version: "CareerFlow バージョン 1.0", db: `データベースバージョン：v${data.schemaVersion}`, privacy: "プライバシー：データは主にこのデバイスに保存されます。", license: "オープンソースライセンス：MIT License" }
     : locale === "en"
       ? { title: "About CareerFlow", version: "CareerFlow version 1.0", db: `Database version: v${data.schemaVersion}`, privacy: "Privacy: Data is mainly stored on this device.", license: "Open-source license: MIT License" }
       : { title: "关于 CareerFlow", version: "CareerFlow 版本 1.0", db: `数据库版本：v${data.schemaVersion}`, privacy: "隐私说明：数据主要保存在当前设备。", license: "开源许可：MIT License" };
-  const go = (next: string) => setPage(next);
-  const touchStart = useRef<number | null>(null);
+  const dismiss = () => {
+    if (closing) return;
+    setClosing(true);
+    window.setTimeout(close, 180);
+  };
   useEffect(() => {
     const y = window.scrollY;
+    const previous = {
+      position: document.body.style.position,
+      top: document.body.style.top,
+      width: document.body.style.width,
+      overflow: document.body.style.overflow,
+    };
     document.documentElement.classList.add("drawer-open");
     document.body.classList.add("drawer-open");
-    document.body.style.setProperty("--saved-scroll-y", `${y}px`);
+    document.body.style.position = "fixed";
     document.body.style.top = `-${y}px`;
+    document.body.style.width = "100%";
+    document.body.style.overflow = "hidden";
     return () => {
       document.documentElement.classList.remove("drawer-open");
       document.body.classList.remove("drawer-open");
-      document.body.style.removeProperty("--saved-scroll-y");
-      document.body.style.removeProperty("top");
+      document.body.style.position = previous.position;
+      document.body.style.top = previous.top;
+      document.body.style.width = previous.width;
+      document.body.style.overflow = previous.overflow;
       window.scrollTo(0, y);
     };
   }, []);
-  return <div className="mobile-settings-layer">
-    <button className="mobile-settings-backdrop" onClick={close} aria-label="Close" />
-    <aside className="mobile-settings-drawer drawer-shell" role="dialog" aria-modal="true" aria-label={label} onTouchStart={(e) => { touchStart.current = e.touches[0].clientX; }} onTouchEnd={(e) => { const start = touchStart.current; const delta = start === null ? 0 : e.changedTouches[0].clientX - start; if (page && start !== null && start <= 24 && delta > 72) setPage(null); else if (!page && delta < -70) close(); touchStart.current = null; }}>
-      <header className="mobile-settings-header drawer-header">
-        <span /><div className="mobile-settings-brand"><strong>CareerFlow</strong><small>日本就活管理</small></div><span />
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") dismiss();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [closing]);
+  return <div className={`mobile-settings-layer ${closing ? "closing" : ""}`}>
+    <button className="mobile-settings-backdrop" onClick={dismiss} aria-label={t.cancel} />
+    <aside className="mobile-settings-drawer drawer-shell" role="dialog" aria-modal="true" aria-label={label}>
+      <header className="mobile-navigation-header mobile-header glass-lite">
+        <button className="mobile-menu-button" onClick={dismiss} aria-label={t.cancel}><X aria-hidden="true" /></button>
+        <strong className="mobile-header-title">CareerFlow</strong>
+        <span className="mobile-header-action-slot" aria-hidden="true" />
       </header>
       <div className="drawer-main drawer-scroll"><nav className="mobile-settings-nav">
-        <button className={selectedItem === "home" ? "active" : ""} onClick={() => { setSelectedItem("home"); setPage(null); close(); setView("dashboard"); }}><Home /><span>{t.dashboard}</span></button>
+        <button className={selectedItem === "home" ? "active" : ""} onClick={() => { setSelectedItem("home"); setPage(null); setView("dashboard"); dismiss(); }}><Home /><span>{t.dashboard}</span></button>
         <button className={`${page === "data" ? "expanded " : ""}${selectedItem === "data" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("data"); setPage(page === "data" ? null : "data"); }}><Database /><span>{t.data}</span><ChevronRight /></button>
         {page === "data" && <div className="drawer-accordion-panel"><button type="button" onClick={() => download("careerflow-backup.json", JSON.stringify(makeBackupSnapshot(data, theme, locale), null, 2), "application/json")}><DatabaseArrowUp /><span>{t.backup}</span></button><button type="button" onClick={() => json.current?.click()}><DatabaseArrowDown /><span>{t.restore}</span></button></div>}
         <button className={`${page === "appearance" ? "expanded " : ""}${selectedItem === "appearance" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("appearance"); setPage(page === "appearance" ? null : "appearance"); }}><Palette /><span>{t.appearance}</span><ChevronRight /></button>
