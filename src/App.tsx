@@ -630,7 +630,7 @@ const tr = {
     sortUpdated: "最近更新", sortEvent: "下一日程", sortInterest: "志望度从高到低", sortName: "企业名称", moveUp: "上移", moveDown: "下移",
     templateNew: "新建模板", templateEdit: "编辑模板", templateDelete: "删除模板", templateDuplicate: "复制模板", templateCategory: "类别", templateTitle: "标题", templateContent: "内容", templateSave: "保存模板", templateEmpty: "还没有模板", templateInsert: "从模板插入", chooseTemplate: "选择模板", insertTemplate: "插入", noTemplates: "暂无可用模板",
     templateSelfPr: "自我PR", templateGakuchika: "学生时代经历", templateMotivation: "志望动机", templateInterviewQuestion: "面试问题", templateReverseQuestion: "反问问题", templatePreparation: "准备事项",
-    calendarAdd: "添加到日历", calendarExportFuture: "将后续日程导出到日历", calendarMethod: "添加到日历的方式", calendarMethodHint: "CareerFlow 使用标准 .ics 文件导出，不是实时同步或双向同步。", calendarDescription: "将 CareerFlow 日程导出为标准 .ics 文件，然后添加到 Apple 日历、Google 日历等服务。", calendarNoSync: "当前不支持自动同步。修改 CareerFlow 日程后，已添加到其他日历的事项不会自动更新。", calendarHowTo: "使用方法", calendarIphoneTitle: "iPhone / iPad", calendarIphone: "1. 打开 CareerFlow 日程并选择“添加到日历”。\n2. 打开或分享生成的 .ics 文件。\n3. 在系统显示的日程确认页面中检查内容，再添加到日历。\n具体按钮名称可能因 Safari、iOS 版本和分享方式而不同。", calendarMacTitle: "Mac", calendarMac: "1. 下载 .ics 文件。\n2. 打开该文件。\n3. 在 Calendar.app 中选择要添加的日历。", calendarGoogleTitle: "Google Calendar", calendarGoogle: "1. 在 CareerFlow 选择“将后续日程导出到日历”。\n2. 打开 Google Calendar 的“设置 → 导入和导出 → 导入”。\n3. 选择 CareerFlow 导出的 .ics 文件。", calendarWindowsTitle: "Windows / Outlook", calendarWindows: "下载 .ics 文件后，从 Outlook 或其他兼容日历应用打开或导入。", calendarImportant: "重要：这不是自动同步。CareerFlow 中的日程发生变化后，请按需要重新导出。", calendarPreferShare: "移动端优先使用分享", calendarExported: "日历文件已生成", calendarNoEvents: "没有可导出的后续日程",
+    calendarAdd: "添加到日历", calendarExportFuture: "汇总导出今后的日程", calendarMethod: "添加到日历的方式", calendarMethodHint: "CareerFlow 使用标准 .ics 文件导出，不是实时同步或双向同步。", calendarDescription: "可以将 CareerFlow 中的日程导出为 .ics 文件，再添加到 Apple 日历。", calendarNoSync: "不是实时同步。修改日程后，需要重新导出。", calendarHowTo: "使用方法", calendarIphoneTitle: "iPhone / iPad", calendarIphone: "1. 点击“汇总导出今后的日程”。\n2. 在分享菜单中保存或分享 .ics 文件。\n3. 打开 .ics 文件，按 iOS 提示添加到日历。\n设备或 Safari 版本不同，显示方式可能不同。", calendarMacTitle: "Mac", calendarMac: "1. 点击“汇总导出今后的日程”。\n2. 下载 .ics 文件。\n3. 打开文件，或在 Calendar.app 中选择“文件 → 导入”并选择该文件。", calendarGoogleTitle: "Google Calendar", calendarGoogle: "", calendarWindowsTitle: "Windows / Outlook", calendarWindows: "", calendarImportant: "重要：这不是自动同步。CareerFlow 中的日程发生变化后，请按需要重新导出。", calendarPreferShare: "移动端优先使用分享", calendarExported: "日历文件已生成", calendarNoEvents: "没有可导出的后续日程",
   },
   ja: {
     dashboard: "ホーム",
@@ -794,7 +794,7 @@ const tr = {
     sortUpdated: "最近更新", sortEvent: "次の日程", sortInterest: "志望度の高い順", sortName: "企業名", moveUp: "上へ", moveDown: "下へ",
     templateNew: "新規作成", templateEdit: "編集", templateDelete: "削除", templateDuplicate: "複製", templateCategory: "カテゴリ", templateTitle: "タイトル", templateContent: "内容", templateSave: "テンプレートを保存", templateEmpty: "テンプレートはまだありません", templateInsert: "テンプレートから挿入", chooseTemplate: "テンプレートを選択", insertTemplate: "挿入", noTemplates: "使用できるテンプレートがありません",
     templateSelfPr: "自己PR", templateGakuchika: "ガクチカ", templateMotivation: "志望動機", templateInterviewQuestion: "面接質問", templateReverseQuestion: "逆質問", templatePreparation: "準備事項",
-    calendarAdd: "カレンダーに追加", calendarExportFuture: "今後の予定をカレンダーに書き出す", calendarMethod: "カレンダーへの追加方法", calendarMethodHint: "CareerFlow は標準の .ics ファイルを書き出します。リアルタイム同期や双方向同期ではありません。", calendarDescription: "CareerFlow の日程を標準のカレンダーファイル（.ics）として書き出し、Apple カレンダーや Google カレンダーなどに追加できます。", calendarNoSync: "現在は自動同期に対応していません。CareerFlow で日程を変更しても、すでに追加した予定は自動更新されません。", calendarHowTo: "使い方", calendarIphoneTitle: "iPhone / iPad", calendarIphone: "1. CareerFlow の日程を開き、「カレンダーに追加」を選択します。\n2. 生成された .ics ファイルを開く、または共有します。\n3. iOS に表示された予定を確認して、カレンダーに追加します。\nボタン名や表示は Safari、iOS のバージョン、共有方法によって異なる場合があります。", calendarMacTitle: "Mac", calendarMac: "1. .ics ファイルをダウンロードします。\n2. ファイルを開きます。\n3. Calendar.app で追加先カレンダーを選択します。", calendarGoogleTitle: "Google Calendar", calendarGoogle: "1. CareerFlow で「今後の予定をカレンダーに書き出す」を選択します。\n2. Google カレンダーの「設定 → インポート / エクスポート → インポート」を開きます。\n3. CareerFlow の .ics ファイルを選択します。", calendarWindowsTitle: "Windows / Outlook", calendarWindows: ".ics ファイルをダウンロードし、Outlook など対応するカレンダーアプリから開く、またはインポートします。", calendarImportant: "重要：自動同期ではありません。CareerFlow で日程を変更した場合は、必要に応じて再度書き出してください。", calendarPreferShare: "モバイルでは共有を優先", calendarExported: "カレンダーファイルを生成しました", calendarNoEvents: "書き出せる今後の予定はありません",
+    calendarAdd: "カレンダーに追加", calendarExportFuture: "今後の予定をまとめて書き出す", calendarMethod: "カレンダーへの追加方法", calendarMethodHint: "CareerFlow は標準の .ics ファイルを書き出します。リアルタイム同期や双方向同期ではありません。", calendarDescription: "CareerFlow の予定を .ics ファイルとして Apple カレンダーに追加できます。", calendarNoSync: "リアルタイム同期ではありません。日程を変更した場合は、必要に応じて再度書き出してください。", calendarHowTo: "使い方", calendarIphoneTitle: "iPhone / iPad", calendarIphone: "1. 「今後の予定をまとめて書き出す」をタップします。\n2. 表示された共有メニューから .ics ファイルを保存・共有します。\n3. .ics ファイルを開き、iOS に表示される案内に従ってカレンダーへ追加します。\n端末や Safari のバージョンによって表示方法が異なる場合があります。", calendarMacTitle: "Mac", calendarMac: "1. 「今後の予定をまとめて書き出す」をクリックします。\n2. .ics ファイルをダウンロードします。\n3. ファイルを開く、または Calendar.app の「ファイル → 読み込む」から .ics を選択します。\n4. 追加先のカレンダーを選択します。", calendarGoogleTitle: "Google Calendar", calendarGoogle: "", calendarWindowsTitle: "Windows / Outlook", calendarWindows: "", calendarImportant: "重要：自動同期ではありません。CareerFlow で日程を変更した場合は、必要に応じて再度書き出してください。", calendarPreferShare: "モバイルでは共有を優先", calendarExported: "カレンダーファイルを生成しました", calendarNoEvents: "書き出せる今後の予定はありません",
   },
   en: {
     dashboard: "Home",
@@ -940,7 +940,7 @@ const tr = {
     sortUpdated: "Recently updated", sortEvent: "Next event", sortInterest: "Interest", sortName: "Company name", moveUp: "Move up", moveDown: "Move down",
     templateNew: "New template", templateEdit: "Edit", templateDelete: "Delete", templateDuplicate: "Duplicate", templateCategory: "Category", templateTitle: "Title", templateContent: "Content", templateSave: "Save template", templateEmpty: "No templates yet", templateInsert: "Insert from template", chooseTemplate: "Choose a template", insertTemplate: "Insert", noTemplates: "No templates available",
     templateSelfPr: "Self PR", templateGakuchika: "Student experience", templateMotivation: "Motivation", templateInterviewQuestion: "Interview question", templateReverseQuestion: "Reverse question", templatePreparation: "Preparation",
-    calendarAdd: "Add to calendar", calendarExportFuture: "Export upcoming events to calendar", calendarMethod: "How calendar entries are added", calendarMethodHint: "CareerFlow exports standard .ics files. This is not real-time or two-way sync.", calendarDescription: "Export CareerFlow events as standard .ics calendar files and add them to Apple Calendar, Google Calendar, or another compatible app.", calendarNoSync: "Automatic sync is not supported. Changes in CareerFlow do not update events already added to another calendar.", calendarHowTo: "How to use", calendarIphoneTitle: "iPhone / iPad", calendarIphone: "1. Open an event in CareerFlow and choose “Add to calendar”.\n2. Open or share the generated .ics file.\n3. Review the event shown by iOS and add it to a calendar.\nButton names can vary with Safari, iOS version, and the sharing method.", calendarMacTitle: "Mac", calendarMac: "1. Download the .ics file.\n2. Open the file.\n3. Choose a destination calendar in Calendar.app.", calendarGoogleTitle: "Google Calendar", calendarGoogle: "1. Choose “Export upcoming events to calendar” in CareerFlow.\n2. In Google Calendar, open “Settings → Import & export → Import”.\n3. Select the CareerFlow .ics file.", calendarWindowsTitle: "Windows / Outlook", calendarWindows: "Download the .ics file, then open or import it from Outlook or another compatible calendar app.", calendarImportant: "Important: this is not automatic sync. Re-export when needed after changing an event in CareerFlow.", calendarPreferShare: "Prefer sharing on mobile", calendarExported: "Calendar file generated", calendarNoEvents: "No upcoming events to export",
+    calendarAdd: "Add to calendar", calendarExportFuture: "Export upcoming events", calendarMethod: "How calendar entries are added", calendarMethodHint: "CareerFlow exports standard .ics files. This is not real-time or two-way sync.", calendarDescription: "Export CareerFlow events as .ics files and add them to Apple Calendar.", calendarNoSync: "This is not real-time sync. Export again after changing an event.", calendarHowTo: "How to use", calendarIphoneTitle: "iPhone / iPad", calendarIphone: "1. Select “Export upcoming events”.\n2. Save or share the .ics file from the share sheet.\n3. Open the .ics file and follow iOS instructions to add it to Calendar.", calendarMacTitle: "Mac", calendarMac: "1. Select “Export upcoming events”.\n2. Download the .ics file.\n3. Open it, or use Calendar.app’s “File → Import” command.", calendarGoogleTitle: "Google Calendar", calendarGoogle: "", calendarWindowsTitle: "Windows / Outlook", calendarWindows: "", calendarImportant: "Important: this is not automatic sync. Re-export when needed after changing an event in CareerFlow.", calendarPreferShare: "Prefer sharing on mobile", calendarExported: "Calendar file generated", calendarNoEvents: "No upcoming events to export",
   },
 };
 // Keep keyboard viewport changes out of React's render path. Safari can emit many
@@ -1108,9 +1108,9 @@ function makeIcs(events: Event[], byId: Record<string, Company>, t: any) {
     "",
   ].join("\r\n");
 }
-async function shareOrDownloadCalendar(name: string, body: string, preferShare: boolean) {
+async function shareOrDownloadCalendar(name: string, body: string) {
   const file = new File([body], name, { type: "text/calendar;charset=utf-8" });
-  const canShare = preferShare && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && !!navigator.share && !!navigator.canShare?.({ files: [file] });
+  const canShare = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && !!navigator.share && !!navigator.canShare?.({ files: [file] });
   if (canShare) {
     await navigator.share({ files: [file], title: "CareerFlow Calendar" });
     return "shared" as const;
@@ -1761,7 +1761,7 @@ export default function App() {
     }
     const name = requestedEvents?.length === 1 ? `careerflow-event-${events[0].id}.ics` : "careerflow-upcoming-events.ics";
     try {
-      await shareOrDownloadCalendar(name, makeIcs(events, byId, t), data.preferences.calendar.preferShare);
+      await shareOrDownloadCalendar(name, makeIcs(events, byId, t));
       setToast({ text: t.calendarExported, undo: () => undefined });
     } catch (error) {
       if ((error as DOMException).name !== "AbortError") setToast({ text: t.calendarNoEvents, undo: () => undefined });
@@ -2292,7 +2292,7 @@ function Dashboard({
       const isMaterial = "isWeeklyFocus" in x;
       return { id: `due-${x.id}`, kind: isMaterial ? "material" : "preparation", label: isMaterial ? t.actionMaterial : t.actionPreparation, company: byId[x.companyId || ""]?.name || t.general, detail: x.title, at: x.dueAt, urgency: days <= 0 ? "urgent" : days === 1 ? "warning" : "normal", meta: days < 0 ? t.overdueLabel : days === 0 ? t.dueToday : days === 1 ? t.dueTomorrow : when(x.dueAt) };
     }),
-    ...(data.preferences.jobHunt.showUpcoming ? upcoming : []).map((x: any) => ({ id: `event-${x.id}`, kind: "schedule", label: t.actionSchedule, company: x.company?.name || t.general, detail: t[x.type] || t.schedule, at: x.at, urgency: daysUntil(x.at) <= 0 ? "urgent" : daysUntil(x.at) === 1 ? "warning" : "normal", meta: when(x.at) })),
+    ...(data.preferences.jobHunt.showUpcoming ? upcoming : []).map((x: any) => ({ id: `event-${x.id}`, kind: "schedule", label: t.actionSchedule, company: x.company?.name || t.general, detail: t[x.type] || t.schedule, at: x.at, event: x.event, urgency: daysUntil(x.at) <= 0 ? "urgent" : daysUntil(x.at) === 1 ? "warning" : "normal", meta: when(x.at) })),
     ...(data.preferences.jobHunt.showWaiting ? waiting : []).map((x: any) => {
       const days = Math.max(1, Math.floor((Date.now() - x.updatedAt) / 864e5));
       return days >= data.preferences.jobHunt.resultWaitingDays ? { id: `waiting-${x.id}`, kind: "waiting", label: t.actionWaiting, company: x.name, detail: t.waitingDays(days), at: undefined, urgency: days >= 14 ? "urgent" : "warning", meta: t.waitingDays(days) } : null;
@@ -2304,6 +2304,16 @@ function Dashboard({
   const { homeSummaryVisibility, homeSummaryOrder, homeSectionVisibility, homeSectionOrder } = data.preferences.customize;
   const actionTitle = t.actionRequired;
   const actionMore = t.viewAll;
+  const openAction = (item: any) => {
+    if (item.kind === "schedule" && item.event) {
+      setEditEvent(item.event);
+      setForm("schedule");
+    } else if (item.kind === "waiting") {
+      navigate("companies", "waiting-result");
+    } else {
+      setView("materials");
+    }
+  };
   const upcomingModule = <section className="entity-card next-class">
     <Title>{t.next}</Title>
     {upcoming.length ? (
@@ -2322,19 +2332,19 @@ function Dashboard({
     ) : <Empty t={t} kind="schedule" open={() => open("schedule")} />}
   </section>;
   const actionModule = actionItems.length > 0 ? <section className="entity-card mobile-action-required">
-    <Title>{actionTitle}</Title>
+    <Title action={<span className="action-required-count">{actionItems.length}</span>}>{actionTitle}</Title>
     <div className="mobile-action-list">
-      {actionItems.slice(0, 3).map((item: any) => <article key={item.id} className={`mobile-action-item ${item.urgency}`}>
-        <span className="mobile-action-kind"><span className="mobile-action-icon">{item.kind === "material" ? <FileText /> : item.kind === "preparation" ? <ListChecks /> : item.kind === "schedule" ? <CalendarClock /> : <Hourglass />}</span>{item.label}</span>
-        <strong>{item.company}</strong><p>{item.detail}</p><time>{item.meta}</time>
-      </article>)}
+      {actionItems.slice(0, 3).map((item: any) => <button type="button" key={item.id} className={`mobile-action-item ${item.urgency}`} onClick={() => openAction(item)}>
+        <span className="mobile-action-primary"><span className="mobile-action-kind"><span className="mobile-action-icon">{item.kind === "material" ? <FileText /> : item.kind === "preparation" ? <ListChecks /> : item.kind === "schedule" ? <CalendarClock /> : <Hourglass />}</span>{item.label}</span><strong>{item.company}</strong><ChevronRight aria-hidden="true" /></span>
+        <span className="mobile-action-secondary"><span>{item.detail}</span><time>{item.meta}</time></span>
+      </button>)}
     </div>
-    {actionItems.length > 3 && <button type="button" className="text-button mobile-action-more" onClick={() => { localStorage.setItem("careerflow-action-filter", "required"); setView("schedule"); }}>{actionMore}</button>}
+    {actionItems.length > 3 && <button type="button" className="text-button mobile-action-more" onClick={() => setView("materials")}>{actionMore}</button>}
   </section> : null;
-  const deadlinesModule = <section>
+  const deadlinesModule = due.length > 0 ? <section>
     <Title className="deadline-title" action={<button className="text-button" onClick={() => open("es")}><Plus />{t.addMaterial}</button>}>{t.deadlines}</Title>
-    <div className="deadline-list">{due.length ? due.map((x: any) => <MaterialRow key={x.id} x={x} company={byId[x.companyId]} t={t} toggle={toggle} focus={focusToggle} />) : <Empty t={t} />}</div>
-  </section>;
+    <div className="deadline-list">{due.map((x: any) => <MaterialRow key={x.id} x={x} company={byId[x.companyId]} t={t} toggle={toggle} focus={focusToggle} />)}</div>
+  </section> : null;
   const progressModule = <section className="entity-card dashboard-progress-module">
     <Title>{t.funnel}</Title>
     <div className="funnel">
@@ -2347,12 +2357,14 @@ function Dashboard({
         "funnelOffer",
       ] as FunnelStage[]).map((s) => (
         <button type="button" className="funnel-row" key={s} onClick={() => openFunnel(s)} aria-label={`${t[s]}: ${data.companies.filter((x: Company) => funnelStageFor(x.stage) === s).length}`}>
-          <span>{t[s]}</span>
-          {(() => {
-            const count = data.companies.filter((x: Company) => funnelStageFor(x.stage) === s).length;
-            return <b className={count > 0 ? "has-count" : undefined}>{count}</b>;
-          })()}
-          <ChevronRight aria-hidden="true" />
+          <span className="funnel-row-label">{t[s]}</span>
+          <span className="funnel-row-meta">
+            {(() => {
+              const count = data.companies.filter((x: Company) => funnelStageFor(x.stage) === s).length;
+              return <b className={count > 0 ? "has-count" : undefined}>{count}</b>;
+            })()}
+            <ChevronRight aria-hidden="true" />
+          </span>
         </button>
       ))}
     </div>
@@ -3863,9 +3875,8 @@ function CustomizeSettings({ t, data, updatePreferences }: any) {
     <label className="settings-field"><span>{t.defaultCompanySort}</span><select value={settings.companySort} onChange={(event) => update({ companySort: event.target.value as CompanySort })}>{(Object.keys(sortLabels) as CompanySort[]).map((key) => <option key={key} value={key}>{sortLabels[key]}</option>)}</select></label>
   </section>;
 }
-function CalendarSettings({ t, data, updatePreferences, exportCalendar }: any) {
-  const update = (preferShare: boolean) => updatePreferences((current: AppPreferences) => ({ ...current, calendar: { ...current.calendar, preferShare } }));
-  return <section className="settings-section settings-form-section"><h3>{t.calendarIntegration}</h3><p className="settings-muted calendar-description">{t.calendarDescription}</p><h4>{t.calendarMethod}</h4><p className="settings-muted">{t.calendarMethodHint}</p><label className="settings-check-row"><input type="checkbox" checked={data.preferences.calendar.preferShare} onChange={(event) => update(event.target.checked)} />{t.calendarPreferShare}</label><button type="button" className="primary settings-wide-action" onClick={() => exportCalendar()}><CalendarDays />{t.calendarExportFuture}</button><div className="calendar-help"><h4>{t.calendarHowTo}</h4>{([[t.calendarIphoneTitle, t.calendarIphone], [t.calendarMacTitle, t.calendarMac], [t.calendarGoogleTitle, t.calendarGoogle], [t.calendarWindowsTitle, t.calendarWindows]] as Array<[string, string]>).map(([title, steps]) => <section key={title}><strong>{title}</strong><p>{steps}</p></section>)}<p className="calendar-important">{t.calendarImportant}</p></div></section>;
+function CalendarSettings({ t, exportCalendar }: any) {
+  return <section className="settings-section settings-form-section"><h3>{t.calendarIntegration}</h3><p className="settings-muted calendar-description">{t.calendarDescription}</p><p className="settings-muted">{t.calendarNoSync}</p><button type="button" className="primary settings-wide-action" onClick={() => exportCalendar()}><CalendarDays />{t.calendarExportFuture}</button><div className="calendar-help"><h4>{t.calendarHowTo}</h4>{([[t.calendarIphoneTitle, t.calendarIphone], [t.calendarMacTitle, t.calendarMac]] as Array<[string, string]>).map(([title, steps]) => <section key={title}><strong>{title}</strong><p>{steps}</p></section>)}<p className="calendar-important">{t.calendarNoSync}</p></div></section>;
 }
 function MobileSettingsDrawer({
   t, page, setPage, close, open, theme, setTheme, locale, setLocale, data, setData, json, download, updatePreferences, exportCalendar,
