@@ -1506,6 +1506,14 @@ export default function App() {
     a.click();
     URL.revokeObjectURL(a.href);
   };
+  const closeMobileSettings = () => {
+    const layer = document.querySelector<HTMLElement>(".mobile-settings-layer");
+    const active = document.activeElement;
+    if (layer?.contains(active) && active instanceof HTMLElement) active.blur();
+    setSettings(false);
+    setMobileSettingsPage(null);
+    setSelectedDrawerItem(null);
+  };
   const importJson = (e: ChangeEvent<HTMLInputElement>) => {
     const input = e.currentTarget;
     const f = e.target.files?.[0];
@@ -1579,7 +1587,7 @@ export default function App() {
           </button>
         </aside>
         <header className="mobile-header glass-lite">
-          <button className="mobile-menu-button" data-menu-open={settings ? "true" : "false"} onClick={() => setSettings((open) => !open)} aria-label={settings ? t.cancel : t.settings}>
+          <button className="mobile-menu-button" data-menu-open={settings ? "true" : "false"} onClick={() => settings ? closeMobileSettings() : setSettings(true)} aria-label={settings ? t.cancel : t.settings}>
             {settings ? <X /> : <Menu />}
           </button>
           <strong className="mobile-header-title">CareerFlow</strong>
@@ -1676,7 +1684,7 @@ export default function App() {
             setPage={setMobileSettingsPage}
             selectedItem={selectedDrawerItem}
             setSelectedItem={setSelectedDrawerItem}
-            close={() => { setSettings(false); setMobileSettingsPage(null); }}
+            close={closeMobileSettings}
             open={settings}
             theme={theme}
             setTheme={setTheme}

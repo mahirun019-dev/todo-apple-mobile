@@ -5092,27 +5092,27 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
 
   .mobile-settings-layer[data-open="true"]::before {
     clip-path: inset(0) !important;
-    transition-duration: 430ms !important;
+    transition-duration: 440ms !important;
   }
 
   .mobile-settings-layer .mobile-settings-nav {
     opacity: 0 !important;
     transform: translateY(-4px) !important;
     animation: none !important;
-    transition: opacity 240ms cubic-bezier(.22, 1, .36, 1), transform 240ms cubic-bezier(.22, 1, .36, 1) !important;
+    transition: opacity 260ms cubic-bezier(.22, 1, .36, 1), transform 260ms cubic-bezier(.22, 1, .36, 1) !important;
   }
 
   .mobile-settings-layer[data-open="true"] .mobile-settings-nav {
     opacity: 1 !important;
     transform: translateY(0) !important;
     transition-delay: 90ms !important;
-    transition-duration: 240ms !important;
+    transition-duration: 260ms !important;
   }
 
   .mobile-settings-layer .mobile-settings-nav > button {
     opacity: 0 !important;
     transform: translateY(-5px) !important;
-    transition: opacity 240ms cubic-bezier(.22, 1, .36, 1), transform 240ms cubic-bezier(.22, 1, .36, 1) !important;
+    transition: opacity 260ms cubic-bezier(.22, 1, .36, 1), transform 260ms cubic-bezier(.22, 1, .36, 1) !important;
   }
 
   .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button {
@@ -5120,11 +5120,11 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     transform: translateY(0) !important;
   }
 
-  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(1) { transition-delay: 90ms !important; }
-  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(2) { transition-delay: 115ms !important; }
-  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(3) { transition-delay: 140ms !important; }
-  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(4) { transition-delay: 165ms !important; }
-  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(5) { transition-delay: 190ms !important; }
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(1) { transition-delay: 100ms !important; }
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(2) { transition-delay: 130ms !important; }
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(3) { transition-delay: 160ms !important; }
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(4) { transition-delay: 190ms !important; }
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(5) { transition-delay: 220ms !important; }
 
   .app-shell > .student-app > .mobile-header .mobile-menu-button svg {
     transform-origin: center;
