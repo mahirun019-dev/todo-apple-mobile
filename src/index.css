@@ -5344,3 +5344,173 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     border-top-color: var(--careerflow-action-divider) !important;
   }
 }
+
+/* Global create menu: inline expansion on desktop, solid action sheets on mobile. */
+@media (min-width: 768px) {
+  .desktop-create {
+    position: static;
+  }
+
+  .desktop-create-menu {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    z-index: auto !important;
+    display: grid;
+    width: 100% !important;
+    max-height: 220px;
+    margin-top: 8px;
+    overflow: hidden;
+    border: 0 !important;
+    border-top: 1px solid var(--border-color) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    border-radius: 0 !important;
+    background: var(--bg-surface) !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    animation: desktop-create-menu-expand 180ms ease-out;
+  }
+
+  .desktop-create-menu > button {
+    min-height: 46px;
+    height: 46px;
+    padding: 0 10px;
+    border: 0 !important;
+    border-top: 1px solid var(--border-color) !important;
+    border-radius: 0 !important;
+    color: var(--text-primary) !important;
+    background: transparent !important;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .desktop-create-menu > button:first-child {
+    border-top: 0 !important;
+  }
+
+  .desktop-create-menu > button:hover {
+    color: var(--text-primary) !important;
+    background: var(--bg-muted) !important;
+  }
+
+  .desktop-create-menu > button > svg:first-child {
+    width: 18px;
+    height: 18px;
+    color: var(--text-secondary) !important;
+  }
+
+  .desktop-create-menu > button > .desktop-create-submenu-chevron,
+  .desktop-create-menu > button > .desktop-create-back-icon {
+    width: 16px;
+    height: 16px;
+    margin-left: auto;
+    color: var(--text-muted) !important;
+  }
+
+  .desktop-create-menu > button > .desktop-create-back-icon {
+    margin-left: 0;
+    transform: rotate(180deg);
+  }
+
+  @keyframes desktop-create-menu-expand {
+    from { opacity: 0; max-height: 0; }
+    to { opacity: 1; max-height: 220px; }
+  }
+}
+
+@media (max-width: 767px) {
+  .careerflow-action-sheet-layer > .sheet-backdrop,
+  .record-add-sheet > .modal-backdrop {
+    background: rgba(20, 24, 30, .10) !important;
+    backdrop-filter: blur(3px) !important;
+    -webkit-backdrop-filter: blur(3px) !important;
+  }
+
+  [data-theme="dark"] .careerflow-action-sheet-layer > .sheet-backdrop,
+  [data-theme="dark"] .record-add-sheet > .modal-backdrop {
+    background: rgba(0, 0, 0, .18) !important;
+    backdrop-filter: blur(3px) !important;
+    -webkit-backdrop-filter: blur(3px) !important;
+  }
+
+  .careerflow-action-sheet-layer > .action-sheet,
+  .record-add-sheet > .drawer {
+    background: var(--bg-surface) !important;
+    border-color: var(--border-color) !important;
+    box-shadow: 0 -10px 32px rgba(15, 23, 42, .14) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  [data-theme="dark"] .careerflow-action-sheet-layer > .action-sheet,
+  [data-theme="dark"] .record-add-sheet > .drawer {
+    box-shadow: 0 -10px 32px rgba(0, 0, 0, .28) !important;
+  }
+
+  .careerflow-action-sheet-layer .sheet-action,
+  .careerflow-action-sheet-layer .cancel-action,
+  .careerflow-action-sheet-layer .sheet-gap,
+  .record-add-sheet .create-record-picker button {
+    background: transparent !important;
+    border-color: var(--border-color) !important;
+  }
+
+  .careerflow-action-sheet-layer .sheet-action:hover,
+  .careerflow-action-sheet-layer .sheet-action:active,
+  .careerflow-action-sheet-layer .sheet-action[data-pressed="true"],
+  .careerflow-action-sheet-layer .cancel-action:hover,
+  .careerflow-action-sheet-layer .cancel-action:active,
+  .careerflow-action-sheet-layer .cancel-action[data-pressed="true"],
+  .record-add-sheet .create-record-picker button:hover,
+  .record-add-sheet .create-record-picker button:active,
+  .record-add-sheet .create-record-picker button[data-pressed="true"] {
+    background: var(--bg-muted) !important;
+  }
+}
+
+/* The mobile navigation reveals as a solid surface below the persistent Header. */
+@media (max-width: 767px) {
+  .mobile-settings-layer::before {
+    inset: calc(58px + env(safe-area-inset-top)) 0 0;
+    background: var(--bg-surface) !important;
+    backdrop-filter: blur(3px) !important;
+    -webkit-backdrop-filter: blur(3px) !important;
+    opacity: 1 !important;
+    clip-path: inset(0 0 100% 0);
+    animation: mobile-navigation-surface-in 260ms cubic-bezier(.2, .8, .2, 1) forwards !important;
+  }
+
+  .mobile-settings-layer.closing::before {
+    animation: mobile-navigation-surface-out 220ms cubic-bezier(.2, .8, .2, 1) 30ms forwards !important;
+  }
+
+  .mobile-settings-nav {
+    animation: mobile-navigation-content-in 180ms cubic-bezier(.2, .8, .2, 1) 80ms forwards !important;
+  }
+
+  .mobile-settings-layer.closing .mobile-settings-nav {
+    animation: mobile-navigation-content-out 150ms cubic-bezier(.2, .8, .2, 1) forwards !important;
+  }
+
+  @keyframes mobile-navigation-surface-in {
+    from { clip-path: inset(0 0 100% 0); }
+    to { clip-path: inset(0); }
+  }
+
+  @keyframes mobile-navigation-surface-out {
+    from { clip-path: inset(0); }
+    to { clip-path: inset(0 0 100% 0); }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) and (max-width: 767px) {
+  .mobile-settings-layer::before {
+    animation: none !important;
+    clip-path: inset(0) !important;
+  }
+
+  .mobile-settings-layer.closing::before {
+    clip-path: inset(0 0 100% 0) !important;
+  }
+}

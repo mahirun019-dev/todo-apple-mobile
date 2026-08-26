@@ -397,9 +397,11 @@ const tr = {
     subtitle: "日本就活进度与材料管理",
     addCompany: "新增企业",
     addEvent: "新增日程",
+    addEsInterview: "添加 ES・面试",
     addMaterial: "添加材料",
     addInterview: "新增面试记录",
     addPrep: "新增准备事项",
+    back: "返回",
     deleteEventTitle: "删除此日程？",
     deleteEventDescription: "删除后无法恢复。",
     deleteAction: "删除",
@@ -550,9 +552,11 @@ const tr = {
     subtitle: "日本就活進捗・書類管理",
     addCompany: "企業を追加",
     addEvent: "日程を追加",
+    addEsInterview: "ES・面接を追加",
     addMaterial: "書類を追加",
     addInterview: "面接記録を追加",
     addPrep: "準備事項を追加",
+    back: "戻る",
     deleteEventTitle: "この日程を削除しますか？",
     deleteEventDescription: "削除すると元に戻せません。",
     deleteAction: "削除",
@@ -703,9 +707,11 @@ const tr = {
     subtitle: "Japan job search progress and materials",
     addCompany: "Add company",
     addEvent: "Add event",
+    addEsInterview: "Add ES · Interview",
     addMaterial: "Add document",
     addInterview: "Add interview record",
     addPrep: "Add preparation",
+    back: "Back",
     deleteEventTitle: "Delete this schedule?",
     deleteEventDescription: "This cannot be undone.",
     deleteAction: "Delete",
@@ -1890,8 +1896,7 @@ function createActions(t: any): [CreateType, any, string][] {
   return [
     ["company", Building2, t.addCompany],
     ["schedule", CalendarDays, t.addEvent],
-    ["es", FileJson, t.addMaterial],
-    ["interview", BriefcaseBusiness, t.addInterview],
+    ["es", FileJson, t.addEsInterview],
     ["preparation", ListChecks, t.addPrep],
   ];
 }
@@ -1906,6 +1911,14 @@ function DesktopCreate({
   active: boolean;
   setActive: (x: boolean) => void;
 }) {
+  const [subMenu, setSubMenu] = useState(false);
+  useEffect(() => {
+    if (!active) setSubMenu(false);
+  }, [active]);
+  const esActions: [CreateType, any, string][] = [
+    ["es", FileJson, t.addMaterial],
+    ["interview", BriefcaseBusiness, t.addInterview],
+  ];
   return (
     <div className="desktop-create">
       <button className="create-entry" onClick={() => setActive(!active)}>
@@ -1914,10 +1927,24 @@ function DesktopCreate({
       </button>
       {active && (
         <div className="desktop-create-menu">
-          {createActions(t).map(([kind, Icon, label]) => (
-            <button key={kind} onClick={() => open(kind)}>
+          {subMenu ? (
+            <>
+              <button className="desktop-create-back" onClick={() => setSubMenu(false)}>
+                <ChevronRight className="desktop-create-back-icon" />
+                <span>{t.back}</span>
+              </button>
+              {esActions.map(([kind, Icon, label]) => (
+                <button key={kind} onClick={() => open(kind)}>
+                  <Icon />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </>
+          ) : createActions(t).map(([kind, Icon, label]) => (
+            <button key={kind} onClick={() => kind === "es" ? setSubMenu(true) : open(kind)}>
               <Icon />
               <span>{label}</span>
+              {kind === "es" && <ChevronRight className="desktop-create-submenu-chevron" />}
             </button>
           ))}
         </div>
@@ -2890,18 +2917,17 @@ function ActionMenu({
   open: (x: CreateType) => void;
 }) {
   const [start, setStart] = useState(0),
-    [closing, setClosing] = useState(false);
+    [closing, setClosing] = useState(false),
+    [subMenu, setSubMenu] = useState(false);
   const dismiss = () => {
     setClosing(true);
-    setTimeout(close, 220);
+    setTimeout(close, 260);
   };
-  const actions = createActions(t).filter(([kind]) => kind !== "preparation");
-  const recent = localStorage.getItem("careerflow-last-create-type");
-  const preferred = actions.findIndex(([kind]) => kind === recent);
-  const ordered = [
-    ...(preferred >= 0 ? [actions[preferred]] : []),
-    ...actions.filter((_, index) => index !== preferred),
+  const esActions: [CreateType, any, string][] = [
+    ["es", FileJson, t.addMaterial],
+    ["interview", BriefcaseBusiness, t.addInterview],
   ];
+  const actions = subMenu ? esActions : createActions(t);
   return (
     <div className="bottom-sheet-layer careerflow-action-sheet-layer">
       <button
@@ -2917,15 +2943,21 @@ function ActionMenu({
         }}
       >
         <div className="sheet-handle" />
-        {ordered.map(([kind, Icon, label]) => (
+        {subMenu && (
+          <button className="sheet-action sheet-back-action" onClick={() => setSubMenu(false)}>
+            <ChevronRight className="sheet-back-icon" />
+            <span>{t.back}</span>
+          </button>
+        )}
+        {actions.map(([kind, Icon, label]) => (
           <button
             className="sheet-action"
-            onClick={() => open(kind)}
+            onClick={() => kind === "es" && !subMenu ? setSubMenu(true) : open(kind)}
             key={kind}
           >
             <Icon />
             <span>{label}</span>
-            <ChevronRight />
+            {!subMenu && kind === "es" && <ChevronRight />}
           </button>
         ))}
         <div className="sheet-gap" />
@@ -3632,7 +3664,7 @@ function MobileSettingsDrawer({
   const dismiss = () => {
     if (closing) return;
     setClosing(true);
-    window.setTimeout(close, 200);
+    window.setTimeout(close, 260);
   };
   useEffect(() => {
     const y = window.scrollY;
