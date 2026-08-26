@@ -2427,21 +2427,26 @@ function Dashboard({
           <Plus />
           {t.addCompany}
         </PrimaryActionButton>
-      </div>
-      <div className="main-dashboard-layout">
-        <div className="dashboard-main">
-          <div className="overview-grid">
-            {homeSummaryOrder.filter((module: HomeSummaryModule) => homeSummaryVisibility[module]).map((module: HomeSummaryModule) => module === "active"
-              ? <Metric key={module} n={active.length} l={t.inProgress} i={BriefcaseBusiness} onClick={() => navigate("companies", "active")} />
-              : module === "deadlines"
-                ? <Metric key={module} n={due.length} l={t.dueWeek} i={Clock3} onClick={() => navigate("schedule", "this-week-deadline")} />
-                : <Metric key={module} n={waiting.length} l={t.waiting} i={Timer} onClick={() => navigate("companies", "waiting-result")} />)}
-          </div>
-          {homeSummaryVisibility.deadlines && deadlinesModule}
-          <div className="dashboard-customizable-modules">
-            {homeSectionOrder.filter((module: HomeSection) => homeSectionVisibility[module] && homeSections[module] !== null).map((module: HomeSection) => <div key={module}>{homeSections[module]}</div>)}
-          </div>
         </div>
+        <div className="main-dashboard-layout">
+          <div className="dashboard-main">
+            <div className="dashboard-top-grid">
+              <div className="overview-grid">
+                {homeSummaryOrder.filter((module: HomeSummaryModule) => homeSummaryVisibility[module]).map((module: HomeSummaryModule) => module === "active"
+                  ? <Metric key={module} n={active.length} l={t.inProgress} i={BriefcaseBusiness} onClick={() => navigate("companies", "active")} />
+                  : module === "deadlines"
+                    ? <Metric key={module} n={due.length} l={t.dueWeek} i={Clock3} onClick={() => navigate("schedule", "this-week-deadline")} />
+                    : <Metric key={module} n={waiting.length} l={t.waiting} i={Timer} onClick={() => navigate("companies", "waiting-result")} />)}
+              </div>
+              {homeSectionOrder.filter((module: HomeSection) => module === "upcoming" && homeSectionVisibility[module] && homeSections[module] !== null).map((module: HomeSection) => <div key={module}>{homeSections[module]}</div>)}
+            </div>
+            <div className="dashboard-full-width-sections">
+              {homeSummaryVisibility.deadlines && deadlinesModule}
+              <div className="dashboard-customizable-modules">
+                {homeSectionOrder.filter((module: HomeSection) => module !== "upcoming" && homeSectionVisibility[module] && homeSections[module] !== null).map((module: HomeSection) => <div key={module}>{homeSections[module]}</div>)}
+              </div>
+            </div>
+          </div>
         <aside className="dashboard-sidebar">
           {homeSummaryVisibility.waiting && <section className="entity-card">
             <Title>{t.results}</Title>
