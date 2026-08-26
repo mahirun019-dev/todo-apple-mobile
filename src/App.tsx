@@ -362,8 +362,8 @@ function isActiveCompany(company: Company): boolean {
 function isWaitingResultCompany(company: Company, events: Event[]): boolean {
   return ["web_test", "first_interview", "second_interview", "final_interview"].includes(company.stage) && !getUpcomingEvent(events, company.id);
 }
-function readRouteState(): { view: View; companyFilter: CompanyRouteFilter | null; scheduleFilter: ScheduleRouteFilter | null } {
-  if (typeof window === "undefined") return { view: "dashboard", companyFilter: null, scheduleFilter: null };
+function readRouteState(): { view: View; companyFilter: CompanyRouteFilter | null; scheduleFilter: ScheduleRouteFilter | null; selectedCompanyId: string | null } {
+  if (typeof window === "undefined") return { view: "dashboard", companyFilter: null, scheduleFilter: null, selectedCompanyId: null };
   const params = new URLSearchParams(window.location.search);
   const routeByPath: Record<string, View> = {
     "/home": "dashboard",
@@ -382,6 +382,7 @@ function readRouteState(): { view: View; companyFilter: CompanyRouteFilter | nul
     view,
     companyFilter: view === "companies" && (filter === "active" || filter === "waiting-result") ? filter : null,
     scheduleFilter: view === "schedule" && filter === "this-week-deadline" ? filter : null,
+    selectedCompanyId: view === "companies" ? params.get("company") : null,
   };
 }
 const tr = {
@@ -1100,7 +1101,7 @@ export default function App() {
     [scheduleCompanyId, setScheduleCompanyId] = useState<string>(),
     [editInterview, setEditInterview] = useState<InterviewRecord>(),
     [editPrep, setEditPrep] = useState<Preparation>(),
-    [selected, setSelected] = useState<string>(),
+    [selected, setSelected] = useState<string | undefined>(initialRoute.selectedCompanyId || undefined),
     [companiesCollapsed, setCompaniesCollapsed] = useState(() => localStorage.getItem("careerflow-companies-collapsed") === "true"),
     [confirm, setConfirm] = useState<Company>(),
     [deleteEvent, setDeleteEvent] = useState<Event>(),
@@ -1112,24 +1113,29 @@ export default function App() {
     iconRef = useRef<HTMLInputElement>(null);
   const firstDataRender = useRef(true);
   const t = tr[locale];
-  const navigate = (nextView: View, nextFilter?: CompanyRouteFilter | ScheduleRouteFilter) => {
+  const navigate = (nextView: View, nextFilter?: CompanyRouteFilter | ScheduleRouteFilter, nextCompanyId?: string) => {
     const params = new URLSearchParams();
     params.set("view", nextView);
     if (nextFilter) params.set("filter", nextFilter);
+    if (nextView === "companies" && nextCompanyId) params.set("company", nextCompanyId);
     window.history.pushState(null, "", `${window.location.pathname}?${params.toString()}`);
     setViewState(nextView);
     setCompanyFilter(nextView === "companies" && (nextFilter === "active" || nextFilter === "waiting-result") ? nextFilter : null);
     setScheduleFilter(nextView === "schedule" && nextFilter === "this-week-deadline" ? nextFilter : null);
-    setSelected(undefined);
+    setSelected(nextView === "companies" ? nextCompanyId : undefined);
   };
   const setView = (nextView: View) => navigate(nextView);
+  const selectCompany = (companyId?: string) => {
+    const route = readRouteState();
+    navigate("companies", route.companyFilter || undefined, companyId);
+  };
   useEffect(() => {
     const onPopState = () => {
       const route = readRouteState();
       setViewState(route.view);
       setCompanyFilter(route.companyFilter);
       setScheduleFilter(route.scheduleFilter);
-      setSelected(undefined);
+      setSelected(route.selectedCompanyId || undefined);
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
@@ -1581,8 +1587,7 @@ export default function App() {
                 title={x.name}
                 key={x.id}
                 onClick={() => {
-                  setView("companies");
-                  setSelected(x.id);
+                  selectCompany(x.id);
                 }}
               >
                 <i style={{ background: x.color }} />
@@ -1632,7 +1637,7 @@ export default function App() {
                 data,
                 byId,
                 selected,
-                setSelected,
+                setSelected: selectCompany,
                 open,
                 setEditCompany,
                 setEditEvent,
