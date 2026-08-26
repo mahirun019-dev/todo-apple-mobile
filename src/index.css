@@ -2296,6 +2296,10 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   flex-direction: column;
   gap: 16px;
 }
+.dashboard-customizable-modules {
+  display: grid;
+  gap: 20px;
+}
 .dashboard-sidebar > .entity-card {
   width: 100%;
   min-width: 0;
@@ -5778,5 +5782,34 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
 
   .calendar-add-inline {
     justify-self: stretch;
+  }
+}
+
+/* Home dashboard modules share one card rhythm across viewport sizes. */
+.dashboard-customizable-modules > div > .next-class,
+.dashboard-customizable-modules > div > .mobile-action-required,
+.dashboard-customizable-modules > div > .dashboard-progress-module {
+  padding: 22px 20px;
+  border-radius: 16px;
+}
+
+.dashboard-customizable-modules > div > .next-class > .section-title,
+.dashboard-customizable-modules > div > .mobile-action-required > .section-title,
+.dashboard-customizable-modules > div > .dashboard-progress-module > .section-title {
+  margin-bottom: 18px;
+}
+
+.dashboard-progress-module .funnel .funnel-row {
+  min-height: 56px;
+  padding: 10px 0;
+}
+
+@media (max-width: 767px) {
+  .dashboard-customizable-modules {
+    gap: 16px;
+  }
+
+  .dashboard-progress-module .funnel .funnel-row {
+    min-height: 56px;
   }
 }
