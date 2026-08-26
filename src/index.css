@@ -2824,6 +2824,10 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   align-items: center;
 }
 .form-combobox-control input {
+  min-height: var(--field-height, 38px);
+  border-radius: var(--field-radius, 7px);
+  border-color: var(--field-border, var(--border-default));
+  background: var(--field-background, var(--bg-input));
   padding-right: 36px;
 }
 .form-combobox-control > svg {
@@ -2851,21 +2855,22 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   display: grid;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 5px;
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  background: var(--bg-surface);
-  box-shadow: 0 12px 30px rgba(15, 23, 42, .16);
+  max-height: 280px;
+  padding: 4px;
+  border: 1px solid var(--field-border, var(--border-default));
+  border-radius: var(--dropdown-radius, 10px);
+  background: var(--dropdown-background, var(--bg-surface));
+  box-shadow: var(--dropdown-shadow, 0 8px 20px rgba(15, 23, 42, .12));
 }
 .form-combobox-menu button {
   display: flex;
-  min-height: 48px;
+  min-height: 44px;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 0 14px;
   border: 0;
-  border-radius: 7px;
+  border-radius: calc(var(--dropdown-radius, 10px) - 3px);
   color: var(--text-primary);
   background: transparent;
   text-align: left;
@@ -2877,13 +2882,13 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
 .form-combobox-menu button.active { background: var(--bg-muted); }
 .form-combobox-menu button.selected { color: var(--accent, #2477d9); background: var(--accent-soft, var(--bg-muted)); }
 .form-combobox-menu button svg { width: 16px; height: 16px; color: var(--accent, #2477d9); }
-.form-combobox-menu .form-combobox-other { border-top: 1px solid var(--border-color); border-radius: 0; color: var(--accent, #2477d9); }
+.form-combobox-menu .form-combobox-other { margin-top: 4px; border-top: 1px solid var(--field-border, var(--border-default)); border-radius: 0; color: var(--accent, #2477d9); }
 .form-combobox-empty { margin: 8px 10px; color: var(--text-secondary); font-size: 12px; font-weight: 500; }
 @media (max-width: 760px) {
   .course-detail { grid-template-columns: 1fr; }
   .company-next-editor-card { align-items: flex-start; flex-direction: column; }
   .company-next-editor-card button { width: 100%; }
-  .form-combobox-menu { max-width: calc(100vw - 32px); border-radius: 14px; }
+  .form-combobox-menu { max-height: 240px; max-width: none; border-radius: var(--dropdown-radius, 10px); }
 }
 
 .mobile-action-required { display: none; }
@@ -3823,6 +3828,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   --button-secondary-text: #24262b;
   --button-disabled-bg: #eef0f2;
   --button-disabled-text: #9298a0;
+  --field-height: 38px;
+  --field-radius: 7px;
+  --field-border: var(--border-default);
+  --field-focus-border: var(--accent);
+  --field-background: var(--bg-input);
+  --dropdown-background: var(--bg-surface);
+  --dropdown-radius: 10px;
+  --dropdown-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
 }
 [data-theme="dark"] {
   --bg-app: #111315;

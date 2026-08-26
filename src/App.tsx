@@ -3047,7 +3047,8 @@ function SearchableChoiceField({
       const viewportHeight = viewport?.height || window.innerHeight;
       const viewportBottom = viewportTop + viewportHeight;
       const gap = 6;
-      const preferredHeight = Math.min(320, Math.max(160, Math.floor(viewportHeight * 0.4)));
+      const maxListHeight = window.matchMedia("(max-width: 760px)").matches ? 240 : 280;
+      const preferredHeight = Math.min(maxListHeight, Math.max(160, Math.floor(viewportHeight * 0.4)));
       const belowSpace = viewportBottom - anchor.bottom - gap;
       const aboveSpace = anchor.top - viewportTop - gap;
       const showBelow = belowSpace >= 180 || belowSpace >= aboveSpace;
