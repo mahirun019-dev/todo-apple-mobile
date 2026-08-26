@@ -816,6 +816,13 @@ function getUpcomingEvent(events: Event[], companyId: string | undefined): Event
     .filter((event) => event.companyId === companyId && new Date(event.startsAt).getTime() >= Date.now())
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0];
 }
+function getLegacyCompanyEventAt(company: any): string {
+  const legacy = company.nextEventAt
+    || company.scheduleDate
+    || (typeof company.nextEvent === "string" ? company.nextEvent : company.nextEvent?.startsAt || company.nextEvent?.startAt)
+    || (typeof company.nextSchedule === "string" ? company.nextSchedule : company.nextSchedule?.startsAt || company.nextSchedule?.startAt);
+  return typeof legacy === "string" ? legacy.trim() : "";
+}
 function makeCompanyNextEvent(company: Company, startsAt: string, existing?: Event): Event {
   const locationOrOnline = company.locationOrOnline || "";
   return {
@@ -835,7 +842,7 @@ function makeCompanyNextEvent(company: Company, startsAt: string, existing?: Eve
 }
 function normalize(x: any): Data {
   const companies = (x.companies || []).map((company: Company) => {
-    const { nextEventAt: _legacyNextEventAt, ...withoutLegacyNext } = company as Company & { nextEventAt?: string };
+    const { nextEventAt: _legacyNextEventAt, nextSchedule: _legacyNextSchedule, nextEvent: _legacyNextEvent, scheduleDate: _legacyScheduleDate, ...withoutLegacyNext } = company as Company & Record<string, unknown>;
     return withoutLegacyNext;
   });
   const events = (x.events || []).map((event: Event) => {
@@ -848,7 +855,7 @@ function normalize(x: any): Data {
     return { ...event, eventMode: mode, attendanceMode: event.attendanceMode || mode, prefecture, city, municipality: event.municipality || city, municipalityCode: event.municipalityCode, detailLocation: event.detailLocation || (city ? locationLabel.replace(prefecture || "", "").replace(city, "").replace(/^・/, "") : ""), location: event.location || legacy, locationLabel, latitude: coords?.[0], longitude: coords?.[1], onlinePlatform: event.onlinePlatform || (mode === "online" ? legacy : ""), meetingUrl: event.meetingUrl || (/https?:\/\//i.test(legacy) ? legacy : "") };
   });
   for (const company of (x.companies || []) as Company[]) {
-    const startsAt = String(company.nextEventAt || "").trim();
+    const startsAt = getLegacyCompanyEventAt(company);
     if (!startsAt || events.some((event: Event) => event.companyId === company.id && event.startsAt === startsAt)) continue;
     events.push(makeCompanyNextEvent(company, startsAt));
   }
