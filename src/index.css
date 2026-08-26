@@ -2896,17 +2896,20 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   [data-theme="dark"] .career-app .create-entry { color: #e5f1ff; background: #285f9d; }
 }
 
-/* Mobile header: keep the page header sticky without clipping its scroll container. */
+/* Mobile header: keep it fixed above the document scroll container. */
 @media (max-width: 767px) {
   .app-shell > .student-app {
     overflow: visible;
   }
 
   .app-shell > .student-app > .mobile-header {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
     z-index: 900;
-    min-height: calc(58px + env(safe-area-inset-top));
+    min-height: calc(56px + env(safe-area-inset-top));
     box-sizing: border-box;
     padding: env(safe-area-inset-top) 15px 8px;
     border: 0;
@@ -2926,6 +2929,10 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
     background: rgba(24, 27, 31, 0.72);
     backdrop-filter: saturate(160%) blur(20px);
     -webkit-backdrop-filter: saturate(160%) blur(20px);
+  }
+
+  .app-shell > .student-app > .workspace {
+    padding-top: calc(56px + env(safe-area-inset-top));
   }
 }
 
