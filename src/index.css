@@ -3385,7 +3385,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .mobile-settings-nav button svg { width: 20px; height: 20px; color: var(--text-secondary); }
   .mobile-settings-nav button svg:last-child { width: 17px; margin-left: auto; color: var(--text-muted); }
   .mobile-settings-page { min-height: 0; overflow-y: auto; padding-top: 16px; }
-  .mobile-settings-page.is-subpage { animation: mobile-settings-page-in .2s ease-out; }
   .mobile-choice-list button { justify-content: space-between; }
   .mobile-choice-list button svg { width: 19px; color: var(--text-primary); }
   .mobile-about { padding: 20px 10px; color: var(--text-secondary); }
@@ -3393,7 +3392,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .mobile-about p { margin: 8px 0; }
   .mobile-data-page { display: grid; gap: 18px; }
   .mobile-data-actions { padding-top: 16px; border-top: 1px solid var(--border-color); }
-  @keyframes mobile-settings-page-in { from { transform: translateX(18px); opacity: .65; } to { transform: translateX(0); opacity: 1; } }
   .mobile-settings-drawer { width: 100%; max-width: none; border-radius: 0; box-shadow: none; }
   .mobile-settings-header { min-height: 58px; border-bottom: 0; }
   .mobile-settings-brand { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: flex-start; padding: 0 10px; }
@@ -3459,22 +3457,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .drawer-shell { height: 100dvh; min-height: 0; overflow: hidden; }
   .drawer-header { position: relative; z-index: 20; flex: 0 0 auto; background: #fff; opacity: 1; transform: none; }
   .drawer-scroll { min-height: 0; flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
-  .drawer-accordion-panel { display: grid; grid-template-rows: 1fr; overflow: hidden; margin: 4px 0 6px; padding: 0; border-radius: 0; background: transparent; animation: drawer-accordion-in .2s ease-out; }
-  .mobile-settings-nav > button.expanded svg:last-child { transform: rotate(90deg); }
-  .drawer-accordion-panel .mobile-choice-list button,
-  .drawer-accordion-panel .mobile-data-actions button { min-height: 44px; height: 44px; padding: 0 12px; font-size: 15px; font-weight: 500; }
-  .drawer-accordion-panel .mobile-data-actions { gap: 0; padding: 4px 0; }
-  .drawer-accordion-panel .mobile-data-actions button { gap: 10px; }
-  .drawer-accordion-panel .mobile-data-actions button svg { width: 19px; height: 19px; }
-  .drawer-accordion-panel > button { display: grid; grid-template-columns: 32px minmax(0, 1fr) 20px; column-gap: 16px; min-height: 46px; height: 46px; width: 100%; min-width: 0; padding: 0 28px 0 48px; border: 0; border-radius: 0; color: #0f1419; background: transparent; font-size: 16px; font-weight: 600; line-height: 1.25; white-space: nowrap; text-align: left; }
-  .drawer-accordion-panel > button span { grid-column: 2; }
-  .drawer-accordion-panel > button span { min-width: 0; white-space: nowrap; overflow: visible; text-overflow: clip; }
-  .drawer-accordion-panel > button svg { width: 22px; height: 22px; color: #0f1419; stroke: currentColor; stroke-width: 2.2; }
-  .drawer-accordion-panel > button:hover { background: transparent; }
-  .drawer-accordion-panel .mobile-about { display: grid; gap: 6px; padding: 6px 0; color: #0f1419; font-size: 14px; font-weight: 500; }
-  .drawer-accordion-panel .mobile-about p { margin: 0; white-space: nowrap; }
-  @keyframes drawer-accordion-in { from { grid-template-rows: 0fr; opacity: 0; } to { grid-template-rows: 1fr; opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) { .drawer-accordion-panel { animation: none; } }
   .mobile-settings-nav button {
     min-height: 54px;
     height: 54px;
@@ -3625,7 +3607,7 @@ option { color: var(--text-primary); background: var(--bg-input); }
 
 /* The mobile drawer header must share the drawer surface, never a white block. */
 .mobile-settings-brand, .drawer-header { color: var(--text-primary); background: var(--bg-sidebar) !important; }
-.mobile-settings-brand strong, .drawer-accordion-panel > button, .mobile-settings-nav button { color: var(--text-primary); }
+.mobile-settings-brand strong, .mobile-settings-nav button { color: var(--text-primary); }
 .mobile-settings-brand small { color: var(--text-secondary); }
 .mobile-settings-nav button.active { color: var(--text-primary); background: var(--bg-selected); }
 
@@ -4077,7 +4059,7 @@ option { color: var(--text-primary); background: var(--bg-input); }
 [data-theme="dark"] .timeline > .empty-small { background: var(--bg-surface) !important; }
 [data-theme="dark"] .filter-bar button.active { color: var(--text-primary); background: var(--bg-selected); }
 [data-theme="dark"] .settings-drawer-panel .close-button, [data-theme="dark"] .close-button { color: var(--text-secondary); background: var(--bg-surface-elevated); border-color: var(--border-default); }
-[data-theme="dark"] .mobile-settings-nav button, [data-theme="dark"] .drawer-accordion-panel > button { color: var(--text-primary); }
+[data-theme="dark"] .mobile-settings-nav button, [data-theme="dark"] .mobile-settings-subpage-list > button { color: var(--text-primary); }
 [data-theme="dark"] .mobile-settings-nav button.active { color: var(--text-primary); background: var(--bg-selected); }
 [data-theme="dark"] .segmented-control span { color: var(--text-secondary); background: transparent; border-color: var(--border-strong); }
 [data-theme="dark"] .segmented-control input:checked + span { color: var(--text-primary); background: var(--bg-selected); border-color: var(--text-primary); }
@@ -4925,28 +4907,128 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     stroke-width: 2;
   }
 
-  .drawer-accordion-panel {
-    margin: 0 0 4px 44px;
-    padding: 2px 0 6px;
-    border-radius: 0;
+  .mobile-settings-content-switch {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 140ms cubic-bezier(.4, 0, .2, 1), transform 140ms cubic-bezier(.4, 0, .2, 1);
+  }
+
+  .mobile-settings-content-switch.is-out {
+    opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
+  }
+
+  .mobile-settings-content-switch.is-in {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  .mobile-settings-subheader {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    min-height: 56px;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mobile-settings-subheader .mobile-header-title {
+    justify-self: center;
+  }
+
+  .mobile-settings-back-button,
+  .mobile-settings-close-button {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    color: var(--text-primary);
     background: transparent;
   }
 
-  .drawer-accordion-panel > button {
-    min-height: 48px;
-    height: 48px;
+  .mobile-settings-back-button svg,
+  .mobile-settings-close-button svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .mobile-settings-subpage {
+    min-height: 0;
+    padding: 24px 28px calc(24px + env(safe-area-inset-bottom));
+  }
+
+  .mobile-settings-subpage > h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 21px;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .mobile-settings-subpage-list {
+    display: grid;
+    gap: 4px;
+    margin-top: 20px;
+  }
+
+  .mobile-settings-subpage-list > button {
+    display: flex;
+    min-height: 54px;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
     padding: 0 16px;
-    border-radius: 10px;
-    font-size: 17px;
-    font-weight: 500;
+    border: 0;
+    border-radius: 12px;
+    color: var(--text-primary);
+    background: transparent;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.25;
+    text-align: left;
   }
 
-  .drawer-accordion-panel > button:hover {
-    background: rgba(0, 0, 0, .035);
+  .mobile-settings-subpage-list > button:hover {
+    background: var(--bg-muted);
   }
 
-  [data-theme="dark"] .drawer-accordion-panel > button:hover {
-    background: rgba(255, 255, 255, .06);
+  .mobile-settings-subpage-list > button.selected {
+    background: var(--bg-selected);
+  }
+
+  .mobile-settings-subpage-list > button svg:first-child {
+    width: 24px;
+    height: 24px;
+    color: var(--text-secondary);
+    stroke: currentColor;
+    stroke-width: 2;
+  }
+
+  .mobile-settings-subpage-list > button svg:last-child {
+    width: 20px;
+    height: 20px;
+    margin-left: auto;
+  }
+
+  .mobile-settings-subpage-list.mobile-data-actions {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .mobile-settings-subpage.mobile-about {
+    display: grid;
+    align-content: start;
+    gap: 10px;
+    color: var(--text-secondary);
+  }
+
+  .mobile-settings-subpage.mobile-about p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.5;
   }
 
 }

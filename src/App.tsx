@@ -18,6 +18,7 @@ import {
   Database,
   DatabaseArrowDown,
   DatabaseArrowUp,
+  ArrowLeft,
   BarChart3,
   BriefcaseBusiness,
   Building2,
@@ -364,9 +365,18 @@ function isWaitingResultCompany(company: Company, events: Event[]): boolean {
 function readRouteState(): { view: View; companyFilter: CompanyRouteFilter | null; scheduleFilter: ScheduleRouteFilter | null } {
   if (typeof window === "undefined") return { view: "dashboard", companyFilter: null, scheduleFilter: null };
   const params = new URLSearchParams(window.location.search);
-  const view = (["dashboard", "companies", "schedule", "materials"] as View[]).includes(params.get("view") as View)
-    ? params.get("view") as View
-    : "dashboard";
+  const routeByPath: Record<string, View> = {
+    "/home": "dashboard",
+    "/companies": "companies",
+    "/schedule": "schedule",
+    "/materials": "materials",
+    "/es-interview": "materials",
+  };
+  const path = window.location.pathname.replace(/\/$/, "");
+  const requestedView = params.get("view");
+  const view = (["dashboard", "companies", "schedule", "materials"] as View[]).includes(requestedView as View)
+    ? requestedView as View
+    : routeByPath[path.slice(path.lastIndexOf("/"))] || "dashboard";
   const filter = params.get("filter");
   return {
     view,
@@ -1071,7 +1081,7 @@ export default function App() {
   const isMobile = useMediaQuery("(max-width: 767px)");
   const [data, setData] = useState<Data>(load);
   const initialRoute = readRouteState();
-  const [view, setView] = useState<View>(initialRoute.view),
+  const [view, setViewState] = useState<View>(initialRoute.view),
     [companyFilter, setCompanyFilter] = useState<CompanyRouteFilter | null>(initialRoute.companyFilter),
     [scheduleFilter, setScheduleFilter] = useState<ScheduleRouteFilter | null>(initialRoute.scheduleFilter),
     [theme, setTheme] = useState<Theme>(
@@ -1083,7 +1093,6 @@ export default function App() {
     }),
     [settings, setSettings] = useState(false),
     [mobileSettingsPage, setMobileSettingsPage] = useState<string | null>(null),
-    [selectedDrawerItem, setSelectedDrawerItem] = useState<string | null>(null),
     [form, setForm] = useState<CreateType | null>(null),
     [recordPickerOpen, setRecordPickerOpen] = useState(false),
     [editCompany, setEditCompany] = useState<Company>(),
@@ -1108,15 +1117,16 @@ export default function App() {
     params.set("view", nextView);
     if (nextFilter) params.set("filter", nextFilter);
     window.history.pushState(null, "", `${window.location.pathname}?${params.toString()}`);
-    setView(nextView);
+    setViewState(nextView);
     setCompanyFilter(nextView === "companies" && (nextFilter === "active" || nextFilter === "waiting-result") ? nextFilter : null);
     setScheduleFilter(nextView === "schedule" && nextFilter === "this-week-deadline" ? nextFilter : null);
     setSelected(undefined);
   };
+  const setView = (nextView: View) => navigate(nextView);
   useEffect(() => {
     const onPopState = () => {
       const route = readRouteState();
-      setView(route.view);
+      setViewState(route.view);
       setCompanyFilter(route.companyFilter);
       setScheduleFilter(route.scheduleFilter);
       setSelected(undefined);
@@ -1512,7 +1522,6 @@ export default function App() {
     if (layer?.contains(active) && active instanceof HTMLElement) active.blur();
     setSettings(false);
     setMobileSettingsPage(null);
-    setSelectedDrawerItem(null);
   };
   const importJson = (e: ChangeEvent<HTMLInputElement>) => {
     const input = e.currentTarget;
@@ -1572,8 +1581,8 @@ export default function App() {
                 title={x.name}
                 key={x.id}
                 onClick={() => {
-                  setSelected(x.id);
                   setView("companies");
+                  setSelected(x.id);
                 }}
               >
                 <i style={{ background: x.color }} />
@@ -1678,12 +1687,8 @@ export default function App() {
         {isMobile && (
           <MobileSettingsDrawer
             t={t}
-            setView={setView}
-            view={view}
             page={mobileSettingsPage}
             setPage={setMobileSettingsPage}
-            selectedItem={selectedDrawerItem}
-            setSelectedItem={setSelectedDrawerItem}
             close={closeMobileSettings}
             open={settings}
             theme={theme}
@@ -1806,7 +1811,7 @@ export default function App() {
       {isMobile && !hasOpenOverlay && createPortal(
         <MobileNav
           view={view}
-          setView={(next) => { setSelectedDrawerItem(null); setView(next); }}
+          setView={setView}
           t={t}
         />,
         document.body,
@@ -3496,18 +3501,18 @@ function BackupControls({ data, theme, locale, setData }: any) {
   return <section className="backup-panel"><section><div className="backup-cloud-actions"><button className="primary" onClick={exportBackup}>{labels.exportBackup}</button><button onClick={() => fileRef.current?.click()}>{labels.restoreFile}</button></div><p>{labels.exportNote}</p><p>{labels.restoreNote}</p><div className="backup-notes"><strong>{labels.notesTitle}</strong><span>{labels.notesData}</span><span>{labels.notesDevice}</span><span>{labels.format}</span></div><p>{lastExport ? `${labels.last}: ${new Date(lastExport).toLocaleDateString()}` : labels.never}</p>{error && <p className="backup-error">{error}</p>}<input hidden ref={fileRef} type="file" accept="application/json,.json" onChange={restoreFile} /></section></section>;
 }
 function MobileSettingsDrawer({
-  t, page, setPage, close, open, setView, view, selectedItem, setSelectedItem, theme, setTheme, locale, setLocale, data, setData, json, download,
+  t, page, setPage, close, open, theme, setTheme, locale, setLocale, data, json, download,
 }: any) {
   const layerRef = useRef<HTMLDivElement>(null);
+  const [renderedPage, setRenderedPage] = useState<string | null>(null);
+  const [contentPhase, setContentPhase] = useState<"idle" | "out" | "in">("idle");
   const label = "CareerFlow";
   const about = locale === "ja"
     ? { title: "CareerFlowについて", version: "CareerFlow バージョン 1.0", db: `データベースバージョン：v${data.schemaVersion}`, privacy: "プライバシー：データは主にこのデバイスに保存されます。", license: "オープンソースライセンス：MIT License" }
     : locale === "en"
       ? { title: "About CareerFlow", version: "CareerFlow version 1.0", db: `Database version: v${data.schemaVersion}`, privacy: "Privacy: Data is mainly stored on this device.", license: "Open-source license: MIT License" }
       : { title: "关于 CareerFlow", version: "CareerFlow 版本 1.0", db: `数据库版本：v${data.schemaVersion}`, privacy: "隐私说明：数据主要保存在当前设备。", license: "开源许可：MIT License" };
-  const dismiss = () => {
-    close();
-  };
+  const dismiss = () => close();
   useEffect(() => {
     if (!open) return;
     const y = window.scrollY;
@@ -3533,6 +3538,22 @@ function MobileSettingsDrawer({
       window.scrollTo(0, y);
     };
   }, [open]);
+  useEffect(() => {
+    if (!open) {
+      setRenderedPage(null);
+      setContentPhase("idle");
+      return;
+    }
+    if (page === renderedPage) return;
+    setContentPhase("out");
+    const swapTimer = window.setTimeout(() => {
+      setRenderedPage(page);
+      setContentPhase("in");
+      const settleFrame = window.requestAnimationFrame(() => setContentPhase("idle"));
+      window.setTimeout(() => window.cancelAnimationFrame(settleFrame), 320);
+    }, 140);
+    return () => window.clearTimeout(swapTimer);
+  }, [open, page, renderedPage]);
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -3624,25 +3645,30 @@ function MobileSettingsDrawer({
       layer.removeEventListener("transitionend", onTransitionEnd);
     };
   }, [open]);
+  const subpageTitle = renderedPage === "data" ? t.data : renderedPage === "appearance" ? t.appearance : renderedPage === "language" ? t.language : about.title;
+  const subpage = renderedPage === "data"
+    ? <section className="mobile-settings-subpage" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><div className="mobile-settings-subpage-list mobile-data-actions"><button type="button" onClick={() => download("careerflow-backup.json", JSON.stringify(makeBackupSnapshot(data, theme, locale), null, 2), "application/json")}><DatabaseArrowUp aria-hidden="true" /><span>{t.backup}</span></button><button type="button" onClick={() => json.current?.click()}><DatabaseArrowDown aria-hidden="true" /><span>{t.restore}</span></button></div></section>
+    : renderedPage === "appearance"
+      ? <section className="mobile-settings-subpage" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><div className="mobile-settings-subpage-list">{(["light", "dark", "system"] as Theme[]).map((x) => { const Icon = x === "light" ? Sun : x === "dark" ? Moon : Monitor; return <button type="button" className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}><Icon aria-hidden="true" /><span>{t[x]}</span>{theme === x && <Check aria-hidden="true" />}</button>; })}</div></section>
+      : renderedPage === "language"
+        ? <section className="mobile-settings-subpage" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><div className="mobile-settings-subpage-list">{(["zh", "ja"] as Locale[]).map((x) => <button type="button" className={locale === x ? "selected" : ""} onClick={() => setLocale(x)} key={x}><span>{x === "zh" ? "中文" : "日本語"}</span>{locale === x && <Check aria-hidden="true" />}</button>)}</div></section>
+        : <section className="mobile-settings-subpage mobile-about" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><p>{about.version}</p><p>{about.db}</p><p>{about.privacy}</p><p>{about.license}</p></section>;
   return <div ref={layerRef} className="mobile-settings-layer" data-mobile-global-nav="true" data-open={open ? "true" : "false"}>
     <button className="mobile-settings-backdrop" onClick={dismiss} aria-label={t.cancel} />
     <aside className="mobile-settings-drawer drawer-shell" role="dialog" aria-modal="true" aria-label={label}>
-      <header className="mobile-navigation-header mobile-header glass-lite">
-        <button className="mobile-menu-button" onClick={dismiss} aria-label={t.cancel}><X aria-hidden="true" /></button>
+      <header className={`mobile-navigation-header mobile-header glass-lite${renderedPage ? " mobile-settings-subheader" : ""}`}>
+        {renderedPage ? <button className="mobile-settings-back-button" type="button" onClick={() => setPage(null)} aria-label={locale === "ja" ? "戻る" : "返回"}><ArrowLeft aria-hidden="true" /></button> : <button className="mobile-menu-button" onClick={dismiss} aria-label={t.cancel}><X aria-hidden="true" /></button>}
         <strong className="mobile-header-title">CareerFlow</strong>
-        <span className="mobile-header-action-slot" aria-hidden="true" />
+        {renderedPage ? <button className="mobile-settings-close-button" type="button" onClick={dismiss} aria-label={t.cancel}><X aria-hidden="true" /></button> : <span className="mobile-header-action-slot" aria-hidden="true" />}
       </header>
-      <div className="drawer-main drawer-scroll"><nav className="mobile-settings-nav">
-        <button className={selectedItem === "home" ? "active" : ""} onClick={() => { setSelectedItem("home"); setPage(null); setView("dashboard"); dismiss(); }}><Home /><span>{t.dashboard}</span></button>
-        <button className={`${page === "data" ? "expanded " : ""}${selectedItem === "data" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("data"); setPage(page === "data" ? null : "data"); }}><Database /><span>{t.data}</span><ChevronRight /></button>
-        {page === "data" && <div className="drawer-accordion-panel"><button type="button" onClick={() => download("careerflow-backup.json", JSON.stringify(makeBackupSnapshot(data, theme, locale), null, 2), "application/json")}><DatabaseArrowUp /><span>{t.backup}</span></button><button type="button" onClick={() => json.current?.click()}><DatabaseArrowDown /><span>{t.restore}</span></button></div>}
-        <button className={`${page === "appearance" ? "expanded " : ""}${selectedItem === "appearance" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("appearance"); setPage(page === "appearance" ? null : "appearance"); }}><Palette /><span>{t.appearance}</span><ChevronRight /></button>
-        {page === "appearance" && <div className="drawer-accordion-panel">{(["light", "dark", "system"] as Theme[]).map((x) => { const Icon = x === "light" ? Sun : x === "dark" ? Moon : Monitor; return <button className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}><Icon aria-hidden="true" /><span>{t[x]}</span>{theme === x && <Check />}</button>; })}</div>}
-        <button className={`${page === "language" ? "expanded " : ""}${selectedItem === "language" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("language"); setPage(page === "language" ? null : "language"); }}><Globe /><span>{t.language}</span><ChevronRight /></button>
-        {page === "language" && <div className="drawer-accordion-panel">{(["zh", "ja"] as Locale[]).map((x) => <button type="button" className={locale === x ? "selected" : ""} onClick={() => setLocale(x)} key={x}><span>{x === "zh" ? "中文" : "日本語"}</span>{locale === x && <Check />}</button>)}</div>}
-        <button className={`${page === "about" ? "expanded " : ""}${selectedItem === "about" ? "selected-setting" : ""}`} onClick={() => { setSelectedItem("about"); setPage(page === "about" ? null : "about"); }}><Info /><span>{about.title}</span><ChevronRight /></button>
-        {page === "about" && <div className="drawer-accordion-panel mobile-about"><p>{about.title}</p><p>{about.version}</p><p>{about.db}</p><p>{about.privacy}</p><p>{about.license}</p></div>}
-      </nav></div>
+      <div className="drawer-main drawer-scroll"><div className={`mobile-settings-content-switch ${contentPhase === "out" ? "is-out" : contentPhase === "in" ? "is-in" : ""}`}>
+        {renderedPage ? subpage : <nav className="mobile-settings-nav">
+          <button type="button" onClick={() => setPage("data")}><Database aria-hidden="true" /><span>{t.data}</span><ChevronRight aria-hidden="true" /></button>
+          <button type="button" onClick={() => setPage("appearance")}><Palette aria-hidden="true" /><span>{t.appearance}</span><ChevronRight aria-hidden="true" /></button>
+          <button type="button" onClick={() => setPage("language")}><Globe aria-hidden="true" /><span>{t.language}</span><ChevronRight aria-hidden="true" /></button>
+          <button type="button" onClick={() => setPage("about")}><Info aria-hidden="true" /><span>{about.title}</span><ChevronRight aria-hidden="true" /></button>
+        </nav>}
+      </div></div>
     </aside>
   </div>;
 }
