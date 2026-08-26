@@ -1,6 +1,7 @@
 import {
   memo,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -314,11 +315,35 @@ const prefectures = prefectureData as string[];
 const cityOptions = Object.fromEntries(Object.entries(municipalityData).map(([prefecture, municipalities]) => [prefecture, (municipalities as { name: string }[]).map((x) => x.name)])) as Record<string, string[]>;
 const locationCoordinates: Record<string, [number, number]> = { "東京都渋谷区": [35.6618, 139.7041], "東京都新宿区": [35.6938, 139.7034], "東京都豊島区": [35.7263, 139.7169], "東京都千代田区": [35.6938, 139.7532], "東京都港区": [35.6581, 139.7516], "栃木県鹿沼市": [36.5671, 139.7454], "大阪府大阪市": [34.6937, 135.5023], "神奈川県横浜市": [35.4437, 139.638], "埼玉県さいたま市": [35.8617, 139.6455], "千葉県千葉市": [35.6073, 140.1063] };
 const industryOptions = [
-  "IT・ソフトウェア", "インターネット・Web", "通信", "SIer・システム開発", "メーカー", "電機・電子", "機械", "自動車", "化学", "食品", "建設", "不動産", "インフラ", "電力・ガス", "鉄道・交通", "物流", "商社", "小売", "金融", "銀行", "証券", "保険", "コンサルティング", "人材", "広告・メディア", "出版", "教育", "医療・福祉", "官公庁・公社",
+  "IT・ソフトウェア", "インターネット・Web", "通信", "SIer・システム開発", "メーカー", "電機・電子", "機械", "自動車", "化学", "食品", "建設", "不動産", "インフラ", "電力・ガス", "鉄道・交通", "物流", "商社", "小売", "金融", "銀行", "証券", "保険", "コンサルティング", "人材", "広告・メディア", "出版", "教育", "医療・福祉", "官公庁・公社", "その他",
 ];
-const occupationOptions = [
-  "インフラエンジニア", "ネットワークエンジニア", "サーバーエンジニア", "クラウドエンジニア", "システムエンジニア（SE）", "アプリケーションエンジニア", "Webエンジニア", "フロントエンドエンジニア", "バックエンドエンジニア", "ソフトウェアエンジニア", "組み込みエンジニア", "セキュリティエンジニア", "データエンジニア", "AI・機械学習エンジニア", "QA・テストエンジニア", "社内SE", "ITコンサルタント", "プリセールス", "テクニカルサポート", "営業", "企画", "マーケティング", "経理・財務", "人事", "総務", "法務", "事務", "研究開発", "生産技術", "品質管理", "設計", "施工管理", "販売・サービス",
+const industryOccupationGroups: Array<{ industries: string[]; occupations: string[] }> = [
+  {
+    industries: ["IT・ソフトウェア", "インターネット・Web", "通信", "SIer・システム開発"],
+    occupations: ["インフラエンジニア", "ネットワークエンジニア", "サーバーエンジニア", "クラウドエンジニア", "システムエンジニア（SE）", "アプリケーションエンジニア", "Webエンジニア", "フロントエンドエンジニア", "バックエンドエンジニア", "ソフトウェアエンジニア", "セキュリティエンジニア", "データエンジニア", "AI・機械学習エンジニア", "QA・テストエンジニア", "社内SE", "ITコンサルタント", "プリセールス", "テクニカルサポート", "営業", "企画"],
+  },
+  {
+    industries: ["メーカー", "電機・電子", "機械", "自動車", "化学", "食品"],
+    occupations: ["研究開発", "設計", "生産技術", "品質管理", "製造技術", "機械設計", "電気・電子設計", "組み込みエンジニア", "営業", "技術営業", "企画"],
+  },
+  {
+    industries: ["金融", "銀行", "証券", "保険"],
+    occupations: ["法人営業", "個人営業", "営業", "企画", "リスク管理", "システム", "IT", "事務"],
+  },
+  {
+    industries: ["商社", "小売", "物流"],
+    occupations: ["営業", "企画", "マーケティング", "販売", "物流管理", "SCM", "事務"],
+  },
+  {
+    industries: ["建設", "不動産", "インフラ", "電力・ガス", "鉄道・交通"],
+    occupations: ["施工管理", "設計", "技術職", "設備管理", "営業", "企画", "IT・システム"],
+  },
 ];
+const generalOccupationOptions = ["営業", "企画", "マーケティング", "経理・財務", "人事", "総務", "法務", "事務", "研究開発", "品質管理", "販売・サービス"];
+function occupationsForIndustry(industry: string): string[] {
+  const group = industryOccupationGroups.find((entry) => entry.industries.includes(industry.trim()));
+  return [...new Set([...(group?.occupations || generalOccupationOptions), "その他"])];
+}
 const funnelStages: FunnelStage[] = ["funnelInterested", "funnelDocuments", "funnelAptitude", "funnelInterview", "funnelFinal", "funnelOffer"];
 type FunnelStage = "funnelInterested" | "funnelDocuments" | "funnelAptitude" | "funnelInterview" | "funnelFinal" | "funnelOffer";
 function funnelStageFor(stage: Company["stage"]): FunnelStage | null {
@@ -436,8 +461,13 @@ const tr = {
     jobTitle: "招聘职位・类别",
     otherCustom: "其他（手动输入）",
     searchOptions: "搜索或选择",
+    selectIndustryFirst: "请先选择行业",
+    industryChanged: "行业已更改，请重新选择职种",
+    industryInput: "输入行业",
+    positionInput: "输入职种",
+    noMatchingOptions: "没有匹配的候选项",
     industry: "行业",
-    position: "职位",
+    position: "职种",
     interest: "志望度",
     stage: "当前选考阶段",
     event: "下一项日程",
@@ -586,6 +616,11 @@ const tr = {
     jobTitle: "募集職種・コース",
     otherCustom: "その他（自由入力）",
     searchOptions: "検索または選択",
+    selectIndustryFirst: "先に業界を選択してください",
+    industryChanged: "業界が変更されたため、職種を再選択してください",
+    industryInput: "業界を入力",
+    positionInput: "職種を入力",
+    noMatchingOptions: "該当する候補がありません",
     industry: "業界",
     position: "職種",
     interest: "志望度",
@@ -722,6 +757,13 @@ const tr = {
     company: "Company",
     industry: "Industry",
     position: "Position",
+    otherCustom: "Other (custom)",
+    searchOptions: "Search or select",
+    selectIndustryFirst: "Select an industry first",
+    industryChanged: "Industry changed. Please select a position again.",
+    industryInput: "Enter an industry",
+    positionInput: "Enter a position",
+    noMatchingOptions: "No matching options",
     interest: "Interest",
     stage: "Stage",
     event: "Next event",
@@ -2948,6 +2990,9 @@ function SearchableChoiceField({
   value,
   options,
   onChange,
+  disabled = false,
+  disabledPlaceholder,
+  customPlaceholder,
 }: {
   t: any;
   label: string;
@@ -2955,16 +3000,27 @@ function SearchableChoiceField({
   value: string;
   options: string[];
   onChange: (value: string) => void;
+  disabled?: boolean;
+  disabledPlaceholder?: string;
+  customPlaceholder?: string;
 }) {
   const root = useRef<HTMLDivElement>(null);
+  const control = useRef<HTMLDivElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(value);
-  const [highlighted, setHighlighted] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [customMode, setCustomMode] = useState(false);
+  const [placement, setPlacement] = useState<"bottom" | "top">("bottom");
+  const [menuPosition, setMenuPosition] = useState({ left: 0, top: 0, bottom: 0, width: 0, maxHeight: 280 });
   const matches = options.filter((option) => !query.trim() || option.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   useEffect(() => setQuery(value), [value]);
   useEffect(() => {
     const onPointerDown = (event: PointerEvent) => {
-      if (root.current && !root.current.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      if (root.current?.contains(target) || menu.current?.contains(target)) return;
+      setOpen(false);
+      setActiveIndex(-1);
     };
     document.addEventListener("pointerdown", onPointerDown);
     return () => document.removeEventListener("pointerdown", onPointerDown);
@@ -2972,50 +3028,139 @@ function SearchableChoiceField({
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setOpen(false);
+        setActiveIndex(-1);
+      }
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open]);
+  useLayoutEffect(() => {
+    if (!open || disabled) return;
+    const updatePosition = () => {
+      const anchor = control.current?.getBoundingClientRect();
+      if (!anchor) return;
+      const viewport = window.visualViewport;
+      const viewportTop = viewport?.offsetTop || 0;
+      const viewportHeight = viewport?.height || window.innerHeight;
+      const viewportBottom = viewportTop + viewportHeight;
+      const gap = 6;
+      const preferredHeight = Math.min(320, Math.max(160, Math.floor(viewportHeight * 0.4)));
+      const belowSpace = viewportBottom - anchor.bottom - gap;
+      const aboveSpace = anchor.top - viewportTop - gap;
+      const showBelow = belowSpace >= 180 || belowSpace >= aboveSpace;
+      const availableHeight = Math.max(96, Math.min(preferredHeight, showBelow ? belowSpace : aboveSpace));
+      setPlacement(showBelow ? "bottom" : "top");
+      setMenuPosition({
+        left: Math.round(anchor.left),
+        top: Math.round(anchor.bottom + gap),
+        bottom: Math.round(viewportBottom - anchor.top + gap),
+        width: Math.round(anchor.width),
+        maxHeight: Math.round(availableHeight),
+      });
+    };
+    updatePosition();
+    window.addEventListener("resize", updatePosition, { passive: true });
+    window.addEventListener("scroll", updatePosition, { passive: true, capture: true });
+    window.visualViewport?.addEventListener("resize", updatePosition, { passive: true });
+    window.visualViewport?.addEventListener("scroll", updatePosition, { passive: true });
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+      window.visualViewport?.removeEventListener("resize", updatePosition);
+      window.visualViewport?.removeEventListener("scroll", updatePosition);
+    };
+  }, [disabled, open]);
   const select = (option: string) => {
     setQuery(option);
     onChange(option);
     setOpen(false);
+    setActiveIndex(-1);
+    setCustomMode(false);
   };
   const chooseOther = () => {
     setQuery("");
     onChange("");
+    setCustomMode(true);
+    setActiveIndex(-1);
     setOpen(true);
   };
+  const openMenu = () => {
+    if (disabled) return;
+    setActiveIndex(-1);
+    setOpen(true);
+  };
+  const menuStyle = placement === "bottom"
+    ? { position: "fixed" as const, top: menuPosition.top, left: menuPosition.left, width: menuPosition.width, maxHeight: menuPosition.maxHeight }
+    : { position: "fixed" as const, bottom: menuPosition.bottom, left: menuPosition.left, width: menuPosition.width, maxHeight: menuPosition.maxHeight };
+  const listbox = open && !disabled && typeof document !== "undefined" ? createPortal(
+    <div
+      ref={menu}
+      className={`form-combobox-menu ${placement}`}
+      id={`${name}-options`}
+      role="listbox"
+      style={menuStyle}
+      onMouseLeave={() => setActiveIndex(-1)}
+    >
+      {matches.map((option, index) => (
+        <button
+          type="button"
+          role="option"
+          id={`${name}-option-${index}`}
+          aria-selected={value === option}
+          className={`${value === option ? "selected" : ""} ${activeIndex === index ? "active" : ""}`.trim()}
+          key={option}
+          onMouseEnter={() => setActiveIndex(index)}
+          onClick={() => select(option)}
+        >
+          {option}
+          {value === option && <Check aria-hidden="true" />}
+        </button>
+      ))}
+      <button type="button" role="option" className="form-combobox-other" onClick={chooseOther}>{t.otherCustom}</button>
+      {!matches.length && <p className="form-combobox-empty">{t.noMatchingOptions}</p>}
+    </div>,
+    document.body,
+  ) : null;
   return (
-    <div className="form-combobox" ref={root}>
+    <div className={`form-combobox ${disabled ? "disabled" : ""}`} ref={root}>
       <span>{label}</span>
-      <div className="form-combobox-control">
+      <div className="form-combobox-control" ref={control}>
         <input
           type="text"
-          value={query}
+          value={disabled ? "" : query}
+          disabled={disabled}
           role="combobox"
+          aria-disabled={disabled}
           aria-expanded={open}
           aria-controls={`${name}-options`}
+          aria-activedescendant={activeIndex >= 0 ? `${name}-option-${activeIndex}` : undefined}
           aria-autocomplete="list"
-          placeholder={t.searchOptions}
-          onFocus={() => setOpen(true)}
-          onChange={(event) => { setQuery(event.target.value); onChange(event.target.value); setHighlighted(0); setOpen(true); }}
+          placeholder={disabled ? disabledPlaceholder : customMode ? customPlaceholder : t.searchOptions}
+          onFocus={openMenu}
+          onClick={openMenu}
+          onChange={(event) => { setQuery(event.target.value); onChange(event.target.value); setActiveIndex(-1); setOpen(true); }}
           onKeyDown={(event) => {
-            if (event.key === "ArrowDown") { event.preventDefault(); setOpen(true); setHighlighted((index) => Math.min(index + 1, Math.max(0, matches.length - 1))); }
-            if (event.key === "ArrowUp") { event.preventDefault(); setOpen(true); setHighlighted((index) => Math.max(index - 1, 0)); }
-            if (event.key === "Enter" && open && matches[highlighted]) { event.preventDefault(); select(matches[highlighted]); }
-            if (event.key === "Escape") { event.preventDefault(); setOpen(false); }
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              setOpen(true);
+              setActiveIndex((index) => matches.length ? (index < 0 ? 0 : Math.min(index + 1, matches.length - 1)) : -1);
+            }
+            if (event.key === "ArrowUp") {
+              event.preventDefault();
+              setOpen(true);
+              setActiveIndex((index) => matches.length ? (index < 0 ? matches.length - 1 : Math.max(index - 1, 0)) : -1);
+            }
+            if (event.key === "Enter" && open && activeIndex >= 0 && matches[activeIndex]) { event.preventDefault(); select(matches[activeIndex]); }
+            if (event.key === "Escape") { event.preventDefault(); setOpen(false); setActiveIndex(-1); }
           }}
         />
         <ChevronDown aria-hidden="true" />
       </div>
       <input type="hidden" name={name} value={value} readOnly />
-      {open && <div className="form-combobox-menu" id={`${name}-options`} role="listbox">
-        {matches.map((option, index) => <button type="button" role="option" aria-selected={value === option} className={value === option || highlighted === index ? "selected" : ""} key={option} onMouseDown={(event) => event.preventDefault()} onClick={() => select(option)}>{option}{value === option && <Check aria-hidden="true" />}</button>)}
-        <button type="button" role="option" className="form-combobox-other" onMouseDown={(event) => event.preventDefault()} onClick={chooseOther}>{t.otherCustom}</button>
-        {!matches.length && <p className="form-combobox-empty">{t.notSet}</p>}
-      </div>}
+      {listbox}
     </div>
   );
 }
@@ -3039,6 +3184,16 @@ function CompanyForm({
   const [interest, setInterest] = useState(Math.min(5, Math.max(1, initial?.interestLevel || 3)));
   const [industry, setIndustry] = useState(initial?.industry || "");
   const [jobCategory, setJobCategory] = useState(initial?.jobCategory || initial?.position || "");
+  const [industryChangedNotice, setIndustryChangedNotice] = useState(false);
+  const previousIndustry = useRef(initial?.industry || "");
+  const occupationOptions = useMemo(() => occupationsForIndustry(industry), [industry]);
+  useEffect(() => {
+    if (previousIndustry.current === industry) return;
+    const shouldNotify = Boolean(previousIndustry.current && industry && jobCategory);
+    previousIndustry.current = industry;
+    setJobCategory("");
+    setIndustryChangedNotice(shouldNotify);
+  }, [industry]);
   return (
     <Modal title={initial ? t.edit : t.addCompany} close={close}>
       <form className="form-grid" onSubmit={save}>
@@ -3046,8 +3201,27 @@ function CompanyForm({
           <span>{t.company}</span>
           <input name="name" defaultValue={initial?.name} required />
         </label>
-        <SearchableChoiceField t={t} label={t.industry} name="industry" value={industry} options={industryOptions} onChange={setIndustry} />
-        <SearchableChoiceField t={t} label={t.position} name="jobCategory" value={jobCategory} options={occupationOptions} onChange={setJobCategory} />
+        <SearchableChoiceField
+          t={t}
+          label={t.industry}
+          name="industry"
+          value={industry}
+          options={industryOptions}
+          customPlaceholder={t.industryInput}
+          onChange={setIndustry}
+        />
+        <SearchableChoiceField
+          t={t}
+          label={t.position}
+          name="jobCategory"
+          value={jobCategory}
+          options={occupationOptions}
+          disabled={!industry.trim()}
+          disabledPlaceholder={t.selectIndustryFirst}
+          customPlaceholder={t.positionInput}
+          onChange={(value) => { setJobCategory(value); if (value) setIndustryChangedNotice(false); }}
+        />
+        {industryChangedNotice && <p className="form-combobox-notice" role="status">{t.industryChanged}</p>}
         <label>
           <span>{t.jobTitle}</span>
           <input name="jobTitle" defaultValue={initial?.jobTitle} placeholder={t.notSet} />
