@@ -3556,7 +3556,7 @@ function MobileSettingsDrawer({
       setContentPhase("in");
       const settleFrame = window.requestAnimationFrame(() => setContentPhase("idle"));
       window.setTimeout(() => window.cancelAnimationFrame(settleFrame), 320);
-    }, 140);
+    }, 120);
     return () => window.clearTimeout(swapTimer);
   }, [open, page, renderedPage]);
   useEffect(() => {

@@ -4910,7 +4910,7 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
   .mobile-settings-content-switch {
     opacity: 1;
     transform: translateY(0);
-    transition: opacity 140ms cubic-bezier(.4, 0, .2, 1), transform 140ms cubic-bezier(.4, 0, .2, 1);
+    transition: opacity 120ms cubic-bezier(.4, 0, .2, 1), transform 120ms cubic-bezier(.4, 0, .2, 1);
   }
 
   .mobile-settings-content-switch.is-out {
@@ -4922,6 +4922,7 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
   .mobile-settings-content-switch.is-in {
     opacity: 0;
     transform: translateY(4px);
+    transition: opacity 180ms cubic-bezier(.4, 0, .2, 1), transform 180ms cubic-bezier(.4, 0, .2, 1);
   }
 
   .mobile-settings-subheader {
