@@ -2048,7 +2048,7 @@ function CreateRecordPicker({
   choose: (kind: CreateType) => void;
 }) {
   return (
-    <Modal title={t.addRecord} close={close}>
+    <Modal title={t.addRecord} close={close} className="record-add-sheet">
       <div className="create-record-picker" role="menu" aria-label={t.addRecord}>
         <button type="button" onClick={() => choose("es")} role="menuitem"><FileJson />{t.addMaterial}</button>
         <button type="button" onClick={() => choose("interview")} role="menuitem"><BriefcaseBusiness />{t.addInterview}</button>
@@ -2903,7 +2903,7 @@ function ActionMenu({
     ...actions.filter((_, index) => index !== preferred),
   ];
   return (
-    <div className="bottom-sheet-layer">
+    <div className="bottom-sheet-layer careerflow-action-sheet-layer">
       <button
         className={`sheet-backdrop ${closing ? "closing" : ""}`}
         onClick={dismiss}
@@ -2940,17 +2940,19 @@ function Modal({
   title,
   close,
   children,
+  className = "",
 }: {
   title: string;
   close: () => void;
   children: ReactNode;
+  className?: string;
 }) {
   useEffect(() => {
     document.body.classList.add("modal-open");
     return () => document.body.classList.remove("modal-open");
   }, []);
   return (
-    <div className="modal-layer">
+    <div className={`modal-layer ${className}`.trim()}>
       <button className="modal-backdrop" onClick={close} />
       <section className="drawer entity-card" role="dialog">
         <header>

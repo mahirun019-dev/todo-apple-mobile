@@ -5203,3 +5203,93 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     animation: none !important;
   }
 }
+
+/* Shared mobile action-sheet material. The surface stays identical to the Header glass. */
+:root {
+  --careerflow-action-backdrop: rgba(20, 24, 30, .12);
+  --careerflow-action-backdrop-filter: blur(5px) saturate(105%);
+  --careerflow-action-divider: rgba(60, 60, 67, .12);
+  --careerflow-action-pressed: rgba(0, 0, 0, .04);
+}
+
+[data-theme="dark"] {
+  --careerflow-action-backdrop: rgba(0, 0, 0, .24);
+  --careerflow-action-divider: rgba(255, 255, 255, .08);
+  --careerflow-action-pressed: rgba(255, 255, 255, .07);
+}
+
+@media (max-width: 767px) {
+  .careerflow-action-sheet-layer,
+  .record-add-sheet {
+    isolation: auto;
+  }
+
+  .careerflow-action-sheet-layer > .sheet-backdrop,
+  .record-add-sheet > .modal-backdrop {
+    z-index: 1000;
+    background: var(--careerflow-action-backdrop) !important;
+    backdrop-filter: var(--careerflow-action-backdrop-filter) !important;
+    -webkit-backdrop-filter: var(--careerflow-action-backdrop-filter) !important;
+  }
+
+  .careerflow-action-sheet-layer > .action-sheet,
+  .record-add-sheet > .drawer {
+    z-index: 1010;
+    border-color: var(--careerflow-glass-border) !important;
+    background: var(--careerflow-glass-background) !important;
+    box-shadow: var(--careerflow-glass-shadow) !important;
+    backdrop-filter: var(--careerflow-glass-backdrop) !important;
+    -webkit-backdrop-filter: var(--careerflow-glass-backdrop) !important;
+  }
+
+  .careerflow-action-sheet-layer > .action-sheet {
+    isolation: auto;
+  }
+
+  .careerflow-action-sheet-layer .sheet-action,
+  .careerflow-action-sheet-layer .cancel-action,
+  .careerflow-action-sheet-layer .sheet-gap,
+  .record-add-sheet .create-record-picker button {
+    border-color: var(--careerflow-action-divider) !important;
+    background: transparent !important;
+  }
+
+  .careerflow-action-sheet-layer .sheet-action:hover,
+  .careerflow-action-sheet-layer .sheet-action:active,
+  .careerflow-action-sheet-layer .sheet-action[data-pressed="true"],
+  .careerflow-action-sheet-layer .cancel-action:hover,
+  .careerflow-action-sheet-layer .cancel-action:active,
+  .careerflow-action-sheet-layer .cancel-action[data-pressed="true"],
+  .record-add-sheet .create-record-picker button:hover,
+  .record-add-sheet .create-record-picker button:active,
+  .record-add-sheet .create-record-picker button[data-pressed="true"] {
+    background: var(--careerflow-action-pressed) !important;
+  }
+
+  .careerflow-action-sheet-layer .sheet-gap {
+    height: 11px;
+    border-top-color: var(--careerflow-action-divider) !important;
+  }
+
+  .record-add-sheet .drawer {
+    overflow: hidden;
+  }
+
+  .record-add-sheet .drawer > header {
+    flex: 0 0 auto;
+    border-color: var(--careerflow-action-divider) !important;
+    background: transparent !important;
+  }
+
+  .record-add-sheet .create-record-picker {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .record-add-sheet .create-record-picker .picker-cancel {
+    margin-top: 8px;
+    border-top-color: var(--careerflow-action-divider) !important;
+  }
+}
