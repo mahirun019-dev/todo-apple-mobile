@@ -1,6 +1,7 @@
 import {
   memo,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -23,6 +24,7 @@ import {
   BriefcaseBusiness,
   Building2,
   CalendarDays,
+  CalendarSync,
   CalendarClock,
   Check,
   ChevronRight,
@@ -50,6 +52,8 @@ import {
   ListChecks,
   Search,
   Sun,
+  ClipboardCheck,
+  PanelsTopLeft,
   SlidersHorizontal,
   Target,
   Timer,
@@ -85,7 +89,9 @@ type ItemType =
   | "general";
 type Priority = "low" | "medium" | "high";
 type CreateType = "company" | "schedule" | "es" | "interview" | "preparation";
-type HomeModule = "active" | "deadlines" | "waiting" | "upcoming" | "action" | "progress";
+type HomeSummaryModule = "active" | "deadlines" | "waiting";
+type HomeSection = "upcoming" | "action" | "progress";
+type HomeModule = HomeSummaryModule | HomeSection;
 type CompanySort = "updated" | "event" | "interest" | "name";
 type TemplateCategory = "selfPr" | "gakuchika" | "motivation" | "interviewQuestion" | "reverseQuestion" | "preparation";
 type CareerTemplate = {
@@ -107,7 +113,10 @@ type AppPreferences = {
     defaultInterestLevel: number;
   };
   customize: {
-    homeModules: HomeModule[];
+    homeSummaryVisibility: Record<HomeSummaryModule, boolean>;
+    homeSummaryOrder: HomeSummaryModule[];
+    homeSectionVisibility: Record<HomeSection, boolean>;
+    homeSectionOrder: HomeSection[];
     companyCard: {
       industry: boolean;
       position: boolean;
@@ -258,7 +267,9 @@ type Data = {
   templates: CareerTemplate[];
 };
 
-const defaultHomeModules: HomeModule[] = ["active", "deadlines", "waiting", "upcoming", "action", "progress"];
+const defaultHomeSummary: HomeSummaryModule[] = ["active", "deadlines", "waiting"];
+const defaultHomeSections: HomeSection[] = ["upcoming", "action", "progress"];
+const defaultHomeModules: HomeModule[] = [...defaultHomeSummary, ...defaultHomeSections];
 function defaultPreferences(): AppPreferences {
   const savedRegion = typeof localStorage !== "undefined" ? localStorage.getItem("careerflow-home-region") || "" : "";
   return {
@@ -273,12 +284,20 @@ function defaultPreferences(): AppPreferences {
       defaultInterestLevel: 3,
     },
     customize: {
-      homeModules: [...defaultHomeModules],
+      homeSummaryVisibility: { active: true, deadlines: true, waiting: true },
+      homeSummaryOrder: [...defaultHomeSummary],
+      homeSectionVisibility: { upcoming: true, action: true, progress: true },
+      homeSectionOrder: [...defaultHomeSections],
       companyCard: { industry: true, position: true, stage: true, interest: true, nextEvent: true },
       companySort: "updated",
     },
     calendar: { timezone: "Asia/Tokyo", preferShare: true },
   };
+}
+
+function normalizePreferenceOrder<T extends string>(value: unknown, allowed: T[], fallback: T[], legacy?: unknown[]): T[] {
+  const source = Array.isArray(value) ? value : Array.isArray(legacy) ? legacy : [];
+  return allowed.filter((key) => source.includes(key)).concat(fallback.filter((key) => !source.includes(key)));
 }
 
 function makeBackupSnapshot(data: Data, theme: Theme, locale: Locale): BackupSnapshot {
@@ -606,12 +625,12 @@ const tr = {
     actionWindow: "待处理时间范围", actionWindowHint: "用于首页待处理事项和临近截止提醒。", days3: "3天内", days7: "7天内", days14: "14天内",
     resultWaitingThreshold: "等待结果判定", resultWaitingHint: "选考结束后持续未更新达到此天数时进入待处理。",
     showDeadlines: "显示截止事项", showUpcoming: "显示近期日程", showWaiting: "显示长期等待结果",
-    defaultStage: "新企业默认选考阶段", defaultInterest: "新企业默认志望度", homeModules: "主页显示项目", companyCard: "企业卡片显示信息",
+    defaultStage: "新企业默认选考阶段", defaultInterest: "新企业默认志望度", defaultStageHint: "这是新增企业时自动填入的默认值。", defaultInterestHint: "保存前仍可单独修改，不会影响已经登记的企业。", homeModules: "主页显示项目", homeSummary: "顶部摘要", homeSummaryOrder: "摘要卡片顺序", homeSections: "主页内容区块", homeSectionsOrder: "内容区块顺序", companyCard: "企业卡片显示信息",
     showIndustry: "行业", showPosition: "职种", showStage: "选考阶段", showInterest: "志望度", showNextEvent: "下一日程", defaultCompanySort: "默认企业排序",
     sortUpdated: "最近更新", sortEvent: "下一日程", sortInterest: "志望度从高到低", sortName: "企业名称", moveUp: "上移", moveDown: "下移",
     templateNew: "新建模板", templateEdit: "编辑模板", templateDelete: "删除模板", templateDuplicate: "复制模板", templateCategory: "类别", templateTitle: "标题", templateContent: "内容", templateSave: "保存模板", templateEmpty: "还没有模板", templateInsert: "从模板插入", chooseTemplate: "选择模板", insertTemplate: "插入", noTemplates: "暂无可用模板",
     templateSelfPr: "自我PR", templateGakuchika: "学生时代经历", templateMotivation: "志望动机", templateInterviewQuestion: "面试问题", templateReverseQuestion: "反问问题", templatePreparation: "准备事项",
-    calendarAdd: "添加到日历", calendarExportFuture: "将后续日程导出到日历", calendarMethod: "添加到日历的方式", calendarMethodHint: "当前采用导出方式，暂不支持自动同步。", calendarPreferShare: "移动端优先使用分享", calendarExported: "日历文件已生成", calendarNoEvents: "没有可导出的后续日程",
+    calendarAdd: "添加到日历", calendarExportFuture: "将后续日程导出到日历", calendarMethod: "添加到日历的方式", calendarMethodHint: "CareerFlow 使用标准 .ics 文件导出，不是实时同步或双向同步。", calendarDescription: "将 CareerFlow 日程导出为标准 .ics 文件，然后添加到 Apple 日历、Google 日历等服务。", calendarNoSync: "当前不支持自动同步。修改 CareerFlow 日程后，已添加到其他日历的事项不会自动更新。", calendarHowTo: "使用方法", calendarIphoneTitle: "iPhone / iPad", calendarIphone: "1. 打开 CareerFlow 日程并选择“添加到日历”。\n2. 打开或分享生成的 .ics 文件。\n3. 在系统显示的日程确认页面中检查内容，再添加到日历。\n具体按钮名称可能因 Safari、iOS 版本和分享方式而不同。", calendarMacTitle: "Mac", calendarMac: "1. 下载 .ics 文件。\n2. 打开该文件。\n3. 在 Calendar.app 中选择要添加的日历。", calendarGoogleTitle: "Google Calendar", calendarGoogle: "1. 在 CareerFlow 选择“将后续日程导出到日历”。\n2. 打开 Google Calendar 的“设置 → 导入和导出 → 导入”。\n3. 选择 CareerFlow 导出的 .ics 文件。", calendarWindowsTitle: "Windows / Outlook", calendarWindows: "下载 .ics 文件后，从 Outlook 或其他兼容日历应用打开或导入。", calendarImportant: "重要：这不是自动同步。CareerFlow 中的日程发生变化后，请按需要重新导出。", calendarPreferShare: "移动端优先使用分享", calendarExported: "日历文件已生成", calendarNoEvents: "没有可导出的后续日程",
   },
   ja: {
     dashboard: "ホーム",
@@ -770,12 +789,12 @@ const tr = {
     actionWindow: "要対応の対象期間", actionWindowHint: "ホームの要対応と締切の目安に使用します。", days3: "3日以内", days7: "7日以内", days14: "14日以内",
     resultWaitingThreshold: "結果待ち判定", resultWaitingHint: "選考終了後、この日数更新がない項目を要対応に表示します。",
     showDeadlines: "締切を表示", showUpcoming: "近日の日程を表示", showWaiting: "長期間の結果待ちを表示",
-    defaultStage: "新規企業の初期選考段階", defaultInterest: "新規企業の初期志望度", homeModules: "ホーム画面の表示項目", companyCard: "企業カードの表示情報",
+    defaultStage: "新規企業のデフォルト選考段階", defaultInterest: "新規企業のデフォルト志望度", defaultStageHint: "新しく企業を追加するときの初期値です。登録時に個別に変更できます。既存の企業には影響しません。", defaultInterestHint: "新しく企業を追加するときの初期値です。登録時に個別に変更できます。既存の企業には影響しません。", homeModules: "ホーム画面の表示項目", homeSummary: "上部サマリー", homeSummaryOrder: "サマリーカードの順序", homeSections: "ホームセクション", homeSectionsOrder: "セクションの順序", companyCard: "企業カードの表示情報",
     showIndustry: "業界", showPosition: "職種", showStage: "選考段階", showInterest: "志望度", showNextEvent: "次の日程", defaultCompanySort: "既定の企業並び替え",
     sortUpdated: "最近更新", sortEvent: "次の日程", sortInterest: "志望度の高い順", sortName: "企業名", moveUp: "上へ", moveDown: "下へ",
     templateNew: "新規作成", templateEdit: "編集", templateDelete: "削除", templateDuplicate: "複製", templateCategory: "カテゴリ", templateTitle: "タイトル", templateContent: "内容", templateSave: "テンプレートを保存", templateEmpty: "テンプレートはまだありません", templateInsert: "テンプレートから挿入", chooseTemplate: "テンプレートを選択", insertTemplate: "挿入", noTemplates: "使用できるテンプレートがありません",
     templateSelfPr: "自己PR", templateGakuchika: "ガクチカ", templateMotivation: "志望動機", templateInterviewQuestion: "面接質問", templateReverseQuestion: "逆質問", templatePreparation: "準備事項",
-    calendarAdd: "カレンダーに追加", calendarExportFuture: "今後の予定をカレンダーに書き出す", calendarMethod: "カレンダーへの追加方法", calendarMethodHint: "現在は書き出し方式です。自動同期には対応していません。", calendarPreferShare: "モバイルでは共有を優先", calendarExported: "カレンダーファイルを生成しました", calendarNoEvents: "書き出せる今後の予定はありません",
+    calendarAdd: "カレンダーに追加", calendarExportFuture: "今後の予定をカレンダーに書き出す", calendarMethod: "カレンダーへの追加方法", calendarMethodHint: "CareerFlow は標準の .ics ファイルを書き出します。リアルタイム同期や双方向同期ではありません。", calendarDescription: "CareerFlow の日程を標準のカレンダーファイル（.ics）として書き出し、Apple カレンダーや Google カレンダーなどに追加できます。", calendarNoSync: "現在は自動同期に対応していません。CareerFlow で日程を変更しても、すでに追加した予定は自動更新されません。", calendarHowTo: "使い方", calendarIphoneTitle: "iPhone / iPad", calendarIphone: "1. CareerFlow の日程を開き、「カレンダーに追加」を選択します。\n2. 生成された .ics ファイルを開く、または共有します。\n3. iOS に表示された予定を確認して、カレンダーに追加します。\nボタン名や表示は Safari、iOS のバージョン、共有方法によって異なる場合があります。", calendarMacTitle: "Mac", calendarMac: "1. .ics ファイルをダウンロードします。\n2. ファイルを開きます。\n3. Calendar.app で追加先カレンダーを選択します。", calendarGoogleTitle: "Google Calendar", calendarGoogle: "1. CareerFlow で「今後の予定をカレンダーに書き出す」を選択します。\n2. Google カレンダーの「設定 → インポート / エクスポート → インポート」を開きます。\n3. CareerFlow の .ics ファイルを選択します。", calendarWindowsTitle: "Windows / Outlook", calendarWindows: ".ics ファイルをダウンロードし、Outlook など対応するカレンダーアプリから開く、またはインポートします。", calendarImportant: "重要：自動同期ではありません。CareerFlow で日程を変更した場合は、必要に応じて再度書き出してください。", calendarPreferShare: "モバイルでは共有を優先", calendarExported: "カレンダーファイルを生成しました", calendarNoEvents: "書き出せる今後の予定はありません",
   },
   en: {
     dashboard: "Home",
@@ -916,12 +935,12 @@ const tr = {
     actionWindow: "Attention window", actionWindowHint: "Used for upcoming deadlines and the home attention list.", days3: "Within 3 days", days7: "Within 7 days", days14: "Within 14 days",
     resultWaitingThreshold: "Waiting-result threshold", resultWaitingHint: "Items with no update after this many days appear in Needs attention.",
     showDeadlines: "Show deadlines", showUpcoming: "Show upcoming events", showWaiting: "Show long-waiting results",
-    defaultStage: "Default stage for new companies", defaultInterest: "Default interest for new companies", homeModules: "Home modules", companyCard: "Company card details",
+    defaultStage: "Default stage for new companies", defaultInterest: "Default interest for new companies", defaultStageHint: "Used as the initial value when adding a company. You can change it before saving; existing companies are unaffected.", defaultInterestHint: "Used as the initial value when adding a company. You can change it before saving; existing companies are unaffected.", homeModules: "Home modules", homeSummary: "Summary cards", homeSummaryOrder: "Summary card order", homeSections: "Home sections", homeSectionsOrder: "Section order", companyCard: "Company card details",
     showIndustry: "Industry", showPosition: "Position", showStage: "Stage", showInterest: "Interest", showNextEvent: "Next event", defaultCompanySort: "Default company sort",
     sortUpdated: "Recently updated", sortEvent: "Next event", sortInterest: "Interest", sortName: "Company name", moveUp: "Move up", moveDown: "Move down",
     templateNew: "New template", templateEdit: "Edit", templateDelete: "Delete", templateDuplicate: "Duplicate", templateCategory: "Category", templateTitle: "Title", templateContent: "Content", templateSave: "Save template", templateEmpty: "No templates yet", templateInsert: "Insert from template", chooseTemplate: "Choose a template", insertTemplate: "Insert", noTemplates: "No templates available",
     templateSelfPr: "Self PR", templateGakuchika: "Student experience", templateMotivation: "Motivation", templateInterviewQuestion: "Interview question", templateReverseQuestion: "Reverse question", templatePreparation: "Preparation",
-    calendarAdd: "Add to calendar", calendarExportFuture: "Export upcoming events to calendar", calendarMethod: "How calendar entries are added", calendarMethodHint: "Events are exported as files. Automatic sync is not supported yet.", calendarPreferShare: "Prefer sharing on mobile", calendarExported: "Calendar file generated", calendarNoEvents: "No upcoming events to export",
+    calendarAdd: "Add to calendar", calendarExportFuture: "Export upcoming events to calendar", calendarMethod: "How calendar entries are added", calendarMethodHint: "CareerFlow exports standard .ics files. This is not real-time or two-way sync.", calendarDescription: "Export CareerFlow events as standard .ics calendar files and add them to Apple Calendar, Google Calendar, or another compatible app.", calendarNoSync: "Automatic sync is not supported. Changes in CareerFlow do not update events already added to another calendar.", calendarHowTo: "How to use", calendarIphoneTitle: "iPhone / iPad", calendarIphone: "1. Open an event in CareerFlow and choose “Add to calendar”.\n2. Open or share the generated .ics file.\n3. Review the event shown by iOS and add it to a calendar.\nButton names can vary with Safari, iOS version, and the sharing method.", calendarMacTitle: "Mac", calendarMac: "1. Download the .ics file.\n2. Open the file.\n3. Choose a destination calendar in Calendar.app.", calendarGoogleTitle: "Google Calendar", calendarGoogle: "1. Choose “Export upcoming events to calendar” in CareerFlow.\n2. In Google Calendar, open “Settings → Import & export → Import”.\n3. Select the CareerFlow .ics file.", calendarWindowsTitle: "Windows / Outlook", calendarWindows: "Download the .ics file, then open or import it from Outlook or another compatible calendar app.", calendarImportant: "Important: this is not automatic sync. Re-export when needed after changing an event in CareerFlow.", calendarPreferShare: "Prefer sharing on mobile", calendarExported: "Calendar file generated", calendarNoEvents: "No upcoming events to export",
   },
 };
 // Keep keyboard viewport changes out of React's render path. Safari can emit many
@@ -1048,6 +1067,11 @@ function calendarTimestamp(value: string, addMinutes = 0) {
   const next = calendarParts(base.toISOString());
   return `${next.year}${next.month}${next.day}T${next.hour}${next.minute}00`;
 }
+function utcCalendarTimestamp(value: string) {
+  const date = new Date(value);
+  const pad = (part: number) => String(part).padStart(2, "0");
+  return `${date.getUTCFullYear()}${pad(date.getUTCMonth() + 1)}${pad(date.getUTCDate())}T${pad(date.getUTCHours())}${pad(date.getUTCMinutes())}${pad(date.getUTCSeconds())}`;
+}
 function eventToIcs(event: Event, company: Company | undefined, t: any) {
   const eventLabel = event.type === "general" ? (event.title || t.general) : t[event.type] || event.title || t.general;
   const location = event.locationLabel || event.location || event.locationOrOnline || "";
@@ -1062,7 +1086,7 @@ function eventToIcs(event: Event, company: Company | undefined, t: any) {
   return [
     "BEGIN:VEVENT",
     `UID:${icsEscape(uid)}`,
-    `DTSTAMP:${calendarTimestamp(new Date().toISOString())}Z`,
+    `DTSTAMP:${utcCalendarTimestamp(new Date().toISOString())}Z`,
     `DTSTART;TZID=Asia/Tokyo:${calendarTimestamp(event.startsAt)}`,
     `DTEND;TZID=Asia/Tokyo:${calendarTimestamp(event.startsAt, 60)}`,
     `SUMMARY:${icsEscape(`${company?.name ? `${company.name} - ` : ""}${eventLabel}`)}`,
@@ -1128,9 +1152,16 @@ function normalize(x: any): Data {
   const defaults = defaultPreferences();
   const rawPreferences = (x.preferences || (x.settings && x.settings.preferences) || {}) as Partial<AppPreferences>;
   const rawJobHunt = (rawPreferences.jobHunt || {}) as Partial<AppPreferences["jobHunt"]>;
-  const rawCustomize = (rawPreferences.customize || {}) as Partial<AppPreferences["customize"]>;
+  const rawCustomize = (rawPreferences.customize || {}) as Partial<AppPreferences["customize"]> & { homeModules?: HomeModule[] };
   const rawCard = (rawCustomize.companyCard || {}) as Partial<AppPreferences["customize"]["companyCard"]>;
   const rawCalendar = (rawPreferences.calendar || {}) as Partial<AppPreferences["calendar"]>;
+  const legacyHomeModules = Array.isArray(rawCustomize.homeModules) ? rawCustomize.homeModules : undefined;
+  const summaryOrder = normalizePreferenceOrder(rawCustomize.homeSummaryOrder, defaultHomeSummary, defaultHomeSummary, legacyHomeModules);
+  const sectionOrder = normalizePreferenceOrder(rawCustomize.homeSectionOrder, defaultHomeSections, defaultHomeSections, legacyHomeModules);
+  const legacySummaryVisibility = Object.fromEntries(defaultHomeSummary.map((key) => [key, legacyHomeModules ? legacyHomeModules.includes(key) : true])) as Record<HomeSummaryModule, boolean>;
+  const legacySectionVisibility = Object.fromEntries(defaultHomeSections.map((key) => [key, legacyHomeModules ? legacyHomeModules.includes(key) : true])) as Record<HomeSection, boolean>;
+  const rawSummaryVisibility = (rawCustomize.homeSummaryVisibility || {}) as Partial<Record<HomeSummaryModule, boolean>>;
+  const rawSectionVisibility = (rawCustomize.homeSectionVisibility || {}) as Partial<Record<HomeSection, boolean>>;
   const preferences: AppPreferences = {
     jobHunt: {
       ...defaults.jobHunt,
@@ -1144,10 +1175,10 @@ function normalize(x: any): Data {
     customize: {
       ...defaults.customize,
       ...rawCustomize,
-      homeModules: Array.isArray(rawCustomize.homeModules)
-        ? defaultHomeModules.filter((key) => rawCustomize.homeModules!.includes(key))
-          .concat((rawCustomize.homeModules as HomeModule[]).filter((key) => !defaultHomeModules.includes(key)))
-        : defaults.customize.homeModules,
+      homeSummaryVisibility: { ...legacySummaryVisibility, ...rawSummaryVisibility },
+      homeSummaryOrder: summaryOrder,
+      homeSectionVisibility: { ...legacySectionVisibility, ...rawSectionVisibility },
+      homeSectionOrder: sectionOrder,
       companyCard: { ...defaults.customize.companyCard, ...rawCard },
       companySort: ["updated", "event", "interest", "name"].includes(String(rawCustomize.companySort)) ? rawCustomize.companySort as CompanySort : defaults.customize.companySort,
     },
@@ -2270,8 +2301,7 @@ function Dashboard({
     const priority: Record<string, number> = { urgent: 0, warning: 1, normal: 2 };
     return priority[a.urgency] - priority[b.urgency] || String(a.at || "9999").localeCompare(String(b.at || "9999"));
   });
-  const modules = data.preferences.customize.homeModules;
-  const showModule = (module: HomeModule) => modules.includes(module);
+  const { homeSummaryVisibility, homeSummaryOrder, homeSectionVisibility, homeSectionOrder } = data.preferences.customize;
   const actionTitle = t.actionRequired;
   const actionMore = t.viewAll;
   const upcomingModule = <section className="entity-card next-class">
@@ -2305,6 +2335,29 @@ function Dashboard({
     <Title className="deadline-title" action={<button className="text-button" onClick={() => open("es")}><Plus />{t.addMaterial}</button>}>{t.deadlines}</Title>
     <div className="deadline-list">{due.length ? due.map((x: any) => <MaterialRow key={x.id} x={x} company={byId[x.companyId]} t={t} toggle={toggle} focus={focusToggle} />) : <Empty t={t} />}</div>
   </section>;
+  const progressModule = <section className="entity-card dashboard-progress-module">
+    <Title>{t.funnel}</Title>
+    <div className="funnel">
+      {([
+        "funnelInterested",
+        "funnelDocuments",
+        "funnelAptitude",
+        "funnelInterview",
+        "funnelFinal",
+        "funnelOffer",
+      ] as FunnelStage[]).map((s) => (
+        <button type="button" className="funnel-row" key={s} onClick={() => openFunnel(s)} aria-label={`${t[s]}: ${data.companies.filter((x: Company) => funnelStageFor(x.stage) === s).length}`}>
+          <span>{t[s]}</span>
+          {(() => {
+            const count = data.companies.filter((x: Company) => funnelStageFor(x.stage) === s).length;
+            return <b className={count > 0 ? "has-count" : undefined}>{count}</b>;
+          })()}
+          <ChevronRight aria-hidden="true" />
+        </button>
+      ))}
+    </div>
+  </section>;
+  const homeSections: Record<HomeSection, ReactNode> = { upcoming: upcomingModule, action: actionModule, progress: progressModule };
   return (
     <>
       <div className="page-head">
@@ -2325,38 +2378,19 @@ function Dashboard({
       <div className="main-dashboard-layout">
         <div className="dashboard-main">
           <div className="overview-grid">
-            {showModule("active") && <Metric n={active.length} l={t.inProgress} i={BriefcaseBusiness} onClick={() => navigate("companies", "active")} />}
-            {showModule("deadlines") && <Metric n={due.length} l={t.dueWeek} i={Clock3} onClick={() => navigate("schedule", "this-week-deadline")} />}
-            {showModule("waiting") && <Metric n={waiting.length} l={t.waiting} i={Timer} onClick={() => navigate("companies", "waiting-result")} />}
+            {homeSummaryOrder.filter((module: HomeSummaryModule) => homeSummaryVisibility[module]).map((module: HomeSummaryModule) => module === "active"
+              ? <Metric key={module} n={active.length} l={t.inProgress} i={BriefcaseBusiness} onClick={() => navigate("companies", "active")} />
+              : module === "deadlines"
+                ? <Metric key={module} n={due.length} l={t.dueWeek} i={Clock3} onClick={() => navigate("schedule", "this-week-deadline")} />
+                : <Metric key={module} n={waiting.length} l={t.waiting} i={Timer} onClick={() => navigate("companies", "waiting-result")} />)}
           </div>
+          {homeSummaryVisibility.deadlines && deadlinesModule}
           <div className="dashboard-customizable-modules">
-            {data.preferences.customize.homeModules.filter((module: HomeModule) => ["upcoming", "action", "deadlines"].includes(module) && showModule(module)).map((module: HomeModule) => <div key={module}>{module === "upcoming" ? upcomingModule : module === "action" ? actionModule : deadlinesModule}</div>)}
+            {homeSectionOrder.filter((module: HomeSection) => homeSectionVisibility[module] && homeSections[module] !== null).map((module: HomeSection) => <div key={module}>{homeSections[module]}</div>)}
           </div>
         </div>
         <aside className="dashboard-sidebar">
-          {showModule("progress") && <section className="entity-card">
-            <Title>{t.funnel}</Title>
-            <div className="funnel">
-              {([
-                "funnelInterested",
-                "funnelDocuments",
-                "funnelAptitude",
-                "funnelInterview",
-                "funnelFinal",
-                "funnelOffer",
-              ] as FunnelStage[]).map((s) => (
-                <button type="button" className="funnel-row" key={s} onClick={() => openFunnel(s)} aria-label={`${t[s]}: ${data.companies.filter((x: Company) => funnelStageFor(x.stage) === s).length}`}>
-                  <span>{t[s]}</span>
-                  {(() => {
-                    const count = data.companies.filter((x: Company) => funnelStageFor(x.stage) === s).length;
-                    return <b className={count > 0 ? "has-count" : undefined}>{count}</b>;
-                  })()}
-                  <ChevronRight aria-hidden="true" />
-                </button>
-              ))}
-            </div>
-          </section>}
-          {showModule("waiting") && <section className="entity-card">
+          {homeSummaryVisibility.waiting && <section className="entity-card">
             <Title>{t.results}</Title>
             {waiting.length ? (
               waiting.map((x: any) => (
@@ -3773,27 +3807,28 @@ const templateCategoryKeys: Array<[TemplateCategory, string]> = [
 ];
 function TemplateManager({ t, data, setData }: any) {
   const [editing, setEditing] = useState<CareerTemplate | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
   const [draft, setDraft] = useState({ category: "selfPr" as TemplateCategory, title: "", content: "" });
-  const beginNew = () => { setEditing(null); setDraft({ category: "selfPr", title: "", content: "" }); };
-  const beginEdit = (template: CareerTemplate) => { setEditing(template); setDraft({ category: template.category, title: template.title, content: template.content }); };
+  const beginNew = () => { setEditing(null); setDraft({ category: "selfPr", title: "", content: "" }); setEditorOpen(true); };
+  const beginEdit = (template: CareerTemplate) => { setEditing(template); setDraft({ category: template.category, title: template.title, content: template.content }); setEditorOpen(true); };
+  const closeEditor = () => { setEditing(null); setEditorOpen(false); setDraft({ category: "selfPr", title: "", content: "" }); };
   const saveTemplate = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!draft.title.trim() || !draft.content.trim()) return;
     const next: CareerTemplate = { id: editing?.id || id(), category: draft.category, title: draft.title.trim(), content: draft.content, updatedAt: Date.now() };
     setData((current: Data) => ({ ...current, templates: editing ? current.templates.map((item) => item.id === editing.id ? next : item) : [next, ...current.templates] }));
-    beginNew();
+    closeEditor();
   };
   const duplicate = (template: CareerTemplate) => setData((current: Data) => ({ ...current, templates: [{ ...template, id: id(), title: `${template.title} ${t.templateDuplicate}`, updatedAt: Date.now() }, ...current.templates] }));
   const remove = (template: CareerTemplate) => setData((current: Data) => ({ ...current, templates: current.templates.filter((item) => item.id !== template.id) }));
-  return <div className="template-manager">
-    <div className="settings-section-heading"><div><h4>{t.templates}</h4><p>{t.templateInsert}</p></div><button type="button" className="settings-secondary-button" onClick={beginNew}><Plus />{t.templateNew}</button></div>
-    <form className="template-editor" onSubmit={saveTemplate}>
+  return <div className={`template-manager${editorOpen ? " is-editing" : ""}`}>
+    <div className="settings-section-heading"><div><h4>{editorOpen ? (editing ? t.templateEdit : t.templateNew) : t.templates}</h4><p>{t.templateInsert}</p></div>{!editorOpen && <button type="button" className="settings-secondary-button" onClick={beginNew}><Plus />{t.templateNew}</button>}</div>
+    {editorOpen ? <form className="template-editor" onSubmit={saveTemplate}>
       <label><span>{t.templateCategory}</span><select value={draft.category} onChange={(event) => setDraft((value) => ({ ...value, category: event.target.value as TemplateCategory }))}>{templateCategoryKeys.map(([value, key]) => <option key={value} value={value}>{t[key]}</option>)}</select></label>
       <label><span>{t.templateTitle}</span><input value={draft.title} onChange={(event) => setDraft((value) => ({ ...value, title: event.target.value }))} placeholder={t.templateTitle} /></label>
       <label className="wide"><span>{t.templateContent}</span><textarea value={draft.content} onChange={(event) => setDraft((value) => ({ ...value, content: event.target.value }))} rows={5} /></label>
-      <div className="template-editor-actions"><button type="submit" className="primary">{editing ? t.templateEdit : t.templateSave}</button>{editing && <button type="button" onClick={beginNew}>{t.cancel}</button>}</div>
-    </form>
-    <div className="template-list">{data.templates.length ? data.templates.map((template: CareerTemplate) => <article className="template-list-item" key={template.id}><div><span className="template-category">{t[templateCategoryKeys.find(([value]) => value === template.category)?.[1] || "templatePreparation"]}</span><h4>{template.title}</h4><p>{template.content}</p><small>{new Date(template.updatedAt).toLocaleDateString()}</small></div><div className="template-item-actions"><button type="button" onClick={() => beginEdit(template)}>{t.templateEdit}</button><button type="button" onClick={() => duplicate(template)}>{t.templateDuplicate}</button><button type="button" className="danger-button" onClick={() => remove(template)}>{t.templateDelete}</button></div></article>) : <p className="settings-muted">{t.templateEmpty}</p>}</div>
+      <div className="template-editor-actions"><button type="submit" className="primary">{t.templateSave}</button><button type="button" onClick={closeEditor}>{t.cancel}</button></div>
+    </form> : <div className="template-list">{data.templates.length ? data.templates.map((template: CareerTemplate) => <article className="template-list-item" key={template.id}><div><span className="template-category">{t[templateCategoryKeys.find(([value]) => value === template.category)?.[1] || "templatePreparation"]}</span><h4>{template.title}</h4><p>{template.content}</p><small>{new Date(template.updatedAt).toLocaleDateString()}</small></div><div className="template-item-actions"><button type="button" onClick={() => beginEdit(template)}>{t.templateEdit}</button><button type="button" onClick={() => duplicate(template)}>{t.templateDuplicate}</button><button type="button" className="danger-button" onClick={() => remove(template)}>{t.templateDelete}</button></div></article>) : <p className="settings-muted">{t.templateEmpty}</p>}</div>}
   </div>;
 }
 function JobHuntSettings({ t, data, updatePreferences }: any) {
@@ -3804,23 +3839,33 @@ function JobHuntSettings({ t, data, updatePreferences }: any) {
     <label className="settings-field"><span>{t.actionWindow}</span><select value={settings.actionWindowDays} onChange={(event) => update({ actionWindowDays: Number(event.target.value) as 3 | 7 | 14 })}>{[[3, t.days3], [7, t.days7], [14, t.days14]].map(([value, label]) => <option key={String(value)} value={value}>{label}</option>)}</select><small>{t.actionWindowHint}</small></label>
     <label className="settings-field"><span>{t.resultWaitingThreshold}</span><select value={settings.resultWaitingDays} onChange={(event) => update({ resultWaitingDays: Number(event.target.value) as 7 | 10 | 14 })}>{[7, 10, 14].map((value) => <option key={value} value={value}>{value}{t.days}</option>)}</select><small>{t.resultWaitingHint}</small></label>
     <div className="settings-toggle-group"><strong>{t.actionRequired}</strong><label><input type="checkbox" checked={settings.showDeadlines} onChange={(event) => update({ showDeadlines: event.target.checked })} />{t.showDeadlines}</label><label><input type="checkbox" checked={settings.showUpcoming} onChange={(event) => update({ showUpcoming: event.target.checked })} />{t.showUpcoming}</label><label><input type="checkbox" checked={settings.showWaiting} onChange={(event) => update({ showWaiting: event.target.checked })} />{t.showWaiting}</label></div>
-    <label className="settings-field"><span>{t.defaultStage}</span><select value={settings.defaultCompanyStage} onChange={(event) => update({ defaultCompanyStage: event.target.value as Stage })}>{stages.map((stage) => <option key={stage} value={stage}>{t[stage]}</option>)}</select></label>
-    <label className="settings-field"><span>{t.defaultInterest}</span><select value={settings.defaultInterestLevel} onChange={(event) => update({ defaultInterestLevel: Number(event.target.value) })}>{[1, 2, 3, 4, 5].map((value) => <option key={value} value={value}>{value} / 5</option>)}</select></label>
+    <label className="settings-field"><span>{t.defaultStage}</span><select value={settings.defaultCompanyStage} onChange={(event) => update({ defaultCompanyStage: event.target.value as Stage })}>{stages.map((stage) => <option key={stage} value={stage}>{t[stage]}</option>)}</select><small>{t.defaultStageHint}</small></label>
+    <label className="settings-field"><span>{t.defaultInterest}</span><select value={settings.defaultInterestLevel} onChange={(event) => update({ defaultInterestLevel: Number(event.target.value) })}>{[1, 2, 3, 4, 5].map((value) => <option key={value} value={value}>{value} / 5</option>)}</select><small>{t.defaultInterestHint}</small></label>
   </section>;
 }
 function CustomizeSettings({ t, data, updatePreferences }: any) {
   const settings = data.preferences.customize;
-  const labels: Record<HomeModule, string> = { active: t.inProgress, deadlines: t.dueWeek, waiting: t.waiting, upcoming: t.next, action: t.actionRequired, progress: t.funnel };
+  const summaryLabels: Record<HomeSummaryModule, string> = { active: t.inProgress, deadlines: t.dueWeek, waiting: t.waiting };
+  const sectionLabels: Record<HomeSection, string> = { upcoming: t.next, action: t.actionRequired, progress: t.funnel };
   const update = (patch: Partial<AppPreferences["customize"]>) => updatePreferences((current: AppPreferences) => ({ ...current, customize: { ...current.customize, ...patch } }));
-  const toggleModule = (module: HomeModule) => update({ homeModules: settings.homeModules.includes(module) ? settings.homeModules.filter((key: HomeModule) => key !== module) : [...settings.homeModules, module] });
-  const move = (index: number, amount: -1 | 1) => { const next = [...settings.homeModules]; const target = index + amount; if (target < 0 || target >= next.length) return; [next[index], next[target]] = [next[target], next[index]]; update({ homeModules: next }); };
+  const toggleSummary = (module: HomeSummaryModule) => update({ homeSummaryVisibility: { ...settings.homeSummaryVisibility, [module]: !settings.homeSummaryVisibility[module] } });
+  const toggleSection = (module: HomeSection) => update({ homeSectionVisibility: { ...settings.homeSectionVisibility, [module]: !settings.homeSectionVisibility[module] } });
+  const moveSummary = (index: number, amount: -1 | 1) => { const next = [...settings.homeSummaryOrder]; const target = index + amount; if (target < 0 || target >= next.length) return; [next[index], next[target]] = [next[target], next[index]]; update({ homeSummaryOrder: next }); };
+  const moveSection = (index: number, amount: -1 | 1) => { const next = [...settings.homeSectionOrder]; const target = index + amount; if (target < 0 || target >= next.length) return; [next[index], next[target]] = [next[target], next[index]]; update({ homeSectionOrder: next }); };
   const updateCard = (key: keyof AppPreferences["customize"]["companyCard"]) => update({ companyCard: { ...settings.companyCard, [key]: !settings.companyCard[key] } });
   const sortLabels: Record<CompanySort, string> = { updated: t.sortUpdated, event: t.sortEvent, interest: t.sortInterest, name: t.sortName };
-  return <section className="settings-section settings-form-section"><h3>{t.customize}</h3><fieldset className="settings-choice-group"><legend>{t.homeModules}</legend>{defaultHomeModules.map((module: HomeModule) => <label key={module}><input type="checkbox" checked={settings.homeModules.includes(module)} onChange={() => toggleModule(module)} />{labels[module]}</label>)}</fieldset><div className="settings-order-list"><strong>{t.homeModules}</strong>{settings.homeModules.map((module: HomeModule, index: number) => <div key={module}><span>{index + 1}. {labels[module]}</span><div><button type="button" onClick={() => move(index, -1)} disabled={index === 0} aria-label={t.moveUp}><ChevronUp /></button><button type="button" onClick={() => move(index, 1)} disabled={index === settings.homeModules.length - 1} aria-label={t.moveDown}><ChevronDown /></button></div></div>)}</div><fieldset className="settings-choice-group"><legend>{t.companyCard}</legend>{(["industry", "position", "stage", "interest", "nextEvent"] as const).map((key) => <label key={key}><input type="checkbox" checked={settings.companyCard[key]} onChange={() => updateCard(key)} />{t[key === "industry" ? "showIndustry" : key === "position" ? "showPosition" : key === "stage" ? "showStage" : key === "interest" ? "showInterest" : "showNextEvent"]}</label>)}</fieldset><label className="settings-field"><span>{t.defaultCompanySort}</span><select value={settings.companySort} onChange={(event) => update({ companySort: event.target.value as CompanySort })}>{(Object.keys(sortLabels) as CompanySort[]).map((key) => <option key={key} value={key}>{sortLabels[key]}</option>)}</select></label></section>;
+  return <section className="settings-section settings-form-section"><h3>{t.customize}</h3>
+    <fieldset className="settings-choice-group"><legend>{t.homeSummary}</legend>{defaultHomeSummary.map((module) => <label key={module}><input type="checkbox" checked={settings.homeSummaryVisibility[module]} onChange={() => toggleSummary(module)} />{summaryLabels[module]}</label>)}</fieldset>
+    <div className="settings-order-list"><strong>{t.homeSummaryOrder}</strong>{settings.homeSummaryOrder.map((module: HomeSummaryModule, index: number) => <div key={module}><span>{index + 1}. {summaryLabels[module]}</span><div><button type="button" onClick={() => moveSummary(index, -1)} disabled={index === 0} aria-label={t.moveUp}><ChevronUp /></button><button type="button" onClick={() => moveSummary(index, 1)} disabled={index === settings.homeSummaryOrder.length - 1} aria-label={t.moveDown}><ChevronDown /></button></div></div>)}</div>
+    <fieldset className="settings-choice-group"><legend>{t.homeSections}</legend>{defaultHomeSections.map((module) => <label key={module}><input type="checkbox" checked={settings.homeSectionVisibility[module]} onChange={() => toggleSection(module)} />{sectionLabels[module]}</label>)}</fieldset>
+    <div className="settings-order-list"><strong>{t.homeSectionsOrder}</strong>{settings.homeSectionOrder.map((module: HomeSection, index: number) => <div key={module}><span>{index + 1}. {sectionLabels[module]}</span><div><button type="button" onClick={() => moveSection(index, -1)} disabled={index === 0} aria-label={t.moveUp}><ChevronUp /></button><button type="button" onClick={() => moveSection(index, 1)} disabled={index === settings.homeSectionOrder.length - 1} aria-label={t.moveDown}><ChevronDown /></button></div></div>)}</div>
+    <fieldset className="settings-choice-group"><legend>{t.companyCard}</legend>{(["industry", "position", "stage", "interest", "nextEvent"] as const).map((key) => <label key={key}><input type="checkbox" checked={settings.companyCard[key]} onChange={() => updateCard(key)} />{t[key === "industry" ? "showIndustry" : key === "position" ? "showPosition" : key === "stage" ? "showStage" : key === "interest" ? "showInterest" : "showNextEvent"]}</label>)}</fieldset>
+    <label className="settings-field"><span>{t.defaultCompanySort}</span><select value={settings.companySort} onChange={(event) => update({ companySort: event.target.value as CompanySort })}>{(Object.keys(sortLabels) as CompanySort[]).map((key) => <option key={key} value={key}>{sortLabels[key]}</option>)}</select></label>
+  </section>;
 }
 function CalendarSettings({ t, data, updatePreferences, exportCalendar }: any) {
   const update = (preferShare: boolean) => updatePreferences((current: AppPreferences) => ({ ...current, calendar: { ...current.calendar, preferShare } }));
-  return <section className="settings-section settings-form-section"><h3>{t.calendarIntegration}</h3><h4>{t.calendarMethod}</h4><p className="settings-muted">{t.calendarMethodHint}</p><label className="settings-check-row"><input type="checkbox" checked={data.preferences.calendar.preferShare} onChange={(event) => update(event.target.checked)} />{t.calendarPreferShare}</label><button type="button" className="primary settings-wide-action" onClick={() => exportCalendar()}><CalendarDays />{t.calendarExportFuture}</button></section>;
+  return <section className="settings-section settings-form-section"><h3>{t.calendarIntegration}</h3><p className="settings-muted calendar-description">{t.calendarDescription}</p><h4>{t.calendarMethod}</h4><p className="settings-muted">{t.calendarMethodHint}</p><label className="settings-check-row"><input type="checkbox" checked={data.preferences.calendar.preferShare} onChange={(event) => update(event.target.checked)} />{t.calendarPreferShare}</label><button type="button" className="primary settings-wide-action" onClick={() => exportCalendar()}><CalendarDays />{t.calendarExportFuture}</button><div className="calendar-help"><h4>{t.calendarHowTo}</h4>{([[t.calendarIphoneTitle, t.calendarIphone], [t.calendarMacTitle, t.calendarMac], [t.calendarGoogleTitle, t.calendarGoogle], [t.calendarWindowsTitle, t.calendarWindows]] as Array<[string, string]>).map(([title, steps]) => <section key={title}><strong>{title}</strong><p>{steps}</p></section>)}<p className="calendar-important">{t.calendarImportant}</p></div></section>;
 }
 function MobileSettingsDrawer({
   t, page, setPage, close, open, theme, setTheme, locale, setLocale, data, setData, json, download, updatePreferences, exportCalendar,
@@ -3882,6 +3927,15 @@ function MobileSettingsDrawer({
       window.clearTimeout(finishTimer);
     };
   }, [open, page]);
+  useLayoutEffect(() => {
+    if (!open) return;
+    const layer = layerRef.current;
+    if (!layer) return;
+    layer.querySelectorAll<HTMLElement>(".mobile-settings-content-layer").forEach((node) => {
+      node.scrollTop = 0;
+    });
+    layer.querySelector<HTMLElement>(".drawer-main")?.scrollTo({ top: 0, behavior: "auto" });
+  }, [open, page, transitionPage]);
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -3981,10 +4035,10 @@ function MobileSettingsDrawer({
   const renderSettingsContent = (pageValue: string | null) => {
     if (!pageValue) return <nav className="mobile-settings-nav">
       <button type="button" onClick={() => changePage("data")}><Database aria-hidden="true" /><span>{t.data}</span><ChevronRight aria-hidden="true" /></button>
-      <button type="button" onClick={() => changePage("job-settings")}><Target aria-hidden="true" /><span>{t.jobSettings}</span><ChevronRight aria-hidden="true" /></button>
-      <button type="button" onClick={() => changePage("customize")}><SlidersHorizontal aria-hidden="true" /><span>{t.customize}</span><ChevronRight aria-hidden="true" /></button>
+      <button type="button" onClick={() => changePage("job-settings")}><ClipboardCheck aria-hidden="true" /><span>{t.jobSettings}</span><ChevronRight aria-hidden="true" /></button>
+      <button type="button" onClick={() => changePage("customize")}><PanelsTopLeft aria-hidden="true" /><span>{t.customize}</span><ChevronRight aria-hidden="true" /></button>
       <button type="button" onClick={() => changePage("templates")}><FileText aria-hidden="true" /><span>{t.templates}</span><ChevronRight aria-hidden="true" /></button>
-      <button type="button" onClick={() => changePage("calendar")}><CalendarDays aria-hidden="true" /><span>{t.calendarIntegration}</span><ChevronRight aria-hidden="true" /></button>
+      <button type="button" onClick={() => changePage("calendar")}><CalendarSync aria-hidden="true" /><span>{t.calendarIntegration}</span><ChevronRight aria-hidden="true" /></button>
       <button type="button" onClick={() => changePage("appearance")}><Palette aria-hidden="true" /><span>{t.appearance}</span><ChevronRight aria-hidden="true" /></button>
       <button type="button" onClick={() => changePage("language")}><Globe aria-hidden="true" /><span>{t.language}</span><ChevronRight aria-hidden="true" /></button>
       <button type="button" onClick={() => changePage("about")}><Info aria-hidden="true" /><span>{about.title}</span><ChevronRight aria-hidden="true" /></button>
@@ -4030,7 +4084,7 @@ function SettingsPanel({ t, theme, setTheme, locale, setLocale, close, data, set
   const ui = locale === "ja"
     ? { general: "一般", appearance: t.appearance, language: t.language, data: "データとバックアップ", about: "CareerFlowについて", storage: "このデバイスの保存状況", backup: "バックアップ", aboutTitle: "CareerFlowについて", version: "CareerFlow バージョン 1.0", db: "データベースバージョン", pwa: "PWA ステータス: standalone 対応", icon: "アイコン: CareerFlow ブランドアイコン", privacy: "プライバシー: データは主にこのデバイスに保存されます。", license: "オープンソースライセンス: MIT License" }
     : { general: "常规", appearance: t.appearance, language: t.language, data: "数据与备份", about: "关于 CareerFlow", storage: "当前设备存储", backup: "备份", aboutTitle: "关于 CareerFlow", version: "CareerFlow 版本 1.0", db: "数据库版本", pwa: "PWA 状态：支持 standalone", icon: "图标：CareerFlow 品牌图标", privacy: "隐私：数据主要保存在当前设备。", license: "开源许可：MIT License" };
-  const tabs = [["general", ui.general, Settings], ["job-settings", t.jobSettings, Target], ["customize", t.customize, SlidersHorizontal], ["templates", t.templates, FileText], ["calendar", t.calendarIntegration, CalendarDays], ["appearance", ui.appearance, Palette], ["language", ui.language, Globe], ["data", ui.data, Database], ["about", ui.about, Info]] as const;
+  const tabs = [["general", ui.general, Settings], ["job-settings", t.jobSettings, ClipboardCheck], ["customize", t.customize, PanelsTopLeft], ["templates", t.templates, FileText], ["calendar", t.calendarIntegration, CalendarSync], ["appearance", ui.appearance, Palette], ["language", ui.language, Globe], ["data", ui.data, Database], ["about", ui.about, Info]] as const;
   return <SettingsDrawer title={t.settings} close={close}><div className="desktop-settings-layout"><nav className="desktop-settings-nav settings-sidebar"><div className="settings-nav-list">{tabs.map(([key, text, Icon]) => <SettingsNavItem key={key} label={text} icon={Icon} active={tab === key} onClick={() => setTab(key)} />)}</div></nav><div className="desktop-settings-content">
     {tab === "general" && <section className="settings-section"><h3>{ui.storage}</h3><div className="settings-stats">{[[ja ? "企業数" : "企业数", data.companies.length], [ja ? "日程数" : "日程数", data.events.length], [ja ? "資料数" : "资料数", data.materials.length], [ja ? "面接記録数" : "面试记录数", data.interviews.length], [ja ? "準備事項数" : "准备事项数", data.preparations.length], [ui.db, "v" + data.schemaVersion]].map(([label, value]) => <div key={String(label)}><span>{label}</span><strong>{value}</strong></div>)}</div></section>}
     {tab === "job-settings" && <JobHuntSettings t={t} data={data} updatePreferences={updatePreferences} />}
