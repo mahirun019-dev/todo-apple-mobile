@@ -458,7 +458,7 @@ const tr = {
     editSchedule: "编辑日程",
     addSchedule: "添加日程",
     jobTitle: "招聘职位・类别",
-    searchOptions: "搜索或选择",
+    selectOption: "请选择",
     selectIndustryFirst: "请先选择行业",
     industryChanged: "行业已更改，请重新选择职种",
     industryInput: "输入行业",
@@ -611,7 +611,7 @@ const tr = {
     editSchedule: "日程を編集",
     addSchedule: "日程を追加",
     jobTitle: "募集職種・コース",
-    searchOptions: "検索または選択",
+    selectOption: "選択してください",
     selectIndustryFirst: "先に業界を選択してください",
     industryChanged: "業界が変更されたため、職種を再選択してください",
     industryInput: "業界を入力",
@@ -752,7 +752,7 @@ const tr = {
     company: "Company",
     industry: "Industry",
     position: "Position",
-    searchOptions: "Search or select",
+    selectOption: "Select an option",
     selectIndustryFirst: "Select an industry first",
     industryChanged: "Industry changed. Please select a position again.",
     industryInput: "Enter an industry",
@@ -3035,7 +3035,7 @@ function CompanyForm({
               }
             }}
           >
-            <option value="" disabled>{t.searchOptions}</option>
+            <option value="" disabled>{t.selectOption}</option>
             {standardIndustryOptions.map((option) => <option key={option} value={option}>{option}</option>)}
             <option value="__other__">{t.other}</option>
           </select>
@@ -3060,7 +3060,7 @@ function CompanyForm({
               }
             }}
           >
-            <option value="" disabled>{industry.trim() ? t.searchOptions : t.selectIndustryFirst}</option>
+            <option value="" disabled>{industry.trim() ? t.selectOption : t.selectIndustryFirst}</option>
             {occupationOptions.filter((option) => option !== "その他").map((option) => <option key={option} value={option}>{option}</option>)}
             <option value="__other__">{t.other}</option>
           </select>
