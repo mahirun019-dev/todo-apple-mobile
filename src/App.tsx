@@ -167,6 +167,7 @@ type Event = {
   locationLabel?: string;
   latitude?: number;
   longitude?: number;
+  source?: "company-next";
   notes: string;
   createdAt: number;
 };
@@ -805,10 +806,55 @@ function at(days: number, hour = 18) {
   d.setHours(hour, 0, 0, 0);
   return d.toISOString().slice(0, 16);
 }
+function inferEventMode(value: string): Event["eventMode"] {
+  if (/zoom|teams|meet|online|オンライン|线上|https?:\/\//i.test(value)) return "online";
+  return value.trim() ? "offline" : "undecided";
+}
+function getUpcomingEvent(events: Event[], companyId: string | undefined): Event | undefined {
+  if (!companyId) return undefined;
+  return events
+    .filter((event) => event.companyId === companyId && new Date(event.startsAt).getTime() >= Date.now())
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0];
+}
+function makeCompanyNextEvent(company: Company, startsAt: string, existing?: Event): Event {
+  const locationOrOnline = company.locationOrOnline || "";
+  return {
+    id: existing?.id || `company-next-${company.id}-${startsAt}`,
+    companyId: company.id,
+    title: "",
+    type: "general",
+    stage: company.stage,
+    startsAt,
+    locationOrOnline,
+    eventMode: inferEventMode(locationOrOnline),
+    attendanceMode: inferEventMode(locationOrOnline),
+    notes: existing?.notes || "",
+    createdAt: existing?.createdAt || company.createdAt,
+    source: "company-next",
+  };
+}
 function normalize(x: any): Data {
+  const companies = (x.companies || []).map((company: Company) => {
+    const { nextEventAt: _legacyNextEventAt, ...withoutLegacyNext } = company as Company & { nextEventAt?: string };
+    return withoutLegacyNext;
+  });
+  const events = (x.events || []).map((event: Event) => {
+    const legacy = String(event.locationOrOnline || "");
+    const mode = event.eventMode || (event.isOnline === true ? "online" : event.isOnline === false && (event.location || legacy) ? "offline" : event.location ? "offline" : event.meetingUrl || event.onlinePlatform || /zoom|teams|meet|online|オンライン|线上|https?:\/\//i.test(legacy) ? "online" : "undecided");
+    const locationLabel = event.locationLabel || event.location || legacy;
+    const prefecture = event.prefecture || prefectures.find((value) => locationLabel.includes(value));
+    const city = event.city || (prefecture && cityOptions[prefecture]?.find((value) => locationLabel.includes(value)));
+    const coords = event.latitude && event.longitude ? [event.latitude, event.longitude] : locationCoordinates[`${prefecture || ""}${city || ""}`];
+    return { ...event, eventMode: mode, attendanceMode: event.attendanceMode || mode, prefecture, city, municipality: event.municipality || city, municipalityCode: event.municipalityCode, detailLocation: event.detailLocation || (city ? locationLabel.replace(prefecture || "", "").replace(city, "").replace(/^・/, "") : ""), location: event.location || legacy, locationLabel, latitude: coords?.[0], longitude: coords?.[1], onlinePlatform: event.onlinePlatform || (mode === "online" ? legacy : ""), meetingUrl: event.meetingUrl || (/https?:\/\//i.test(legacy) ? legacy : "") };
+  });
+  for (const company of (x.companies || []) as Company[]) {
+    const startsAt = String(company.nextEventAt || "").trim();
+    if (!startsAt || events.some((event: Event) => event.companyId === company.id && event.startsAt === startsAt)) continue;
+    events.push(makeCompanyNextEvent(company, startsAt));
+  }
   return {
     schemaVersion: 5,
-    companies: x.companies || [],
+    companies,
     materials: (x.materials || []).map((m: Material) => ({
       ...m,
       category: "material",
@@ -820,15 +866,7 @@ function normalize(x: any): Data {
         ? "other_document"
         : m.documentType,
     })),
-    events: (x.events || []).map((event: Event) => {
-      const legacy = String(event.locationOrOnline || "");
-      const mode = event.eventMode || (event.isOnline === true ? "online" : event.isOnline === false && (event.location || legacy) ? "offline" : event.location ? "offline" : event.meetingUrl || event.onlinePlatform || /zoom|teams|meet|online|オンライン|线上|https?:\/\//i.test(legacy) ? "online" : "undecided");
-      const locationLabel = event.locationLabel || event.location || legacy;
-      const prefecture = event.prefecture || prefectures.find((value) => locationLabel.includes(value));
-      const city = event.city || (prefecture && cityOptions[prefecture]?.find((value) => locationLabel.includes(value)));
-      const coords = event.latitude && event.longitude ? [event.latitude, event.longitude] : locationCoordinates[`${prefecture || ""}${city || ""}`];
-      return { ...event, eventMode: mode, attendanceMode: event.attendanceMode || mode, prefecture, city, municipality: event.municipality || city, municipalityCode: event.municipalityCode, detailLocation: event.detailLocation || (city ? locationLabel.replace(prefecture || "", "").replace(city, "").replace(/^・/, "") : ""), location: event.location || legacy, locationLabel, latitude: coords?.[0], longitude: coords?.[1], onlinePlatform: event.onlinePlatform || (mode === "online" ? legacy : ""), meetingUrl: event.meetingUrl || (/https?:\/\//i.test(legacy) ? legacy : "") };
-    }),
+    events,
     interviews: (x.interviews || []).map((v: InterviewRecord) => ({ ...v, category: "interview" })),
     preparations: (x.preparations || []).map((v: Preparation) => ({ ...v, category: "preparation" })),
     focusMinutes: x.focusMinutes || 0,
@@ -837,7 +875,11 @@ function normalize(x: any): Data {
 function load(): Data {
   try {
     const stored = localStorage.getItem(KEY);
-    if (stored) return clean(normalize(JSON.parse(stored)));
+    if (stored) {
+      const normalized = clean(normalize(JSON.parse(stored)));
+      localStorage.setItem(KEY, JSON.stringify(normalized));
+      return normalized;
+    }
     const old = localStorage.getItem(OLD);
     if (!old) return emptyData();
     localStorage.setItem(BACKUP, old);
@@ -1009,7 +1051,7 @@ export default function App() {
           "first_interview",
           "second_interview",
           "final_interview",
-        ].includes(x.stage) && !x.nextEventAt,
+        ].includes(x.stage) && !getUpcomingEvent(data.events, x.id),
     ),
     focus = data.materials.filter((x) => x.isWeeklyFocus).slice(0, 3);
   const schedules = [
@@ -1113,7 +1155,8 @@ export default function App() {
   const saveCompany = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const f = new FormData(e.currentTarget),
-      base = editCompany;
+      base = editCompany,
+      eventAt = String(f.get("event") || "").trim() || undefined;
     const v: Company = {
       id: base?.id || id(),
       name: String(f.get("name")),
@@ -1121,8 +1164,7 @@ export default function App() {
       position: String(f.get("position")),
       interestLevel: Number(f.get("interest")),
       stage: f.get("stage") as Stage,
-      nextEventAt: String(f.get("event") || "") || undefined,
-      locationOrOnline: String(f.get("place")),
+      locationOrOnline: String(f.get("place") || ""),
       careersUrl: String(f.get("url")),
       notes: String(f.get("notes")),
       tags: base?.tags || [],
@@ -1132,6 +1174,15 @@ export default function App() {
     };
     setData((d) => ({
       ...d,
+      events: (() => {
+        const managed = d.events.filter((event) =>
+          event.companyId === v.id &&
+          (event.source === "company-next" || (!!base?.nextEventAt && event.startsAt === base.nextEventAt)),
+        );
+        const remaining = d.events.filter((event) => !managed.some((item) => item.id === event.id));
+        if (!eventAt) return remaining;
+        return [makeCompanyNextEvent(v, eventAt, managed[0]), ...remaining];
+      })(),
       companies: base
         ? d.companies.map((x) => (x.id === v.id ? v : x))
         : [v, ...d.companies],
@@ -2197,7 +2248,8 @@ function Companies({
   if (co) {
     const materials = data.materials.filter((x: any) => x.companyId === co.id),
       interviews = data.interviews.filter((x: any) => x.companyId === co.id),
-      preps = data.preparations.filter((x: any) => x.companyId === co.id);
+      preps = data.preparations.filter((x: any) => x.companyId === co.id),
+      nextEvent = getUpcomingEvent(data.events, co.id);
     return (
       <>
         <div className="page-head">
@@ -2213,7 +2265,7 @@ function Companies({
           <div className="head-actions">
             <button
               onClick={() => {
-                setEditCompany(co);
+                setEditCompany({ ...co, nextEventAt: nextEvent?.startsAt });
                 open("company");
               }}
             >
@@ -2295,7 +2347,7 @@ function Companies({
     .filter((x: Company) => stageFilter === "all" || (stageFilter.startsWith("funnel") ? funnelStageFor(x.stage) === stageFilter : x.stage === stageFilter))
     .sort((a: Company, b: Company) => {
       if (sortBy === "interest") return b.interestLevel - a.interestLevel;
-      if (sortBy === "event") return (a.nextEventAt || "9999").localeCompare(b.nextEventAt || "9999");
+      if (sortBy === "event") return (getUpcomingEvent(data.events, a.id)?.startsAt || "9999").localeCompare(getUpcomingEvent(data.events, b.id)?.startsAt || "9999");
       if (sortBy === "name") return a.name.localeCompare(b.name);
       return b.updatedAt - a.updatedAt;
     });
@@ -2337,8 +2389,9 @@ function Companies({
       </div>}
       <div className="company-grid">
         {filteredCompanies.length ? (
-          filteredCompanies.map((x: Company) => (
-            <button
+          filteredCompanies.map((x: Company) => {
+            const nextEvent = getUpcomingEvent(data.events, x.id);
+            return <button
               className="company-card entity-card"
               onClick={() => setSelected(x.id)}
               key={x.id}
@@ -2348,11 +2401,11 @@ function Companies({
                 <h3 title={x.name}>{x.name}</h3>
                 <p>{x.industry || x.position || t.general}</p>
                 <span>{stageDisplayLabel(x.stage, t)} · {t.interest} {"★".repeat(x.interestLevel)}{"☆".repeat(5 - x.interestLevel)}</span>
-                <span>{x.nextEventAt ? `${t.event} · ${when(x.nextEventAt)} · ${relative(x.nextEventAt, t)}` : t.noSchedule}</span>
+                <span>{nextEvent ? `${t.event} · ${when(nextEvent.startsAt)} · ${relative(nextEvent.startsAt, t)}` : t.noSchedule}</span>
               </div>
               <ChevronRight />
-            </button>
-          ))
+            </button>;
+          })
         ) : (
           <Empty t={t} kind="company" open={() => open("company")} />
         )}
