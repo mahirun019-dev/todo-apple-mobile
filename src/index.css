@@ -5150,3 +5150,71 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     clip-path: inset(0 0 100% 0) !important;
   }
 }
+
+/* The mobile navigation is mounted closed first, then opened on the next frame.
+   Keeping the animation selectors state-specific prevents first-mount styles from
+   skipping the closed -> open transition. */
+@media (max-width: 767px) {
+  .mobile-settings-layer.mounted {
+    pointer-events: none;
+  }
+
+  .mobile-settings-layer.visible {
+    pointer-events: auto;
+  }
+
+  .mobile-settings-layer.closing {
+    pointer-events: none;
+  }
+
+  .mobile-settings-layer::before {
+    clip-path: inset(0 0 100% 0) !important;
+    animation: none !important;
+  }
+
+  .mobile-settings-layer.visible::before {
+    animation: mobile-navigation-surface-in 400ms cubic-bezier(.32, .72, 0, 1) forwards !important;
+  }
+
+  .mobile-settings-layer.closing::before {
+    animation: mobile-navigation-surface-out 250ms cubic-bezier(.32, .72, 0, 1) 50ms forwards !important;
+  }
+
+  .mobile-settings-layer .mobile-settings-nav {
+    opacity: 0 !important;
+    transform: translateY(-6px) !important;
+    animation: none !important;
+  }
+
+  .mobile-settings-layer.visible .mobile-settings-nav {
+    animation: mobile-navigation-content-in 280ms cubic-bezier(.22, 1, .36, 1) 100ms forwards !important;
+  }
+
+  .mobile-settings-layer.closing .mobile-settings-nav {
+    animation: mobile-navigation-content-out 150ms cubic-bezier(.22, 1, .36, 1) forwards !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) and (max-width: 767px) {
+  .mobile-settings-layer.visible::before {
+    animation: none !important;
+    clip-path: inset(0) !important;
+  }
+
+  .mobile-settings-layer.visible .mobile-settings-nav {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .mobile-settings-layer.closing::before {
+    animation: none !important;
+    clip-path: inset(0 0 100% 0) !important;
+  }
+
+  .mobile-settings-layer.closing .mobile-settings-nav {
+    animation: none !important;
+    opacity: 0 !important;
+    transform: translateY(-4px) !important;
+  }
+}
