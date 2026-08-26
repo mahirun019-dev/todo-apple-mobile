@@ -58,6 +58,8 @@ import {
 } from "lucide-react";
 
 type View = "dashboard" | "companies" | "schedule" | "materials";
+type CompanyRouteFilter = "active" | "waiting-result";
+type ScheduleRouteFilter = "this-week-deadline";
 type Theme = "light" | "dark" | "system";
 type Locale = "zh" | "ja";
 type Stage =
@@ -320,6 +322,25 @@ function funnelStageFor(stage: Company["stage"]): FunnelStage | null {
   if (["es_draft", "es_submitted", "resume", "document screening", "书类选考", "書類選考", "材料选考", "document_screening", "es"].includes(value)) return "funnelDocuments";
   if (["saved", "briefing", "interested", "关注中", "気になる"].includes(value)) return "funnelInterested";
   return null;
+}
+function isActiveCompany(company: Company): boolean {
+  return ["funnelDocuments", "funnelAptitude", "funnelInterview", "funnelFinal"].includes(funnelStageFor(company.stage) || "");
+}
+function isWaitingResultCompany(company: Company, events: Event[]): boolean {
+  return ["web_test", "first_interview", "second_interview", "final_interview"].includes(company.stage) && !getUpcomingEvent(events, company.id);
+}
+function readRouteState(): { view: View; companyFilter: CompanyRouteFilter | null; scheduleFilter: ScheduleRouteFilter | null } {
+  if (typeof window === "undefined") return { view: "dashboard", companyFilter: null, scheduleFilter: null };
+  const params = new URLSearchParams(window.location.search);
+  const view = (["dashboard", "companies", "schedule", "materials"] as View[]).includes(params.get("view") as View)
+    ? params.get("view") as View
+    : "dashboard";
+  const filter = params.get("filter");
+  return {
+    view,
+    companyFilter: view === "companies" && (filter === "active" || filter === "waiting-result") ? filter : null,
+    scheduleFilter: view === "schedule" && filter === "this-week-deadline" ? filter : null,
+  };
 }
 const tr = {
   zh: {
@@ -963,7 +984,10 @@ function useMediaQuery(query: string) {
 export default function App() {
   const isMobile = useMediaQuery("(max-width: 767px)");
   const [data, setData] = useState<Data>(load);
-  const [view, setView] = useState<View>("dashboard"),
+  const initialRoute = readRouteState();
+  const [view, setView] = useState<View>(initialRoute.view),
+    [companyFilter, setCompanyFilter] = useState<CompanyRouteFilter | null>(initialRoute.companyFilter),
+    [scheduleFilter, setScheduleFilter] = useState<ScheduleRouteFilter | null>(initialRoute.scheduleFilter),
     [theme, setTheme] = useState<Theme>(
       () => (localStorage.getItem(THEME) as Theme) || "system",
     ),
@@ -994,6 +1018,27 @@ export default function App() {
     iconRef = useRef<HTMLInputElement>(null);
   const firstDataRender = useRef(true);
   const t = tr[locale];
+  const navigate = (nextView: View, nextFilter?: CompanyRouteFilter | ScheduleRouteFilter) => {
+    const params = new URLSearchParams();
+    params.set("view", nextView);
+    if (nextFilter) params.set("filter", nextFilter);
+    window.history.pushState(null, "", `${window.location.pathname}?${params.toString()}`);
+    setView(nextView);
+    setCompanyFilter(nextView === "companies" && (nextFilter === "active" || nextFilter === "waiting-result") ? nextFilter : null);
+    setScheduleFilter(nextView === "schedule" && nextFilter === "this-week-deadline" ? nextFilter : null);
+    setSelected(undefined);
+  };
+  useEffect(() => {
+    const onPopState = () => {
+      const route = readRouteState();
+      setView(route.view);
+      setCompanyFilter(route.companyFilter);
+      setScheduleFilter(route.scheduleFilter);
+      setSelected(undefined);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
   const hasOpenOverlay = Boolean(form || settings || menu || confirm || deleteEvent || recordPickerOpen || companyFilterOpen);
   useEffect(() => {
     if (hasOpenOverlay) document.body.dataset.overlayOpen = "true";
@@ -1042,24 +1087,14 @@ export default function App() {
     () => Object.fromEntries(data.companies.map((x) => [x.id, x])),
     [data.companies],
   );
-  const active = data.companies.filter(
-      (x) => !["saved", "offer", "rejected", "withdrawn"].includes(x.stage),
-    ),
+  const active = data.companies.filter(isActiveCompany),
     due = [
       ...data.materials.filter((x) => !x.completed && x.dueAt),
       ...data.preparations.filter((x) => !x.completed && x.dueAt),
     ]
       .filter((x) => new Date(x.dueAt!).getTime() < Date.now() + 6048e5)
       .sort((a, b) => String(a.dueAt).localeCompare(String(b.dueAt))),
-    waiting = data.companies.filter(
-      (x) =>
-        [
-          "web_test",
-          "first_interview",
-          "second_interview",
-          "final_interview",
-        ].includes(x.stage) && !getUpcomingEvent(data.events, x.id),
-    ),
+    waiting = data.companies.filter((x) => isWaitingResultCompany(x, data.events)),
     focus = data.materials.filter((x) => x.isWeeklyFocus).slice(0, 3);
   const schedules = [
     ...data.events.map((x) => ({
@@ -1096,6 +1131,10 @@ export default function App() {
   ].sort((a, b) => a.at.localeCompare(b.at));
   const next = schedules[0];
   const upcoming = schedules.filter((x) => x.kind === "event" && new Date(x.at).getTime() >= Date.now());
+  const dueIds = new Set(due.map((x) => x.id));
+  const visibleSchedules = scheduleFilter === "this-week-deadline"
+    ? schedules.filter((x) => dueIds.has(x.id))
+    : schedules;
   const toggle = (x: string) =>
     setData((d) => ({
       ...d,
@@ -1487,6 +1526,7 @@ export default function App() {
                 toggle,
                 focusToggle,
                 open,
+                navigate,
                 setView,
                 setEditEvent,
                 setForm,
@@ -1504,6 +1544,8 @@ export default function App() {
                 open,
                 setEditCompany,
                 setConfirm,
+                companyFilter,
+                clearCompanyFilter: () => navigate("companies"),
                 filterSheetOpen: companyFilterOpen,
                 setFilterSheetOpen: setCompanyFilterOpen,
               }}
@@ -1513,7 +1555,9 @@ export default function App() {
             <Schedule
               {...{
                 t,
-                schedules,
+                schedules: visibleSchedules,
+                scheduleFilter,
+                clearScheduleFilter: () => navigate("schedule"),
                 setEditEvent,
                 setForm,
                 removeEvent,
@@ -1925,6 +1969,7 @@ function Dashboard({
   toggle,
   focusToggle,
   open,
+  navigate,
   setView,
   setEditEvent,
   setForm,
@@ -1971,9 +2016,9 @@ function Dashboard({
       <div className="main-dashboard-layout">
         <div className="dashboard-main">
           <div className="overview-grid">
-            <Metric n={active.length} l={t.inProgress} i={BriefcaseBusiness} />
-            <Metric n={due.length} l={t.dueWeek} i={Clock3} />
-            <Metric n={waiting.length} l={t.waiting} i={Timer} />
+            <Metric n={active.length} l={t.inProgress} i={BriefcaseBusiness} onClick={() => navigate("companies", "active")} />
+            <Metric n={due.length} l={t.dueWeek} i={Clock3} onClick={() => navigate("schedule", "this-week-deadline")} />
+            <Metric n={waiting.length} l={t.waiting} i={Timer} onClick={() => navigate("companies", "waiting-result")} />
           </div>
           <section className="entity-card next-class">
             <Title>{t.next}</Title>
@@ -2090,15 +2135,16 @@ function Dashboard({
     </>
   );
 }
-function Metric({ n, l, i: I }: { n: number; l: string; i: any }) {
+function Metric({ n, l, i: I, onClick }: { n: number; l: string; i: any; onClick: () => void }) {
   return (
-    <div className="metric entity-card">
-      <I />
+    <button type="button" className="metric metric-link entity-card" onClick={onClick} aria-label={`${l}: ${n}`}>
+      <I className="metric-icon" aria-hidden="true" />
       <div>
         <strong>{n}</strong>
         <span>{l}</span>
       </div>
-    </div>
+      <ChevronRight className="metric-chevron" aria-hidden="true" />
+    </button>
   );
 }
 function MaterialRow({
@@ -2224,6 +2270,8 @@ function Companies({
   open,
   setEditCompany,
   setConfirm,
+  companyFilter,
+  clearCompanyFilter,
   filterSheetOpen,
   setFilterSheetOpen,
 }: any) {
@@ -2351,6 +2399,7 @@ function Companies({
   }
   const filteredCompanies = data.companies
     .filter((x: Company) => !query.trim() || x.name.toLowerCase().includes(query.trim().toLowerCase()))
+    .filter((x: Company) => companyFilter === "active" ? isActiveCompany(x) : companyFilter === "waiting-result" ? isWaitingResultCompany(x, data.events) : true)
     .filter((x: Company) => stageFilter === "all" || (stageFilter.startsWith("funnel") ? funnelStageFor(x.stage) === stageFilter : x.stage === stageFilter))
     .sort((a: Company, b: Company) => {
       if (sortBy === "interest") return b.interestLevel - a.interestLevel;
@@ -2370,6 +2419,10 @@ function Companies({
           {t.addCompany}
         </PrimaryActionButton>}
       </div>
+      {companyFilter && <div className="route-filter-bar" role="status">
+        <span>{companyFilter === "active" ? t.inProgress : t.waiting}</span>
+        <button type="button" onClick={clearCompanyFilter} aria-label={t.cancel}>×</button>
+      </div>}
       {data.companies.length > 0 && <div className="company-toolbar">
         <div className="company-search-field"><Search aria-hidden="true" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t.language === "言語" ? "企業を検索" : t.language === "Language" ? "Search companies" : "搜索企业"} aria-label={t.language === "言語" ? "企業を検索" : t.language === "Language" ? "Search companies" : "搜索企业"} /></div>
         <button type="button" className={`company-filter-trigger${stageFilter !== "all" || sortBy !== "updated" ? " has-filter" : ""}`} aria-label={t.language === "言語" ? "絞り込みと並び替え" : "筛选与排序"} onClick={() => { setDraftStageFilter(stageFilter); setDraftSortBy(sortBy); setFilterSheetOpen(true); }}><SlidersHorizontal /></button>
@@ -2423,6 +2476,8 @@ function Companies({
 function Schedule({
   t,
   schedules,
+  scheduleFilter,
+  clearScheduleFilter,
   setEditEvent,
   setForm,
   removeEvent,
@@ -2442,6 +2497,10 @@ function Schedule({
           {t.addEvent}
         </PrimaryActionButton>}
       </div>
+      {scheduleFilter && <div className="route-filter-bar" role="status">
+        <span>{t.dueWeek}</span>
+        <button type="button" onClick={clearScheduleFilter} aria-label={t.cancel}>×</button>
+      </div>}
       <div className="timeline">
         {schedules.length ? (
           schedules.map((x: any) => (

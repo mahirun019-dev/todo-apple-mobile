@@ -604,6 +604,17 @@ textarea:focus-visible {
   gap: 12px;
   padding: 16px;
 }
+.metric-link {
+  width: 100%;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 160ms ease, border-color 160ms ease, transform 120ms ease;
+}
+.metric-link:hover { border-color: var(--accent, #2477d9); background: var(--bg-muted, #f1f1f2); }
+.metric-link:active { transform: translateY(1px); }
+.metric-link .metric-icon { flex: 0 0 auto; }
+.metric-link .metric-chevron { width: 18px; height: 18px; margin-left: auto; flex: 0 0 18px; color: var(--text-muted, #8b8f97); }
 .metric > svg {
   width: 22px;
   color: #2477d9;
@@ -3756,6 +3767,33 @@ option { color: var(--text-primary); background: var(--bg-input); }
   gap: 10px;
   margin: 0 0 16px;
 }
+.route-filter-bar {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 0 14px;
+  padding: 0 8px 0 12px;
+  border: 1px solid var(--accent, #2477d9);
+  border-radius: 999px;
+  color: var(--accent, #2477d9);
+  background: var(--accent-soft, #eef6ff);
+  font-size: 13px;
+  font-weight: 650;
+}
+.route-filter-bar button {
+  display: inline-flex;
+  width: 26px;
+  height: 26px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  color: inherit;
+  background: transparent;
+  font-size: 18px;
+  line-height: 1;
+}
 .company-toolbar input,
 .company-toolbar select {
   width: 100%;
@@ -4003,6 +4041,24 @@ option { color: var(--text-primary); background: var(--bg-input); }
     gap: 4px;
     overflow: hidden;
     padding: 10px 8px;
+  }
+  .career-app .metric-link {
+    grid-template-columns: 1fr auto 1fr;
+    grid-template-rows: auto 1fr auto;
+    text-align: center;
+  }
+  .career-app .metric-link .metric-icon { grid-column: 2; grid-row: 1; }
+  .career-app .metric-link > div { display: contents; }
+  .career-app .metric-link strong { grid-column: 1 / -1; grid-row: 2; }
+  .career-app .metric-link span { grid-column: 1 / -1; grid-row: 3; }
+  .career-app .metric-link .metric-chevron {
+    grid-column: 3;
+    grid-row: 1;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    align-self: start;
+    justify-self: end;
   }
   .career-app .metric > svg {
     width: 20px;
