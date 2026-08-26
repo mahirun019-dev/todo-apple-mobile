@@ -1106,6 +1106,7 @@ export default function App() {
     iconRef = useRef<HTMLInputElement>(null);
   const mobileSettingsRafs = useRef<number[]>([]);
   const mobileSettingsCloseTimer = useRef<number | null>(null);
+  const mobileSettingsCloseStartedAt = useRef<number | null>(null);
   const firstDataRender = useRef(true);
   const t = tr[locale];
   const navigate = (nextView: View, nextFilter?: CompanyRouteFilter | ScheduleRouteFilter) => {
@@ -1550,6 +1551,16 @@ export default function App() {
   const open = (kind: CreateType) => {
     setForm(kind);
   };
+  const completeMobileSettingsClose = () => {
+    if (!mobileSettingsMounted || !mobileSettingsClosing) return;
+    if (mobileSettingsCloseTimer.current !== null) window.clearTimeout(mobileSettingsCloseTimer.current);
+    setMobileSettingsMounted(false);
+    setMobileSettingsClosing(false);
+    setSettings(false);
+    mobileSettingsCloseTimer.current = null;
+    if (import.meta.env.DEV) console.debug("[mobile-menu] unmounted", { at: performance.now(), duration: mobileSettingsCloseStartedAt.current === null ? undefined : performance.now() - mobileSettingsCloseStartedAt.current });
+    mobileSettingsCloseStartedAt.current = null;
+  };
   const closeMobileSettings = () => {
     if (!mobileSettingsMounted || mobileSettingsClosing) return;
     mobileSettingsRafs.current.forEach((id) => cancelAnimationFrame(id));
@@ -1558,15 +1569,10 @@ export default function App() {
     setMobileSettingsVisible(false);
     setMobileSettingsPage(null);
     const startedAt = performance.now();
+    mobileSettingsCloseStartedAt.current = startedAt;
     if (import.meta.env.DEV) console.debug("[mobile-menu] close", { at: startedAt, reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches });
     if (mobileSettingsCloseTimer.current !== null) window.clearTimeout(mobileSettingsCloseTimer.current);
-    mobileSettingsCloseTimer.current = window.setTimeout(() => {
-      setMobileSettingsMounted(false);
-      setMobileSettingsClosing(false);
-      setSettings(false);
-      mobileSettingsCloseTimer.current = null;
-      if (import.meta.env.DEV) console.debug("[mobile-menu] unmounted", { at: performance.now(), duration: performance.now() - startedAt });
-    }, 320);
+    mobileSettingsCloseTimer.current = window.setTimeout(completeMobileSettingsClose, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 320);
   };
   const toggleMobileSettings = () => {
     if (mobileSettingsMounted) {
@@ -1726,6 +1732,7 @@ export default function App() {
             selectedItem={selectedDrawerItem}
             setSelectedItem={setSelectedDrawerItem}
             close={closeMobileSettings}
+            onClosed={completeMobileSettingsClose}
             visible={mobileSettingsVisible}
             closing={mobileSettingsClosing}
             theme={theme}
@@ -3538,7 +3545,7 @@ function BackupControls({ data, theme, locale, setData }: any) {
   return <section className="backup-panel"><section><div className="backup-cloud-actions"><button className="primary" onClick={exportBackup}>{labels.exportBackup}</button><button onClick={() => fileRef.current?.click()}>{labels.restoreFile}</button></div><p>{labels.exportNote}</p><p>{labels.restoreNote}</p><div className="backup-notes"><strong>{labels.notesTitle}</strong><span>{labels.notesData}</span><span>{labels.notesDevice}</span><span>{labels.format}</span></div><p>{lastExport ? `${labels.last}: ${new Date(lastExport).toLocaleDateString()}` : labels.never}</p>{error && <p className="backup-error">{error}</p>}<input hidden ref={fileRef} type="file" accept="application/json,.json" onChange={restoreFile} /></section></section>;
 }
 function MobileSettingsDrawer({
-  t, page, setPage, close, visible, closing, setView, view, selectedItem, setSelectedItem, theme, setTheme, locale, setLocale, data, setData, json, download,
+  t, page, setPage, close, onClosed, visible, closing, setView, view, selectedItem, setSelectedItem, theme, setTheme, locale, setLocale, data, setData, json, download,
 }: any) {
   const layerRef = useRef<HTMLDivElement>(null);
   const label = "CareerFlow";
@@ -3621,6 +3628,7 @@ function MobileSettingsDrawer({
         at: performance.now(),
       });
     }
+    if (closing && event.type === "animationend" && event.animationName === "mobile-navigation-surface-out") onClosed();
   };
   return <div ref={layerRef} className={`mobile-settings-layer ${stateClass}`} onAnimationStart={handleAnimationEvent} onAnimationEnd={handleAnimationEvent}>
     <button className="mobile-settings-backdrop" onClick={dismiss} aria-label={t.cancel} />
