@@ -5086,27 +5086,48 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     opacity: 1 !important;
     clip-path: inset(0 0 100% 0) !important;
     animation: none !important;
-    transition: clip-path 300ms cubic-bezier(.22, 1, .36, 1) !important;
+    transition: clip-path 350ms cubic-bezier(.22, 1, .36, 1) !important;
     will-change: clip-path;
   }
 
   .mobile-settings-layer[data-open="true"]::before {
     clip-path: inset(0) !important;
-    transition-duration: 400ms !important;
+    transition-duration: 480ms !important;
   }
 
   .mobile-settings-layer .mobile-settings-nav {
     opacity: 0 !important;
     transform: translateY(-4px) !important;
     animation: none !important;
-    transition: opacity 150ms cubic-bezier(.22, 1, .36, 1), transform 150ms cubic-bezier(.22, 1, .36, 1) !important;
+    transition: opacity 160ms cubic-bezier(.22, 1, .36, 1), transform 160ms cubic-bezier(.22, 1, .36, 1) !important;
   }
 
   .mobile-settings-layer[data-open="true"] .mobile-settings-nav {
     opacity: 1 !important;
     transform: translateY(0) !important;
-    transition-delay: 100ms !important;
-    transition-duration: 260ms !important;
+    transition-delay: 120ms !important;
+    transition-duration: 280ms !important;
+  }
+
+  .mobile-settings-layer .mobile-settings-nav > button {
+    opacity: 0 !important;
+    transform: translateY(-5px) !important;
+    transition: opacity 280ms cubic-bezier(.22, 1, .36, 1), transform 280ms cubic-bezier(.22, 1, .36, 1) !important;
+  }
+
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+  }
+
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(1) { transition-delay: 120ms !important; }
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(2) { transition-delay: 160ms !important; }
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(3) { transition-delay: 200ms !important; }
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(4) { transition-delay: 240ms !important; }
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(5) { transition-delay: 280ms !important; }
+
+  .mobile-settings-layer[data-open="false"] .mobile-settings-nav > button {
+    transition-delay: 0ms !important;
   }
 }
 
@@ -5128,6 +5149,13 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
 
   .mobile-settings-layer .mobile-settings-nav,
   .mobile-settings-layer[data-open="true"] .mobile-settings-nav {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .mobile-settings-layer .mobile-settings-nav > button,
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button {
     opacity: 1 !important;
     transform: none !important;
     transition: none !important;

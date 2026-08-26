@@ -3560,6 +3560,10 @@ function MobileSettingsDrawer({
           backgroundColor: surface.backgroundColor,
           opacity: surface.opacity,
           clipPath: surface.clipPath,
+          transitionProperty: surface.transitionProperty,
+          transitionDuration: surface.transitionDuration,
+          transitionDelay: surface.transitionDelay,
+          transitionTimingFunction: surface.transitionTimingFunction,
           animationDuration: surface.animationDuration,
           animationName: surface.animationName,
         },
@@ -3567,13 +3571,50 @@ function MobileSettingsDrawer({
           visibility: navStyle.visibility,
           opacity: navStyle.opacity,
           transform: navStyle.transform,
+          transitionProperty: navStyle.transitionProperty,
           transitionDuration: navStyle.transitionDuration,
+          transitionDelay: navStyle.transitionDelay,
+          transitionTimingFunction: navStyle.transitionTimingFunction,
           animationDuration: navStyle.animationDuration,
           animationName: navStyle.animationName,
         },
       });
     });
     return () => cancelAnimationFrame(frame);
+  }, [open]);
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const layer = layerRef.current;
+    if (!layer) return;
+    let startedAt: number | null = null;
+    const onTransitionStart = (event: TransitionEvent) => {
+      if (event.propertyName !== "clip-path") return;
+      startedAt = performance.now();
+      console.debug("[mobile-menu] transitionstart", {
+        property: event.propertyName,
+        pseudoElement: event.pseudoElement,
+        at: startedAt,
+        open,
+      });
+    };
+    const onTransitionEnd = (event: TransitionEvent) => {
+      if (event.propertyName !== "clip-path") return;
+      const endedAt = performance.now();
+      console.debug("[mobile-menu] transitionend", {
+        property: event.propertyName,
+        pseudoElement: event.pseudoElement,
+        at: endedAt,
+        open,
+        duration: startedAt === null ? undefined : endedAt - startedAt,
+      });
+      startedAt = null;
+    };
+    layer.addEventListener("transitionstart", onTransitionStart);
+    layer.addEventListener("transitionend", onTransitionEnd);
+    return () => {
+      layer.removeEventListener("transitionstart", onTransitionStart);
+      layer.removeEventListener("transitionend", onTransitionEnd);
+    };
   }, [open]);
   return <div ref={layerRef} className="mobile-settings-layer" data-mobile-global-nav="true" data-open={open ? "true" : "false"}>
     <button className="mobile-settings-backdrop" onClick={dismiss} aria-label={t.cancel} />
