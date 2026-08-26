@@ -1,7 +1,6 @@
 import {
   memo,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -459,13 +458,11 @@ const tr = {
     editSchedule: "编辑日程",
     addSchedule: "添加日程",
     jobTitle: "招聘职位・类别",
-    otherCustom: "其他（手动输入）",
     searchOptions: "搜索或选择",
     selectIndustryFirst: "请先选择行业",
     industryChanged: "行业已更改，请重新选择职种",
     industryInput: "输入行业",
     positionInput: "输入职种",
-    noMatchingOptions: "没有匹配的候选项",
     industry: "行业",
     position: "职种",
     interest: "志望度",
@@ -614,13 +611,11 @@ const tr = {
     editSchedule: "日程を編集",
     addSchedule: "日程を追加",
     jobTitle: "募集職種・コース",
-    otherCustom: "その他（自由入力）",
     searchOptions: "検索または選択",
     selectIndustryFirst: "先に業界を選択してください",
     industryChanged: "業界が変更されたため、職種を再選択してください",
     industryInput: "業界を入力",
     positionInput: "職種を入力",
-    noMatchingOptions: "該当する候補がありません",
     industry: "業界",
     position: "職種",
     interest: "志望度",
@@ -757,13 +752,11 @@ const tr = {
     company: "Company",
     industry: "Industry",
     position: "Position",
-    otherCustom: "Other (custom)",
     searchOptions: "Search or select",
     selectIndustryFirst: "Select an industry first",
     industryChanged: "Industry changed. Please select a position again.",
     industryInput: "Enter an industry",
     positionInput: "Enter a position",
-    noMatchingOptions: "No matching options",
     interest: "Interest",
     stage: "Stage",
     event: "Next event",
@@ -2983,188 +2976,6 @@ function CloseButton({
     </button>
   );
 }
-function SearchableChoiceField({
-  t,
-  label,
-  name,
-  value,
-  options,
-  onChange,
-  disabled = false,
-  disabledPlaceholder,
-  customPlaceholder,
-}: {
-  t: any;
-  label: string;
-  name: string;
-  value: string;
-  options: string[];
-  onChange: (value: string) => void;
-  disabled?: boolean;
-  disabledPlaceholder?: string;
-  customPlaceholder?: string;
-}) {
-  const root = useRef<HTMLDivElement>(null);
-  const control = useRef<HTMLDivElement>(null);
-  const menu = useRef<HTMLDivElement>(null);
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState(value);
-  const [activeIndex, setActiveIndex] = useState(-1);
-  const [customMode, setCustomMode] = useState(false);
-  const [placement, setPlacement] = useState<"bottom" | "top">("bottom");
-  const [menuPosition, setMenuPosition] = useState({ left: 0, top: 0, bottom: 0, width: 0, maxHeight: 280 });
-  const matches = options.filter((option) => !query.trim() || option.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
-  useEffect(() => setQuery(value), [value]);
-  useEffect(() => {
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as Node;
-      if (root.current?.contains(target) || menu.current?.contains(target)) return;
-      setOpen(false);
-      setActiveIndex(-1);
-    };
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
-  }, []);
-  useEffect(() => {
-    if (!open) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        setOpen(false);
-        setActiveIndex(-1);
-      }
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open]);
-  useLayoutEffect(() => {
-    if (!open || disabled) return;
-    const updatePosition = () => {
-      const anchor = control.current?.getBoundingClientRect();
-      if (!anchor) return;
-      const viewport = window.visualViewport;
-      const viewportTop = viewport?.offsetTop || 0;
-      const viewportHeight = viewport?.height || window.innerHeight;
-      const viewportBottom = viewportTop + viewportHeight;
-      const gap = 6;
-      const maxListHeight = window.matchMedia("(max-width: 760px)").matches ? 200 : 240;
-      const preferredHeight = Math.min(maxListHeight, Math.max(160, Math.floor(viewportHeight * 0.4)));
-      const belowSpace = viewportBottom - anchor.bottom - gap;
-      const aboveSpace = anchor.top - viewportTop - gap;
-      const showBelow = belowSpace >= 180 || belowSpace >= aboveSpace;
-      const availableHeight = Math.max(96, Math.min(preferredHeight, showBelow ? belowSpace : aboveSpace));
-      setPlacement(showBelow ? "bottom" : "top");
-      setMenuPosition({
-        left: Math.round(anchor.left),
-        top: Math.round(anchor.bottom + gap),
-        bottom: Math.round(viewportBottom - anchor.top + gap),
-        width: Math.round(anchor.width),
-        maxHeight: Math.round(availableHeight),
-      });
-    };
-    updatePosition();
-    window.addEventListener("resize", updatePosition, { passive: true });
-    window.addEventListener("scroll", updatePosition, { passive: true, capture: true });
-    window.visualViewport?.addEventListener("resize", updatePosition, { passive: true });
-    window.visualViewport?.addEventListener("scroll", updatePosition, { passive: true });
-    return () => {
-      window.removeEventListener("resize", updatePosition);
-      window.removeEventListener("scroll", updatePosition, true);
-      window.visualViewport?.removeEventListener("resize", updatePosition);
-      window.visualViewport?.removeEventListener("scroll", updatePosition);
-    };
-  }, [disabled, open]);
-  const select = (option: string) => {
-    setQuery(option);
-    onChange(option);
-    setOpen(false);
-    setActiveIndex(-1);
-    setCustomMode(false);
-  };
-  const chooseOther = () => {
-    setQuery("");
-    onChange("");
-    setCustomMode(true);
-    setActiveIndex(-1);
-    setOpen(true);
-  };
-  const openMenu = () => {
-    if (disabled) return;
-    setActiveIndex(-1);
-    setOpen(true);
-  };
-  const menuStyle = placement === "bottom"
-    ? { position: "fixed" as const, top: menuPosition.top, left: menuPosition.left, width: menuPosition.width, maxHeight: menuPosition.maxHeight }
-    : { position: "fixed" as const, bottom: menuPosition.bottom, left: menuPosition.left, width: menuPosition.width, maxHeight: menuPosition.maxHeight };
-  const listbox = open && !disabled && typeof document !== "undefined" ? createPortal(
-    <div
-      ref={menu}
-      className={`form-combobox-menu ${placement}`}
-      id={`${name}-options`}
-      role="listbox"
-      style={menuStyle}
-      onMouseLeave={() => setActiveIndex(-1)}
-    >
-      {matches.map((option, index) => (
-        <button
-          type="button"
-          role="option"
-          id={`${name}-option-${index}`}
-          aria-selected={value === option}
-          className={`${value === option ? "selected" : ""} ${activeIndex === index ? "active" : ""}`.trim()}
-          key={option}
-          onMouseEnter={() => setActiveIndex(index)}
-          onClick={() => select(option)}
-        >
-          {option}
-          {value === option && <Check aria-hidden="true" />}
-        </button>
-      ))}
-      <button type="button" role="option" className="form-combobox-other" onClick={chooseOther}>{t.otherCustom}</button>
-      {!matches.length && <p className="form-combobox-empty">{t.noMatchingOptions}</p>}
-    </div>,
-    document.body,
-  ) : null;
-  return (
-    <div className={`form-combobox ${disabled ? "disabled" : ""}`} ref={root}>
-      <span>{label}</span>
-      <div className="form-combobox-control" ref={control}>
-        <input
-          type="text"
-          value={disabled ? "" : query}
-          disabled={disabled}
-          role="combobox"
-          aria-disabled={disabled}
-          aria-expanded={open}
-          aria-controls={`${name}-options`}
-          aria-activedescendant={activeIndex >= 0 ? `${name}-option-${activeIndex}` : undefined}
-          aria-autocomplete="list"
-          placeholder={disabled ? disabledPlaceholder : customMode ? customPlaceholder : t.searchOptions}
-          onFocus={openMenu}
-          onClick={openMenu}
-          onChange={(event) => { setQuery(event.target.value); onChange(event.target.value); setActiveIndex(-1); setOpen(true); }}
-          onKeyDown={(event) => {
-            if (event.key === "ArrowDown") {
-              event.preventDefault();
-              setOpen(true);
-              setActiveIndex((index) => matches.length ? (index < 0 ? 0 : Math.min(index + 1, matches.length - 1)) : -1);
-            }
-            if (event.key === "ArrowUp") {
-              event.preventDefault();
-              setOpen(true);
-              setActiveIndex((index) => matches.length ? (index < 0 ? matches.length - 1 : Math.max(index - 1, 0)) : -1);
-            }
-            if (event.key === "Enter" && open && activeIndex >= 0 && matches[activeIndex]) { event.preventDefault(); select(matches[activeIndex]); }
-            if (event.key === "Escape") { event.preventDefault(); setOpen(false); setActiveIndex(-1); }
-          }}
-        />
-        <ChevronDown aria-hidden="true" />
-      </div>
-      <input type="hidden" name={name} value={value} readOnly />
-      {listbox}
-    </div>
-  );
-}
 function CompanyForm({
   t,
   initial,
@@ -3183,16 +2994,22 @@ function CompanyForm({
   const colors = ["#555555", "#777777", "#d18135", "#d4534d", "#2d9b78", "#9a6b44", "#6e7d91", "#c04f8a"];
   const [color, setColor] = useState(initial?.color || colors[0]);
   const [interest, setInterest] = useState(Math.min(5, Math.max(1, initial?.interestLevel || 3)));
-  const [industry, setIndustry] = useState(initial?.industry || "");
-  const [jobCategory, setJobCategory] = useState(initial?.jobCategory || initial?.position || "");
+  const initialIndustry = initial?.industry || "";
+  const initialJobCategory = initial?.jobCategory || initial?.position || "";
+  const standardIndustryOptions = useMemo(() => industryOptions.filter((option) => option !== "その他"), []);
+  const [industry, setIndustry] = useState(initialIndustry);
+  const [industryIsCustom, setIndustryIsCustom] = useState(Boolean(initialIndustry && !standardIndustryOptions.includes(initialIndustry)));
+  const [jobCategory, setJobCategory] = useState(initialJobCategory);
+  const [jobCategoryIsCustom, setJobCategoryIsCustom] = useState(Boolean(initialJobCategory && !occupationsForIndustry(initialIndustry).filter((option) => option !== "その他").includes(initialJobCategory)));
   const [industryChangedNotice, setIndustryChangedNotice] = useState(false);
-  const previousIndustry = useRef(initial?.industry || "");
+  const previousIndustry = useRef(initialIndustry);
   const occupationOptions = useMemo(() => occupationsForIndustry(industry), [industry]);
   useEffect(() => {
     if (previousIndustry.current === industry) return;
     const shouldNotify = Boolean(previousIndustry.current && industry && jobCategory);
     previousIndustry.current = industry;
     setJobCategory("");
+    setJobCategoryIsCustom(false);
     setIndustryChangedNotice(shouldNotify);
   }, [industry]);
   return (
@@ -3202,27 +3019,55 @@ function CompanyForm({
           <span>{t.company}</span>
           <input name="name" defaultValue={initial?.name} required />
         </label>
-        <SearchableChoiceField
-          t={t}
-          label={t.industry}
-          name="industry"
-          value={industry}
-          options={industryOptions}
-          customPlaceholder={t.industryInput}
-          onChange={setIndustry}
-        />
-        <SearchableChoiceField
-          t={t}
-          label={t.position}
-          name="jobCategory"
-          value={jobCategory}
-          options={occupationOptions}
-          disabled={!industry.trim()}
-          disabledPlaceholder={t.selectIndustryFirst}
-          customPlaceholder={t.positionInput}
-          onChange={(value) => { setJobCategory(value); if (value) setIndustryChangedNotice(false); }}
-        />
-        {industryChangedNotice && <p className="form-combobox-notice" role="status">{t.industryChanged}</p>}
+        <label>
+          <span>{t.industry}</span>
+          <select
+            name="industryChoice"
+            value={industryIsCustom ? "__other__" : industry}
+            onChange={(event) => {
+              const value = event.target.value;
+              if (value === "__other__") {
+                setIndustryIsCustom(true);
+                setIndustry("");
+              } else {
+                setIndustryIsCustom(false);
+                setIndustry(value);
+              }
+            }}
+          >
+            <option value="" disabled>{t.searchOptions}</option>
+            {standardIndustryOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+            <option value="__other__">{t.other}</option>
+          </select>
+          {industryIsCustom && <input name="industryCustom" value={industry} onChange={(event) => setIndustry(event.target.value)} placeholder={t.industryInput} />}
+          <input type="hidden" name="industry" value={industry} readOnly />
+        </label>
+        <label>
+          <span>{t.position}</span>
+          <select
+            name="jobCategoryChoice"
+            disabled={!industry.trim()}
+            value={jobCategoryIsCustom ? "__other__" : jobCategory}
+            onChange={(event) => {
+              const value = event.target.value;
+              if (value === "__other__") {
+                setJobCategoryIsCustom(true);
+                setJobCategory("");
+              } else {
+                setJobCategoryIsCustom(false);
+                setJobCategory(value);
+                if (value) setIndustryChangedNotice(false);
+              }
+            }}
+          >
+            <option value="" disabled>{industry.trim() ? t.searchOptions : t.selectIndustryFirst}</option>
+            {occupationOptions.filter((option) => option !== "その他").map((option) => <option key={option} value={option}>{option}</option>)}
+            <option value="__other__">{t.other}</option>
+          </select>
+          {jobCategoryIsCustom && industry.trim() && <input name="jobCategoryCustom" value={jobCategory} onChange={(event) => setJobCategory(event.target.value)} placeholder={t.positionInput} />}
+          <input type="hidden" name="jobCategory" value={jobCategory} readOnly />
+        </label>
+        {industryChangedNotice && <p className="form-field-notice" role="status">{t.industryChanged}</p>}
         <label>
           <span>{t.jobTitle}</span>
           <input name="jobTitle" defaultValue={initial?.jobTitle} placeholder={t.notSet} />
