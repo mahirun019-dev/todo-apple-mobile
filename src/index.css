@@ -5478,19 +5478,21 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     -webkit-backdrop-filter: blur(3px) !important;
     opacity: 1 !important;
     clip-path: inset(0 0 100% 0);
-    animation: mobile-navigation-surface-in 260ms cubic-bezier(.2, .8, .2, 1) forwards !important;
+    will-change: clip-path;
+    animation: mobile-navigation-surface-in 280ms cubic-bezier(.2, .8, .2, 1) forwards !important;
   }
 
   .mobile-settings-layer.closing::before {
-    animation: mobile-navigation-surface-out 220ms cubic-bezier(.2, .8, .2, 1) 30ms forwards !important;
+    animation: mobile-navigation-surface-out 240ms cubic-bezier(.2, .8, .2, 1) 40ms forwards !important;
   }
 
   .mobile-settings-nav {
-    animation: mobile-navigation-content-in 180ms cubic-bezier(.2, .8, .2, 1) 80ms forwards !important;
+    will-change: opacity, transform;
+    animation: mobile-navigation-content-in 200ms cubic-bezier(.2, .8, .2, 1) 90ms forwards !important;
   }
 
   .mobile-settings-layer.closing .mobile-settings-nav {
-    animation: mobile-navigation-content-out 150ms cubic-bezier(.2, .8, .2, 1) forwards !important;
+    animation: mobile-navigation-content-out 160ms cubic-bezier(.2, .8, .2, 1) forwards !important;
   }
 
   @keyframes mobile-navigation-surface-in {
