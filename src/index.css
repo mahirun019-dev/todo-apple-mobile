@@ -5014,6 +5014,16 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
 
 /* Mobile navigation is a full-screen glass overlay, not a side drawer. */
 @media (max-width: 767px) {
+  :root {
+    --careerflow-mobile-menu-background: rgba(248, 250, 252, .66);
+    --careerflow-mobile-menu-backdrop: saturate(180%) blur(17px);
+  }
+
+  [data-theme="dark"] {
+    --careerflow-mobile-menu-background: rgba(24, 27, 31, .66);
+    --careerflow-mobile-menu-backdrop: saturate(160%) blur(17px);
+  }
+
   .mobile-settings-layer {
     position: fixed;
     inset: 0;
@@ -5023,15 +5033,31 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     height: 100dvh;
     min-height: 100dvh;
     overflow: hidden;
-    background: var(--careerflow-glass-background);
-    backdrop-filter: var(--careerflow-glass-backdrop);
-    -webkit-backdrop-filter: var(--careerflow-glass-backdrop);
-    animation: mobile-navigation-in 220ms cubic-bezier(.2, .8, .2, 1);
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    animation: none !important;
+  }
+
+  .mobile-settings-layer::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: var(--careerflow-mobile-menu-background);
+    backdrop-filter: var(--careerflow-mobile-menu-backdrop);
+    -webkit-backdrop-filter: var(--careerflow-mobile-menu-backdrop);
+    opacity: 0;
+    pointer-events: none;
+    animation: mobile-navigation-glass-in 210ms cubic-bezier(.22, 1, .36, 1) forwards;
   }
 
   .mobile-settings-layer.closing {
-    animation: mobile-navigation-out 170ms ease-in forwards;
     pointer-events: none;
+  }
+
+  .mobile-settings-layer.closing::before {
+    animation: mobile-navigation-glass-out 150ms cubic-bezier(.22, 1, .36, 1) 40ms forwards;
   }
 
   .mobile-settings-backdrop {
@@ -5110,6 +5136,13 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     gap: 4px;
     margin: 0;
     padding: 24px 28px calc(24px + env(safe-area-inset-bottom));
+    opacity: 0;
+    transform: translateY(-6px);
+    animation: mobile-navigation-content-in 190ms cubic-bezier(.22, 1, .36, 1) 70ms forwards;
+  }
+
+  .mobile-settings-layer.closing .mobile-settings-nav {
+    animation: mobile-navigation-content-out 150ms cubic-bezier(.22, 1, .36, 1) forwards;
   }
 
   .mobile-settings-nav > button {
@@ -5118,7 +5151,7 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     column-gap: 16px;
     width: 100%;
     min-width: 0;
-    min-height: 68px;
+    min-height: 56px;
     align-items: center;
     padding: 0 16px;
     border: 0;
@@ -5187,20 +5220,38 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     background: rgba(255, 255, 255, .06);
   }
 
-  @keyframes mobile-navigation-in {
-    from { opacity: 0; transform: translateY(-8px); }
+  @keyframes mobile-navigation-glass-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes mobile-navigation-glass-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  @keyframes mobile-navigation-content-in {
+    from { opacity: 0; transform: translateY(-6px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
-  @keyframes mobile-navigation-out {
+  @keyframes mobile-navigation-content-out {
     from { opacity: 1; transform: translateY(0); }
-    to { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 0; transform: translateY(-4px); }
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mobile-settings-layer {
+  .mobile-settings-layer::before,
+  .mobile-settings-nav,
+  .mobile-settings-layer.closing .mobile-settings-nav {
     animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+
+  .mobile-settings-layer.closing::before {
+    opacity: 0;
   }
 }
 

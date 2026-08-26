@@ -3632,7 +3632,7 @@ function MobileSettingsDrawer({
   const dismiss = () => {
     if (closing) return;
     setClosing(true);
-    window.setTimeout(close, 180);
+    window.setTimeout(close, 200);
   };
   useEffect(() => {
     const y = window.scrollY;
