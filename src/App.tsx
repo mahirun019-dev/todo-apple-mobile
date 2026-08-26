@@ -85,6 +85,43 @@ type ItemType =
   | "general";
 type Priority = "low" | "medium" | "high";
 type CreateType = "company" | "schedule" | "es" | "interview" | "preparation";
+type HomeModule = "active" | "deadlines" | "waiting" | "upcoming" | "action" | "progress";
+type CompanySort = "updated" | "event" | "interest" | "name";
+type TemplateCategory = "selfPr" | "gakuchika" | "motivation" | "interviewQuestion" | "reverseQuestion" | "preparation";
+type CareerTemplate = {
+  id: string;
+  category: TemplateCategory;
+  title: string;
+  content: string;
+  updatedAt: number;
+};
+type AppPreferences = {
+  jobHunt: {
+    homeRegion: string;
+    actionWindowDays: 3 | 7 | 14;
+    resultWaitingDays: 7 | 10 | 14;
+    showDeadlines: boolean;
+    showUpcoming: boolean;
+    showWaiting: boolean;
+    defaultCompanyStage: Stage;
+    defaultInterestLevel: number;
+  };
+  customize: {
+    homeModules: HomeModule[];
+    companyCard: {
+      industry: boolean;
+      position: boolean;
+      stage: boolean;
+      interest: boolean;
+      nextEvent: boolean;
+    };
+    companySort: CompanySort;
+  };
+  calendar: {
+    timezone: "Asia/Tokyo";
+    preferShare: boolean;
+  };
+};
 type PrepType =
   | "research"
   | "es_fix"
@@ -217,7 +254,32 @@ type Data = {
   interviews: InterviewRecord[];
   preparations: Preparation[];
   focusMinutes: number;
+  preferences: AppPreferences;
+  templates: CareerTemplate[];
 };
+
+const defaultHomeModules: HomeModule[] = ["active", "deadlines", "waiting", "upcoming", "action", "progress"];
+function defaultPreferences(): AppPreferences {
+  const savedRegion = typeof localStorage !== "undefined" ? localStorage.getItem("careerflow-home-region") || "" : "";
+  return {
+    jobHunt: {
+      homeRegion: savedRegion,
+      actionWindowDays: 7,
+      resultWaitingDays: 7,
+      showDeadlines: true,
+      showUpcoming: true,
+      showWaiting: true,
+      defaultCompanyStage: "saved",
+      defaultInterestLevel: 3,
+    },
+    customize: {
+      homeModules: [...defaultHomeModules],
+      companyCard: { industry: true, position: true, stage: true, interest: true, nextEvent: true },
+      companySort: "updated",
+    },
+    calendar: { timezone: "Asia/Tokyo", preferShare: true },
+  };
+}
 
 function makeBackupSnapshot(data: Data, theme: Theme, locale: Locale): BackupSnapshot {
   return {
@@ -229,7 +291,7 @@ function makeBackupSnapshot(data: Data, theme: Theme, locale: Locale): BackupSna
     interviews: data.interviews,
     preparations: data.preparations,
     selectionRecords: data.companies.map((x) => ({ id: x.id, stage: x.stage, updatedAt: x.updatedAt })),
-    settings: { theme, locale },
+    settings: { theme, locale, preferences: data.preferences, templates: data.templates },
   };
 }
 
@@ -248,7 +310,8 @@ function parseBackupPayload(value: unknown): { data: ReturnType<typeof normalize
   const materials = array(["materials", "resources", "documents"]);
   const interviews = array(["interviews", "interviewRecords"]);
   const preparations = array(["preparations", "preparationItems"]);
-  const data = normalize({ schemaVersion: 5, companies, events, materials, interviews, preparations, focusMinutes: 0 });
+  const backupSettings = (x.settings && typeof x.settings === "object" ? x.settings : {}) as Record<string, any>;
+  const data = normalize({ schemaVersion: 5, companies, events, materials, interviews, preparations, focusMinutes: 0, preferences: backupSettings.preferences || x.preferences, templates: backupSettings.templates || x.templates });
   return { data, counts: { companies: companies.length, schedules: events.length, materials: materials.length, interviews: interviews.length, preparations: preparations.length } };
 }
 const KEY = "career-flow-data-v5",
@@ -538,6 +601,17 @@ const tr = {
     undo: "撤销",
     materialsSub: "材料、面试记录与准备事项",
     scheduleSub: "说明会、笔试、面试与截止时间",
+    jobSettings: "求职设置", customize: "自定义", templates: "模板", calendarIntegration: "日历连接",
+    homeRegion: "常驻就活地区", homeRegionHint: "没有填写详细地点的日程将使用此地区作为天气和出行参考。",
+    actionWindow: "待处理时间范围", actionWindowHint: "用于首页待处理事项和临近截止提醒。", days3: "3天内", days7: "7天内", days14: "14天内",
+    resultWaitingThreshold: "等待结果判定", resultWaitingHint: "选考结束后持续未更新达到此天数时进入待处理。",
+    showDeadlines: "显示截止事项", showUpcoming: "显示近期日程", showWaiting: "显示长期等待结果",
+    defaultStage: "新企业默认选考阶段", defaultInterest: "新企业默认志望度", homeModules: "主页显示项目", companyCard: "企业卡片显示信息",
+    showIndustry: "行业", showPosition: "职种", showStage: "选考阶段", showInterest: "志望度", showNextEvent: "下一日程", defaultCompanySort: "默认企业排序",
+    sortUpdated: "最近更新", sortEvent: "下一日程", sortInterest: "志望度从高到低", sortName: "企业名称", moveUp: "上移", moveDown: "下移",
+    templateNew: "新建模板", templateEdit: "编辑模板", templateDelete: "删除模板", templateDuplicate: "复制模板", templateCategory: "类别", templateTitle: "标题", templateContent: "内容", templateSave: "保存模板", templateEmpty: "还没有模板", templateInsert: "从模板插入", chooseTemplate: "选择模板", insertTemplate: "插入", noTemplates: "暂无可用模板",
+    templateSelfPr: "自我PR", templateGakuchika: "学生时代经历", templateMotivation: "志望动机", templateInterviewQuestion: "面试问题", templateReverseQuestion: "反问问题", templatePreparation: "准备事项",
+    calendarAdd: "添加到日历", calendarExportFuture: "将后续日程导出到日历", calendarMethod: "添加到日历的方式", calendarMethodHint: "当前采用导出方式，暂不支持自动同步。", calendarPreferShare: "移动端优先使用分享", calendarExported: "日历文件已生成", calendarNoEvents: "没有可导出的后续日程",
   },
   ja: {
     dashboard: "ホーム",
@@ -691,6 +765,17 @@ const tr = {
     undo: "元に戻す",
     materialsSub: "書類・面接記録・準備事項",
     scheduleSub: "説明会・筆記・面接・締切",
+    jobSettings: "就活設定", customize: "カスタマイズ", templates: "テンプレート", calendarIntegration: "カレンダー連携",
+    homeRegion: "常駐就活地域", homeRegionHint: "詳細な場所がない日程では、この地域を天気や移動の目安に使用します。",
+    actionWindow: "要対応の対象期間", actionWindowHint: "ホームの要対応と締切の目安に使用します。", days3: "3日以内", days7: "7日以内", days14: "14日以内",
+    resultWaitingThreshold: "結果待ち判定", resultWaitingHint: "選考終了後、この日数更新がない項目を要対応に表示します。",
+    showDeadlines: "締切を表示", showUpcoming: "近日の日程を表示", showWaiting: "長期間の結果待ちを表示",
+    defaultStage: "新規企業の初期選考段階", defaultInterest: "新規企業の初期志望度", homeModules: "ホーム画面の表示項目", companyCard: "企業カードの表示情報",
+    showIndustry: "業界", showPosition: "職種", showStage: "選考段階", showInterest: "志望度", showNextEvent: "次の日程", defaultCompanySort: "既定の企業並び替え",
+    sortUpdated: "最近更新", sortEvent: "次の日程", sortInterest: "志望度の高い順", sortName: "企業名", moveUp: "上へ", moveDown: "下へ",
+    templateNew: "新規作成", templateEdit: "編集", templateDelete: "削除", templateDuplicate: "複製", templateCategory: "カテゴリ", templateTitle: "タイトル", templateContent: "内容", templateSave: "テンプレートを保存", templateEmpty: "テンプレートはまだありません", templateInsert: "テンプレートから挿入", chooseTemplate: "テンプレートを選択", insertTemplate: "挿入", noTemplates: "使用できるテンプレートがありません",
+    templateSelfPr: "自己PR", templateGakuchika: "ガクチカ", templateMotivation: "志望動機", templateInterviewQuestion: "面接質問", templateReverseQuestion: "逆質問", templatePreparation: "準備事項",
+    calendarAdd: "カレンダーに追加", calendarExportFuture: "今後の予定をカレンダーに書き出す", calendarMethod: "カレンダーへの追加方法", calendarMethodHint: "現在は書き出し方式です。自動同期には対応していません。", calendarPreferShare: "モバイルでは共有を優先", calendarExported: "カレンダーファイルを生成しました", calendarNoEvents: "書き出せる今後の予定はありません",
   },
   en: {
     dashboard: "Home",
@@ -826,6 +911,17 @@ const tr = {
     undo: "Undo",
     materialsSub: "Documents, interview records and preparations",
     scheduleSub: "Briefings, tests, interviews and deadlines",
+    jobSettings: "Job hunt settings", customize: "Customize", templates: "Templates", calendarIntegration: "Calendar integration",
+    homeRegion: "Home job-search region", homeRegionHint: "Used as a weather and travel reference when an event has no detailed location.",
+    actionWindow: "Attention window", actionWindowHint: "Used for upcoming deadlines and the home attention list.", days3: "Within 3 days", days7: "Within 7 days", days14: "Within 14 days",
+    resultWaitingThreshold: "Waiting-result threshold", resultWaitingHint: "Items with no update after this many days appear in Needs attention.",
+    showDeadlines: "Show deadlines", showUpcoming: "Show upcoming events", showWaiting: "Show long-waiting results",
+    defaultStage: "Default stage for new companies", defaultInterest: "Default interest for new companies", homeModules: "Home modules", companyCard: "Company card details",
+    showIndustry: "Industry", showPosition: "Position", showStage: "Stage", showInterest: "Interest", showNextEvent: "Next event", defaultCompanySort: "Default company sort",
+    sortUpdated: "Recently updated", sortEvent: "Next event", sortInterest: "Interest", sortName: "Company name", moveUp: "Move up", moveDown: "Move down",
+    templateNew: "New template", templateEdit: "Edit", templateDelete: "Delete", templateDuplicate: "Duplicate", templateCategory: "Category", templateTitle: "Title", templateContent: "Content", templateSave: "Save template", templateEmpty: "No templates yet", templateInsert: "Insert from template", chooseTemplate: "Choose a template", insertTemplate: "Insert", noTemplates: "No templates available",
+    templateSelfPr: "Self PR", templateGakuchika: "Student experience", templateMotivation: "Motivation", templateInterviewQuestion: "Interview question", templateReverseQuestion: "Reverse question", templatePreparation: "Preparation",
+    calendarAdd: "Add to calendar", calendarExportFuture: "Export upcoming events to calendar", calendarMethod: "How calendar entries are added", calendarMethodHint: "Events are exported as files. Automatic sync is not supported yet.", calendarPreferShare: "Prefer sharing on mobile", calendarExported: "Calendar file generated", calendarNoEvents: "No upcoming events to export",
   },
 };
 // Keep keyboard viewport changes out of React's render path. Safari can emit many
@@ -858,6 +954,8 @@ function emptyData(): Data {
     interviews: [],
     preparations: [],
     focusMinutes: 0,
+    preferences: defaultPreferences(),
+    templates: [],
   };
 }
 function demo(): Data {
@@ -933,6 +1031,74 @@ function getUpcomingEvent(events: Event[], companyId: string | undefined): Event
     .filter((event) => event.companyId === companyId && !(event as Event & { deletedAt?: boolean }).deletedAt && Number.isFinite(new Date(event.startsAt).getTime()) && new Date(event.startsAt).getTime() >= Date.now())
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0];
 }
+function icsEscape(value: string) {
+  return value.replace(/\\/g, "\\\\").replace(/\r?\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
+}
+function calendarParts(value: string) {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (match) return { year: match[1], month: match[2], day: match[3], hour: match[4], minute: match[5] };
+  const date = new Date(value);
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(date);
+  return Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value])) as { year: string; month: string; day: string; hour: string; minute: string };
+}
+function calendarTimestamp(value: string, addMinutes = 0) {
+  const parts = calendarParts(value);
+  const base = new Date(`${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:00+09:00`);
+  base.setMinutes(base.getMinutes() + addMinutes);
+  const next = calendarParts(base.toISOString());
+  return `${next.year}${next.month}${next.day}T${next.hour}${next.minute}00`;
+}
+function eventToIcs(event: Event, company: Company | undefined, t: any) {
+  const eventLabel = event.type === "general" ? (event.title || t.general) : t[event.type] || event.title || t.general;
+  const location = event.locationLabel || event.location || event.locationOrOnline || "";
+  const description = [
+    company?.name ? `${t.company}: ${company.name}` : "",
+    `${t.stage}: ${t[event.stage] || event.stage}`,
+    event.eventMode ? `${t.format}: ${t[event.eventMode] || event.eventMode}` : "",
+    event.notes ? `${t.notes}: ${event.notes}` : "",
+    company?.careersUrl ? `${t.url}: ${company.careersUrl}` : "",
+  ].filter(Boolean).join("\\n");
+  const uid = `${event.id}@careerflow`;
+  return [
+    "BEGIN:VEVENT",
+    `UID:${icsEscape(uid)}`,
+    `DTSTAMP:${calendarTimestamp(new Date().toISOString())}Z`,
+    `DTSTART;TZID=Asia/Tokyo:${calendarTimestamp(event.startsAt)}`,
+    `DTEND;TZID=Asia/Tokyo:${calendarTimestamp(event.startsAt, 60)}`,
+    `SUMMARY:${icsEscape(`${company?.name ? `${company.name} - ` : ""}${eventLabel}`)}`,
+    `DESCRIPTION:${icsEscape(description)}`,
+    location ? `LOCATION:${icsEscape(location)}` : "",
+    company?.careersUrl ? `URL:${icsEscape(company.careersUrl)}` : "",
+    "END:VEVENT",
+  ].filter(Boolean).join("\r\n");
+}
+function makeIcs(events: Event[], byId: Record<string, Company>, t: any) {
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//CareerFlow//CareerFlow Calendar//JA",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    ...events.map((event) => eventToIcs(event, byId[event.companyId || ""], t)),
+    "END:VCALENDAR",
+    "",
+  ].join("\r\n");
+}
+async function shareOrDownloadCalendar(name: string, body: string, preferShare: boolean) {
+  const file = new File([body], name, { type: "text/calendar;charset=utf-8" });
+  const canShare = preferShare && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && !!navigator.share && !!navigator.canShare?.({ files: [file] });
+  if (canShare) {
+    await navigator.share({ files: [file], title: "CareerFlow Calendar" });
+    return "shared" as const;
+  }
+  const url = URL.createObjectURL(file);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return "downloaded" as const;
+}
 function getLegacyCompanyEventAt(company: any): string {
   const legacy = company.nextEventAt
     || company.scheduleDate
@@ -959,6 +1125,34 @@ function makeCompanyNextEvent(company: Company, startsAt: string, existing?: Eve
   };
 }
 function normalize(x: any): Data {
+  const defaults = defaultPreferences();
+  const rawPreferences = (x.preferences || (x.settings && x.settings.preferences) || {}) as Partial<AppPreferences>;
+  const rawJobHunt = (rawPreferences.jobHunt || {}) as Partial<AppPreferences["jobHunt"]>;
+  const rawCustomize = (rawPreferences.customize || {}) as Partial<AppPreferences["customize"]>;
+  const rawCard = (rawCustomize.companyCard || {}) as Partial<AppPreferences["customize"]["companyCard"]>;
+  const rawCalendar = (rawPreferences.calendar || {}) as Partial<AppPreferences["calendar"]>;
+  const preferences: AppPreferences = {
+    jobHunt: {
+      ...defaults.jobHunt,
+      ...rawJobHunt,
+      homeRegion: typeof rawJobHunt.homeRegion === "string" ? rawJobHunt.homeRegion : defaults.jobHunt.homeRegion,
+      actionWindowDays: [3, 7, 14].includes(Number(rawJobHunt.actionWindowDays)) ? Number(rawJobHunt.actionWindowDays) as 3 | 7 | 14 : defaults.jobHunt.actionWindowDays,
+      resultWaitingDays: [7, 10, 14].includes(Number(rawJobHunt.resultWaitingDays)) ? Number(rawJobHunt.resultWaitingDays) as 7 | 10 | 14 : defaults.jobHunt.resultWaitingDays,
+      defaultCompanyStage: stages.includes(rawJobHunt.defaultCompanyStage as Stage) ? rawJobHunt.defaultCompanyStage as Stage : defaults.jobHunt.defaultCompanyStage,
+      defaultInterestLevel: Math.min(5, Math.max(1, Number(rawJobHunt.defaultInterestLevel) || defaults.jobHunt.defaultInterestLevel)),
+    },
+    customize: {
+      ...defaults.customize,
+      ...rawCustomize,
+      homeModules: Array.isArray(rawCustomize.homeModules)
+        ? defaultHomeModules.filter((key) => rawCustomize.homeModules!.includes(key))
+          .concat((rawCustomize.homeModules as HomeModule[]).filter((key) => !defaultHomeModules.includes(key)))
+        : defaults.customize.homeModules,
+      companyCard: { ...defaults.customize.companyCard, ...rawCard },
+      companySort: ["updated", "event", "interest", "name"].includes(String(rawCustomize.companySort)) ? rawCustomize.companySort as CompanySort : defaults.customize.companySort,
+    },
+    calendar: { ...defaults.calendar, ...rawCalendar, timezone: "Asia/Tokyo" },
+  };
   const companies = (x.companies || []).map((company: Company) => {
     const { nextEventAt: _legacyNextEventAt, nextSchedule: _legacyNextSchedule, nextEvent: _legacyNextEvent, scheduleDate: _legacyScheduleDate, ...withoutLegacyNext } = company as Company & Record<string, unknown>;
     return withoutLegacyNext;
@@ -977,6 +1171,16 @@ function normalize(x: any): Data {
     if (!startsAt || events.some((event: Event) => event.companyId === company.id && event.startsAt === startsAt)) continue;
     events.push(makeCompanyNextEvent(company, startsAt));
   }
+  const validTemplateCategories: TemplateCategory[] = ["selfPr", "gakuchika", "motivation", "interviewQuestion", "reverseQuestion", "preparation"];
+  const templates = (Array.isArray(x.templates) ? x.templates : Array.isArray((x.settings || {}).templates) ? (x.settings || {}).templates : [])
+    .filter((template: any) => template && validTemplateCategories.includes(template.category))
+    .map((template: any): CareerTemplate => ({
+      id: String(template.id || id()),
+      category: template.category,
+      title: String(template.title || ""),
+      content: String(template.content || ""),
+      updatedAt: Number(template.updatedAt) || Date.now(),
+    }));
   return {
     schemaVersion: 5,
     companies,
@@ -995,6 +1199,8 @@ function normalize(x: any): Data {
     interviews: (x.interviews || []).map((v: InterviewRecord) => ({ ...v, category: "interview" })),
     preparations: (x.preparations || []).map((v: Preparation) => ({ ...v, category: "preparation" })),
     focusMinutes: x.focusMinutes || 0,
+    preferences,
+    templates,
   };
 }
 function load(): Data {
@@ -1152,17 +1358,7 @@ export default function App() {
       firstDataRender.current = false;
       return;
     }
-    const snapshot: BackupSnapshot = {
-      schemaVersion: data.schemaVersion,
-      createdAt: Date.now(),
-      companies: data.companies,
-      schedules: data.events,
-      resources: data.materials,
-      interviews: data.interviews,
-      preparations: data.preparations,
-      selectionRecords: data.companies.map((x) => ({ id: x.id, stage: x.stage, updatedAt: x.updatedAt })),
-      settings: { theme, locale },
-    };
+    const snapshot = makeBackupSnapshot(data, theme, locale);
     createBackup(snapshot).catch(() => setToast({ text: locale === "ja" ? "自動バックアップに失敗しました" : "自动备份失败", undo: () => undefined }));
   }, [data, locale, theme]);
   useEffect(() => localStorage.setItem(LOCALE, locale), [locale]);
@@ -1185,11 +1381,15 @@ export default function App() {
     [data.companies],
   );
   const active = data.companies.filter(isActiveCompany),
-    due = [
+    allDue = [
       ...data.materials.filter((x) => !x.completed && x.dueAt),
       ...data.preparations.filter((x) => !x.completed && x.dueAt),
-    ]
+    ],
+    due = allDue
       .filter((x) => new Date(x.dueAt!).getTime() < Date.now() + 6048e5)
+      .sort((a, b) => String(a.dueAt).localeCompare(String(b.dueAt))),
+    actionDue = allDue
+      .filter((x) => new Date(x.dueAt!).getTime() < Date.now() + data.preferences.jobHunt.actionWindowDays * 864e5)
       .sort((a, b) => String(a.dueAt).localeCompare(String(b.dueAt))),
     waiting = data.companies.filter((x) => isWaitingResultCompany(x, data.events)),
     focus = data.materials.filter((x) => x.isWeeklyFocus).slice(0, 3);
@@ -1307,8 +1507,8 @@ export default function App() {
       position: String(f.get("jobCategory") || f.get("position") || ""),
       jobCategory: String(f.get("jobCategory") || f.get("position") || "") || undefined,
       jobTitle: String(f.get("jobTitle") || "") || undefined,
-      interestLevel: Number(f.get("interest")),
-      stage: f.get("stage") as Stage,
+      interestLevel: Number(f.get("interest")) || data.preferences.jobHunt.defaultInterestLevel,
+      stage: (f.get("stage") as Stage) || data.preferences.jobHunt.defaultCompanyStage,
       locationOrOnline: String(f.get("place") || base?.locationOrOnline || ""),
       careersUrl: String(f.get("url")),
       notes: String(f.get("notes")),
@@ -1522,6 +1722,20 @@ export default function App() {
     a.click();
     URL.revokeObjectURL(a.href);
   };
+  const exportCalendar = async (requestedEvents?: Event[]) => {
+    const events = (requestedEvents || data.events).filter((event) => Number.isFinite(new Date(event.startsAt).getTime()) && new Date(event.startsAt).getTime() >= Date.now());
+    if (!events.length) {
+      setToast({ text: t.calendarNoEvents, undo: () => undefined });
+      return;
+    }
+    const name = requestedEvents?.length === 1 ? `careerflow-event-${events[0].id}.ics` : "careerflow-upcoming-events.ics";
+    try {
+      await shareOrDownloadCalendar(name, makeIcs(events, byId, t), data.preferences.calendar.preferShare);
+      setToast({ text: t.calendarExported, undo: () => undefined });
+    } catch (error) {
+      if ((error as DOMException).name !== "AbortError") setToast({ text: t.calendarNoEvents, undo: () => undefined });
+    }
+  };
   const closeMobileSettings = () => {
     const layer = document.querySelector<HTMLElement>(".mobile-settings-layer");
     const active = document.activeElement;
@@ -1564,6 +1778,9 @@ export default function App() {
       localStorage.setItem(ICON, v);
     };
     r.readAsDataURL(f);
+  };
+  const updatePreferences = (change: (current: AppPreferences) => AppPreferences) => {
+    setData((current) => ({ ...current, preferences: change(current.preferences) }));
   };
   const open = (kind: CreateType) => {
     setForm(kind);
@@ -1615,6 +1832,7 @@ export default function App() {
                 data,
                 active,
                 due,
+                actionDue,
                 waiting,
                 next,
                 upcoming,
@@ -1627,6 +1845,7 @@ export default function App() {
                 setView,
                 setEditEvent,
                 setForm,
+                onExportCalendar: (event: Event) => exportCalendar([event]),
               }}
             />
           )}
@@ -1664,6 +1883,7 @@ export default function App() {
                 removeMaterial,
                 removePrep,
                 setEditPrep,
+                onExportCalendar: (event: Event) => exportCalendar([event]),
               }}
             />
           )}
@@ -1708,6 +1928,8 @@ export default function App() {
             importJson={importJson}
             upload={upload}
             download={download}
+            updatePreferences={updatePreferences}
+            exportCalendar={exportCalendar}
           />
         )}
         {!isMobile && settings && (
@@ -1726,6 +1948,8 @@ export default function App() {
             importJson={importJson}
             upload={upload}
             download={download}
+            updatePreferences={updatePreferences}
+            exportCalendar={exportCalendar}
           />
         )}{" "}
         <input hidden ref={json} type="file" accept=".json,application/json" onChange={importJson} />
@@ -1733,6 +1957,8 @@ export default function App() {
           <CompanyForm
             t={t}
             initial={editCompany}
+            defaultStage={data.preferences.jobHunt.defaultCompanyStage}
+            defaultInterest={data.preferences.jobHunt.defaultInterestLevel}
             nextEvent={editCompany ? getUpcomingEvent(data.events, editCompany.id) : undefined}
             openNextEvent={(event?: Event) => {
               setEditEvent(event);
@@ -1751,6 +1977,7 @@ export default function App() {
           <MaterialForm
             t={t}
             companies={data.companies}
+            templates={data.templates}
             close={() => setForm(null)}
             save={saveMaterial}
           />
@@ -1774,6 +2001,7 @@ export default function App() {
           <InterviewForm
             t={t}
             companies={data.companies}
+            templates={data.templates}
             initial={editInterview}
             close={() => {
               setForm(null);
@@ -1786,6 +2014,7 @@ export default function App() {
           <PreparationForm
             t={t}
             companies={data.companies}
+            templates={data.templates}
             initial={editPrep}
             close={() => {
               setForm(null);
@@ -2007,6 +2236,7 @@ function Dashboard({
   data,
   active,
   due,
+  actionDue,
   waiting,
   next,
   upcoming,
@@ -2026,22 +2256,55 @@ function Dashboard({
   };
   const daysUntil = (at: string) => Math.ceil((new Date(at).getTime() - Date.now()) / 864e5);
   const actionItems = [
-    ...due.map((x: any) => {
+    ...(data.preferences.jobHunt.showDeadlines ? actionDue : []).map((x: any) => {
       const days = daysUntil(x.dueAt);
       const isMaterial = "isWeeklyFocus" in x;
       return { id: `due-${x.id}`, kind: isMaterial ? "material" : "preparation", label: isMaterial ? t.actionMaterial : t.actionPreparation, company: byId[x.companyId || ""]?.name || t.general, detail: x.title, at: x.dueAt, urgency: days <= 0 ? "urgent" : days === 1 ? "warning" : "normal", meta: days < 0 ? t.overdueLabel : days === 0 ? t.dueToday : days === 1 ? t.dueTomorrow : when(x.dueAt) };
     }),
-    ...upcoming.map((x: any) => ({ id: `event-${x.id}`, kind: "schedule", label: t.actionSchedule, company: x.company?.name || t.general, detail: t[x.type] || t.schedule, at: x.at, urgency: daysUntil(x.at) <= 0 ? "urgent" : daysUntil(x.at) === 1 ? "warning" : "normal", meta: when(x.at) })),
-    ...waiting.map((x: any) => {
+    ...(data.preferences.jobHunt.showUpcoming ? upcoming : []).map((x: any) => ({ id: `event-${x.id}`, kind: "schedule", label: t.actionSchedule, company: x.company?.name || t.general, detail: t[x.type] || t.schedule, at: x.at, urgency: daysUntil(x.at) <= 0 ? "urgent" : daysUntil(x.at) === 1 ? "warning" : "normal", meta: when(x.at) })),
+    ...(data.preferences.jobHunt.showWaiting ? waiting : []).map((x: any) => {
       const days = Math.max(1, Math.floor((Date.now() - x.updatedAt) / 864e5));
-      return days > 7 ? { id: `waiting-${x.id}`, kind: "waiting", label: t.actionWaiting, company: x.name, detail: t.waitingDays(days), at: undefined, urgency: days >= 14 ? "urgent" : "warning", meta: t.waitingDays(days) } : null;
+      return days >= data.preferences.jobHunt.resultWaitingDays ? { id: `waiting-${x.id}`, kind: "waiting", label: t.actionWaiting, company: x.name, detail: t.waitingDays(days), at: undefined, urgency: days >= 14 ? "urgent" : "warning", meta: t.waitingDays(days) } : null;
     }).filter(Boolean),
   ].sort((a: any, b: any) => {
     const priority: Record<string, number> = { urgent: 0, warning: 1, normal: 2 };
     return priority[a.urgency] - priority[b.urgency] || String(a.at || "9999").localeCompare(String(b.at || "9999"));
   });
+  const modules = data.preferences.customize.homeModules;
+  const showModule = (module: HomeModule) => modules.includes(module);
   const actionTitle = t.actionRequired;
   const actionMore = t.viewAll;
+  const upcomingModule = <section className="entity-card next-class">
+    <Title>{t.next}</Title>
+    {upcoming.length ? (
+      <div className="dashboard-upcoming-list">
+        {upcoming.slice(0, 3).map((item: any) => <button type="button" className="dashboard-upcoming-item" key={item.id} onClick={() => { setEditEvent(item.event); setForm("schedule"); }}>
+          <i style={{ background: item.company?.color || "#555555" }} />
+          <div>
+            <h3>{item.title || item.company?.name || t.untitledSchedule}</h3>
+            <p>{t[item.type]} · {when(item.at)}</p>
+            <span>{getEventModeLabel(item.event, t.language === "言語" ? "ja" : "zh")}{item.event?.eventMode === "offline" && formatScheduleLocation(item.event) ? ` · ${formatScheduleLocation(item.event)}` : item.event?.eventMode === "online" && item.event.onlinePlatform ? ` · ${item.event.onlinePlatform}` : ""} · {relative(item.at, t)}</span>
+            <WeatherLine location={item.event?.eventMode === "offline" ? formatScheduleLocation(item.event) : undefined} prefecture={item.event?.prefecture} municipality={item.event?.municipality || item.event?.city} latitude={item.event?.latitude} longitude={item.event?.longitude} date={item.at} locale={t.language === "言語" ? "ja" : "zh"} />
+          </div>
+        </button>)}
+        {upcoming.length > 3 && <button type="button" className="text-button" onClick={() => setView("schedule")}>{t.language === "言語" ? "すべての予定を見る" : "查看全部日程"}</button>}
+      </div>
+    ) : <Empty t={t} kind="schedule" open={() => open("schedule")} />}
+  </section>;
+  const actionModule = actionItems.length > 0 ? <section className="entity-card mobile-action-required">
+    <Title>{actionTitle}</Title>
+    <div className="mobile-action-list">
+      {actionItems.slice(0, 3).map((item: any) => <article key={item.id} className={`mobile-action-item ${item.urgency}`}>
+        <span className="mobile-action-kind"><span className="mobile-action-icon">{item.kind === "material" ? <FileText /> : item.kind === "preparation" ? <ListChecks /> : item.kind === "schedule" ? <CalendarClock /> : <Hourglass />}</span>{item.label}</span>
+        <strong>{item.company}</strong><p>{item.detail}</p><time>{item.meta}</time>
+      </article>)}
+    </div>
+    {actionItems.length > 3 && <button type="button" className="text-button mobile-action-more" onClick={() => { localStorage.setItem("careerflow-action-filter", "required"); setView("schedule"); }}>{actionMore}</button>}
+  </section> : null;
+  const deadlinesModule = <section>
+    <Title className="deadline-title" action={<button className="text-button" onClick={() => open("es")}><Plus />{t.addMaterial}</button>}>{t.deadlines}</Title>
+    <div className="deadline-list">{due.length ? due.map((x: any) => <MaterialRow key={x.id} x={x} company={byId[x.companyId]} t={t} toggle={toggle} focus={focusToggle} />) : <Empty t={t} />}</div>
+  </section>;
   return (
     <>
       <div className="page-head">
@@ -2062,77 +2325,16 @@ function Dashboard({
       <div className="main-dashboard-layout">
         <div className="dashboard-main">
           <div className="overview-grid">
-            <Metric n={active.length} l={t.inProgress} i={BriefcaseBusiness} onClick={() => navigate("companies", "active")} />
-            <Metric n={due.length} l={t.dueWeek} i={Clock3} onClick={() => navigate("schedule", "this-week-deadline")} />
-            <Metric n={waiting.length} l={t.waiting} i={Timer} onClick={() => navigate("companies", "waiting-result")} />
+            {showModule("active") && <Metric n={active.length} l={t.inProgress} i={BriefcaseBusiness} onClick={() => navigate("companies", "active")} />}
+            {showModule("deadlines") && <Metric n={due.length} l={t.dueWeek} i={Clock3} onClick={() => navigate("schedule", "this-week-deadline")} />}
+            {showModule("waiting") && <Metric n={waiting.length} l={t.waiting} i={Timer} onClick={() => navigate("companies", "waiting-result")} />}
           </div>
-          <section className="entity-card next-class">
-            <Title>{t.next}</Title>
-            {upcoming.length ? (
-              <div className="dashboard-upcoming-list">
-                {upcoming.slice(0, 3).map((item: any) => <button type="button" className="dashboard-upcoming-item" key={item.id} onClick={() => { setEditEvent(item.event); setForm("schedule"); }}>
-                <i style={{ background: item.company?.color || "#555555" }} />
-                <div>
-                  <h3>{item.title || item.company?.name || t.untitledSchedule}</h3>
-                  <p>
-                    {t[item.type]} · {when(item.at)}
-                  </p>
-                  <span>
-                    {getEventModeLabel(item.event, t.language === "言語" ? "ja" : "zh")}{item.event?.eventMode === "offline" && formatScheduleLocation(item.event) ? ` · ${formatScheduleLocation(item.event)}` : item.event?.eventMode === "online" && item.event.onlinePlatform ? ` · ${item.event.onlinePlatform}` : ""} · {relative(item.at, t)}
-                  </span>
-                  <WeatherLine location={item.event?.eventMode === "offline" ? formatScheduleLocation(item.event) : undefined} prefecture={item.event?.prefecture} municipality={item.event?.municipality || item.event?.city} latitude={item.event?.latitude} longitude={item.event?.longitude} date={item.at} locale={t.language === "言語" ? "ja" : "zh"} />
-                </div>
-                </button>)}
-                {upcoming.length > 3 && <button type="button" className="text-button" onClick={() => setView("schedule")}>{t.language === "言語" ? "すべての予定を見る" : "查看全部日程"}</button>}
-              </div>
-            ) : (
-            <Empty t={t} kind="schedule" open={() => open("schedule")} />
-            )}
-          </section>
-          {actionItems.length > 0 && <section className="entity-card mobile-action-required">
-            <Title>{actionTitle}</Title>
-            <div className="mobile-action-list">
-              {actionItems.slice(0, 3).map((item: any) => <article key={item.id} className={`mobile-action-item ${item.urgency}`}>
-                <span className="mobile-action-kind"><span className="mobile-action-icon">{item.kind === "material" ? <FileText /> : item.kind === "preparation" ? <ListChecks /> : item.kind === "schedule" ? <CalendarClock /> : <Hourglass />}</span>{item.label}</span>
-                <strong>{item.company}</strong>
-                <p>{item.detail}</p>
-                <time>{item.meta}</time>
-              </article>)}
-            </div>
-            {actionItems.length > 3 && <button type="button" className="text-button mobile-action-more" onClick={() => { localStorage.setItem("careerflow-action-filter", "required"); setView("schedule"); }}>{actionMore}</button>}
-          </section>}
-          {due.length > 0 && <section>
-            <Title
-              className="deadline-title"
-              action={
-                <button className="text-button" onClick={() => open("es")}>
-                  <Plus />
-                  {t.addMaterial}
-                </button>
-              }
-            >
-              {t.deadlines}
-            </Title>
-            <div className="deadline-list">
-              {due.length ? (
-                due.map((x: any) => (
-                  <MaterialRow
-                    key={x.id}
-                    x={x}
-                    company={byId[x.companyId]}
-                    t={t}
-                    toggle={toggle}
-                    focus={focusToggle}
-                  />
-                ))
-              ) : (
-                <Empty t={t} />
-              )}
-            </div>
-          </section>}
+          <div className="dashboard-customizable-modules">
+            {data.preferences.customize.homeModules.filter((module: HomeModule) => ["upcoming", "action", "deadlines"].includes(module) && showModule(module)).map((module: HomeModule) => <div key={module}>{module === "upcoming" ? upcomingModule : module === "action" ? actionModule : deadlinesModule}</div>)}
+          </div>
         </div>
         <aside className="dashboard-sidebar">
-          <section className="entity-card">
+          {showModule("progress") && <section className="entity-card">
             <Title>{t.funnel}</Title>
             <div className="funnel">
               {([
@@ -2153,8 +2355,8 @@ function Dashboard({
                 </button>
               ))}
             </div>
-          </section>
-          <section className="entity-card">
+          </section>}
+          {showModule("waiting") && <section className="entity-card">
             <Title>{t.results}</Title>
             {waiting.length ? (
               waiting.map((x: any) => (
@@ -2175,7 +2377,7 @@ function Dashboard({
             ) : (
               <Empty t={t} />
             )}
-          </section>
+          </section>}
         </aside>
       </div>
     </>
@@ -2363,9 +2565,9 @@ function Companies({
   const co = selected ? byId[selected] : undefined;
   const [query, setQuery] = useState("");
   const [stageFilter, setStageFilter] = useState(() => localStorage.getItem("careerflow-company-stage-filter") || "all");
-  const [sortBy, setSortBy] = useState("updated");
+  const [sortBy, setSortBy] = useState<CompanySort>(() => data.preferences?.customize?.companySort || "updated");
   const [draftStageFilter, setDraftStageFilter] = useState("all");
-  const [draftSortBy, setDraftSortBy] = useState("updated");
+  const [draftSortBy, setDraftSortBy] = useState<CompanySort>(() => data.preferences?.customize?.companySort || "updated");
   const [recordMenu, setRecordMenu] = useState(false);
   useEffect(() => {
     if (!filterSheetOpen) return;
@@ -2385,6 +2587,11 @@ function Companies({
     };
   }, [filterSheetOpen]);
   useEffect(() => { localStorage.setItem("careerflow-company-stage-filter", stageFilter); }, [stageFilter]);
+  useEffect(() => {
+    const defaultSort = data.preferences?.customize?.companySort || "updated";
+    setSortBy(defaultSort);
+    setDraftSortBy(defaultSort);
+  }, [data.preferences?.customize?.companySort]);
   if (co) {
     const materials = data.materials.filter((x: any) => x.companyId === co.id),
       interviews = data.interviews.filter((x: any) => x.companyId === co.id),
@@ -2543,10 +2750,11 @@ function Companies({
           <option value="all">{t.all}</option>
           {funnelStages.map((stage) => <option key={stage} value={stage}>{t[stage]}</option>)}
         </select>
-        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} aria-label={t.language === "言語" ? "並び替え" : t.language === "Language" ? "Sort" : "排序"}>
+        <select value={sortBy} onChange={(e) => setSortBy(e.target.value as CompanySort)} aria-label={t.language === "言語" ? "並び替え" : t.language === "Language" ? "Sort" : "排序"}>
           <option value="updated">{t.language === "言語" ? "最近更新" : t.language === "Language" ? "Recently updated" : "最近更新"}</option>
           <option value="interest">{t.interest}</option>
           <option value="event">{t.event}</option>
+          <option value="name">{t.language === "言語" ? "企業名" : t.language === "Language" ? "Company name" : "企业名称"}</option>
         </select>
       </div>}
       {filterSheetOpen && <div className="company-filter-sheet-layer">
@@ -2556,7 +2764,7 @@ function Companies({
           <div className="company-filter-sheet-content"><fieldset><legend>{t.stage}</legend><div className="company-filter-options">
             {["all", ...funnelStages].map((stage) => <label key={stage} className={draftStageFilter === stage ? "selected" : ""}><input type="radio" name="company-stage" checked={draftStageFilter === stage} onChange={() => setDraftStageFilter(stage)} /><span>{stage === "all" ? t.all : t[stage]}</span><Check /></label>)}
           </div></fieldset><fieldset><legend>{t.language === "言語" ? "並び替え" : "排序方式"}</legend><div className="company-filter-options">
-            {["updated", "event", "interest", "name"].map((sort) => <label key={sort} className={draftSortBy === sort ? "selected" : ""}><input type="radio" name="company-sort" checked={draftSortBy === sort} onChange={() => setDraftSortBy(sort)} /><span>{sort === "updated" ? (t.language === "言語" ? "最近更新" : "最近更新") : sort === "event" ? t.event : sort === "interest" ? (t.language === "言語" ? "志望度の高い順" : "志望度从高到低") : (t.language === "言語" ? "企業名" : "企业名称")}</span><Check /></label>)}
+            {(["updated", "event", "interest", "name"] as CompanySort[]).map((sort) => <label key={sort} className={draftSortBy === sort ? "selected" : ""}><input type="radio" name="company-sort" checked={draftSortBy === sort} onChange={() => setDraftSortBy(sort)} /><span>{sort === "updated" ? (t.language === "言語" ? "最近更新" : "最近更新") : sort === "event" ? t.event : sort === "interest" ? (t.language === "言語" ? "志望度の高い順" : "志望度从高到低") : (t.language === "言語" ? "企業名" : "企业名称")}</span><Check /></label>)}
           </div></fieldset></div><footer className="company-filter-sheet-actions"><button type="button" onClick={() => { setDraftStageFilter("all"); setDraftSortBy("updated"); }}>{t.language === "言語" ? "リセット" : "重置"}</button><button type="button" className="primary" onClick={() => { setStageFilter(draftStageFilter); setSortBy(draftSortBy); setFilterSheetOpen(false); }}>{t.language === "言語" ? "適用" : "应用"}</button></footer>
         </section>
       </div>}
@@ -2572,9 +2780,9 @@ function Companies({
               <i style={{ background: x.color }} />
               <div className="company-card-body">
                 <h3 title={x.name}>{x.name}</h3>
-                <p>{[x.industry, companyJobCategory(x)].filter(Boolean).join(" / ") || t.notSet}</p>
-                <span>{stageDisplayLabel(x.stage, t)} · {t.interest} {formatInterest(x)}</span>
-                <span>{nextEvent ? `${t.nextSchedule} · ${whenForLocale(nextEvent.startsAt, t)} · ${daysUntilLabel(nextEvent.startsAt, t)}` : t.noSchedule}</span>
+                {(data.preferences.customize.companyCard.industry || data.preferences.customize.companyCard.position) && <p>{[data.preferences.customize.companyCard.industry ? x.industry : "", data.preferences.customize.companyCard.position ? companyJobCategory(x) : ""].filter(Boolean).join(" / ") || t.notSet}</p>}
+                {(data.preferences.customize.companyCard.stage || data.preferences.customize.companyCard.interest) && <span>{data.preferences.customize.companyCard.stage ? stageDisplayLabel(x.stage, t) : ""}{data.preferences.customize.companyCard.stage && data.preferences.customize.companyCard.interest ? ` · ${t.interest} ` : data.preferences.customize.companyCard.interest ? `${t.interest} ` : ""}{data.preferences.customize.companyCard.interest ? formatInterest(x) : ""}</span>}
+                {data.preferences.customize.companyCard.nextEvent && <span>{nextEvent ? `${t.nextSchedule} · ${whenForLocale(nextEvent.startsAt, t)} · ${daysUntilLabel(nextEvent.startsAt, t)}` : t.noSchedule}</span>}
               </div>
               <ChevronRight />
             </button>;
@@ -2597,6 +2805,7 @@ function Schedule({
   removeMaterial,
   removePrep,
   setEditPrep,
+  onExportCalendar,
 }: any) {
   return (
     <>
@@ -2627,30 +2836,33 @@ function Schedule({
                     : removeMaterial(x.material)
               }
             >
-              <button
-                className="timeline-row entity-card"
-                onClick={() => {
-                  if (x.kind === "event") {
-                    setEditEvent(x.event);
-                    setForm("schedule");
-                  }
-                  if (x.kind === "preparation") {
-                    setEditPrep(x.preparation);
-                    setForm("preparation");
-                  }
-                }}
-              >
-                <time>{when(x.at)}</time>
-                <i style={{ background: x.company?.color || "#d18135" }} />
-                <div>
-                  <strong>{scheduleDisplayTitle(x.title, x.type, t)}</strong>
-                  <span>
-                    {x.company?.name || t.general} · {t[x.type]}
-                  </span>
-                  {x.kind === "event" && <><span>{eventModeText(x.event, t)}</span><WeatherLine location={x.event.eventMode === "offline" ? formatScheduleLocation(x.event) : undefined} prefecture={x.event.prefecture} municipality={x.event.municipality || x.event.city} latitude={x.event.latitude} longitude={x.event.longitude} date={x.at} locale={t.language === "言語" ? "ja" : "zh"} />{x.event.meetingUrl && <a className="meeting-link" href={x.event.meetingUrl} target="_blank" rel="noopener noreferrer">{t.language === "言語" ? "会議リンクを開く" : "打开会议链接"}</a>}</>}
-                </div>
-                <ChevronRight />
-              </button>
+              <div className="timeline-entry">
+                <button
+                  className="timeline-row entity-card"
+                  onClick={() => {
+                    if (x.kind === "event") {
+                      setEditEvent(x.event);
+                      setForm("schedule");
+                    }
+                    if (x.kind === "preparation") {
+                      setEditPrep(x.preparation);
+                      setForm("preparation");
+                    }
+                  }}
+                >
+                  <time>{when(x.at)}</time>
+                  <i style={{ background: x.company?.color || "#d18135" }} />
+                  <div>
+                    <strong>{scheduleDisplayTitle(x.title, x.type, t)}</strong>
+                    <span>
+                      {x.company?.name || t.general} · {t[x.type]}
+                    </span>
+                    {x.kind === "event" && <><span>{eventModeText(x.event, t)}</span><WeatherLine location={x.event.eventMode === "offline" ? formatScheduleLocation(x.event) : undefined} prefecture={x.event.prefecture} municipality={x.event.municipality || x.event.city} latitude={x.event.latitude} longitude={x.event.longitude} date={x.at} locale={t.language === "言語" ? "ja" : "zh"} />{x.event.meetingUrl && <a className="meeting-link" href={x.event.meetingUrl} target="_blank" rel="noopener noreferrer">{t.language === "言語" ? "会議リンクを開く" : "打开会议链接"}</a>}</>}
+                  </div>
+                  <ChevronRight />
+                </button>
+                {x.kind === "event" && <button type="button" className="calendar-add-inline" onClick={(event) => { event.stopPropagation(); onExportCalendar(x.event); }}><CalendarDays aria-hidden="true" />{t.calendarAdd}</button>}
+              </div>
             </Swipe>
           ))
         ) : (
@@ -2868,6 +3080,8 @@ function CompanyForm({
   t,
   initial,
   nextEvent,
+  defaultStage,
+  defaultInterest,
   openNextEvent,
   close,
   save,
@@ -2875,13 +3089,15 @@ function CompanyForm({
   t: any;
   initial?: Company;
   nextEvent?: Event;
+  defaultStage: Stage;
+  defaultInterest: number;
   openNextEvent: (event?: Event) => void;
   close: () => void;
   save: any;
 }) {
   const colors = ["#555555", "#777777", "#d18135", "#d4534d", "#2d9b78", "#9a6b44", "#6e7d91", "#c04f8a"];
   const [color, setColor] = useState(initial?.color || colors[0]);
-  const [interest, setInterest] = useState(Math.min(5, Math.max(1, initial?.interestLevel || 3)));
+  const [interest, setInterest] = useState(Math.min(5, Math.max(1, initial?.interestLevel || defaultInterest)));
   const initialIndustry = initial?.industry || "";
   const initialJobCategory = initial?.jobCategory || initial?.position || "";
   const standardIndustryOptions = useMemo(() => industryOptions.filter((option) => option !== "その他"), []);
@@ -2970,7 +3186,7 @@ function CompanyForm({
         </label>
         <label>
           <span>{t.stage}</span>
-          <select name="stage" defaultValue={initial?.stage || "saved"}>
+          <select name="stage" defaultValue={initial?.stage || defaultStage}>
             {stages.map((x) => (
               <option key={x} value={x}>
                 {t[x]}
@@ -3006,14 +3222,46 @@ function CompanyForm({
     </Modal>
   );
 }
+function TemplateInsert({
+  t,
+  templates,
+  categories,
+  targetName,
+}: {
+  t: any;
+  templates: CareerTemplate[];
+  categories: TemplateCategory[];
+  targetName: string;
+}) {
+  const [selected, setSelected] = useState("");
+  const available = templates.filter((template) => categories.includes(template.category));
+  const insert = () => {
+    const template = available.find((item) => item.id === selected);
+    const target = document.querySelector<HTMLTextAreaElement | HTMLInputElement>(`[name="${targetName}"]`);
+    if (!template || !target) return;
+    const current = target.value.trim();
+    target.value = current ? `${current}\n\n${template.content}` : template.content;
+    target.dispatchEvent(new Event("input", { bubbles: true }));
+    setSelected("");
+  };
+  return <div className="template-insert">
+    <select value={selected} onChange={(event) => setSelected(event.target.value)} aria-label={t.templateInsert}>
+      <option value="">{available.length ? t.chooseTemplate : t.noTemplates}</option>
+      {available.map((template) => <option key={template.id} value={template.id}>{template.title}</option>)}
+    </select>
+    <button type="button" onClick={insert} disabled={!selected}>{t.insertTemplate}</button>
+  </div>;
+}
 function MaterialForm({
   t,
   companies,
+  templates,
   close,
   save,
 }: {
   t: any;
   companies: Company[];
+  templates: CareerTemplate[];
   close: () => void;
   save: any;
 }) {
@@ -3114,6 +3362,9 @@ function MaterialForm({
         </label>
         {saveMode === "text" && documentType === "es" && <>
           <label className="wide"><span>{label("题目", "設問", "Question")}</span><input name="question" /></label>
+          <label className="wide"><span>{label("自我介绍", "自己PR", "Self PR")}</span><TemplateInsert t={t} templates={templates} categories={["selfPr"]} targetName="selfPr" /><textarea name="selfPr" /></label>
+          <label className="wide"><span>{label("学生时代经历", "ガクチカ", "Student experience")}</span><TemplateInsert t={t} templates={templates} categories={["gakuchika"]} targetName="gakuchika" /><textarea name="gakuchika" /></label>
+          <label className="wide"><span>{label("志望动机", "志望動機", "Motivation")}</span><TemplateInsert t={t} templates={templates} categories={["motivation"]} targetName="motivation" /><textarea name="motivation" /></label>
           <label className="wide"><span>{label("回答", "回答", "Answer")}</span><textarea name="answer" /></label>
           <label><span>{label("文字数限制", "文字数制限", "Character limit")}</span><input name="characterLimit" type="number" min="0" /></label>
         </>}
@@ -3224,12 +3475,14 @@ function EventForm({
 function InterviewForm({
   t,
   companies,
+  templates,
   initial,
   close,
   save,
 }: {
   t: any;
   companies: Company[];
+  templates: CareerTemplate[];
   initial?: InterviewRecord;
   close: () => void;
   save: any;
@@ -3271,10 +3524,12 @@ function InterviewForm({
         <label className="interest-field"><span>{t.score}</span><input type="hidden" name="score" value={score} readOnly /><div className="interest-stars" role="radiogroup" aria-label={t.score}>{[1,2,3,4,5].map((x) => <button key={x} type="button" role="radio" aria-checked={score === x} tabIndex={score === x ? 0 : -1} className={x <= score ? "selected" : ""} onClick={() => setScore(x)} onKeyDown={(e) => { if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); setScore(Math.min(5, score + 1)); } if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); setScore(Math.max(1, score - 1)); } }}>{x <= score ? "★" : "☆"}</button>)}<span>{score} / 5</span></div></label>
         <label className="wide">
           <span>{t.questions}</span>
+          <TemplateInsert t={t} templates={templates} categories={["interviewQuestion"]} targetName="questions" />
           <textarea name="questions" defaultValue={initial?.questions} />
         </label>
         <label className="wide">
           <span>{t.answers}</span>
+          <TemplateInsert t={t} templates={templates} categories={["reverseQuestion"]} targetName="answers" />
           <textarea name="answers" defaultValue={initial?.answers} />
         </label>
         <label className="wide">
@@ -3294,12 +3549,14 @@ function InterviewForm({
 function PreparationForm({
   t,
   companies,
+  templates,
   initial,
   close,
   save,
 }: {
   t: any;
   companies: Company[];
+  templates: CareerTemplate[];
   initial?: Preparation;
   close: () => void;
   save: any;
@@ -3374,6 +3631,7 @@ function PreparationForm({
         </label>
         <label className="wide">
           <span>{t.notes}</span>
+          <TemplateInsert t={t} templates={templates} categories={["preparation"]} targetName="notes" />
           <textarea name="notes" defaultValue={initial?.notes} />
         </label>
         <Actions t={t} close={close} />
@@ -3505,8 +3763,67 @@ function BackupControls({ data, theme, locale, setData }: any) {
   const labels = locale === "ja" ? { exportBackup:"バックアップを書き出す", restoreFile:"バックアップを復元", exportNote:"バックアップファイルはブラウザの既定のダウンロード先に保存されます。", restoreNote:"以前に書き出したバックアップファイルを選択してください。", notesTitle:"バックアップについて", notesData:"企業、日程、書類、面接記録、アプリ設定が含まれます。", notesDevice:"バックアップファイルはユーザーのデバイスにのみ保存されます。", format:"ファイル形式：JSON", last:"前回の書き出し", never:"まだバックアップを書き出していません" } : { exportBackup:"导出备份", restoreFile:"恢复备份", exportNote:"备份文件将下载到浏览器的默认下载位置。", restoreNote:"请选择此前导出的备份文件。", notesTitle:"备份说明", notesData:"备份包含企业、日程、材料、面试记录及应用设置。", notesDevice:"备份文件仅保存在用户设备中。", format:"文件格式：JSON", last:"上次导出", never:"尚未导出备份" };
   return <section className="backup-panel"><section><div className="backup-cloud-actions"><button className="primary" onClick={exportBackup}>{labels.exportBackup}</button><button onClick={() => fileRef.current?.click()}>{labels.restoreFile}</button></div><p>{labels.exportNote}</p><p>{labels.restoreNote}</p><div className="backup-notes"><strong>{labels.notesTitle}</strong><span>{labels.notesData}</span><span>{labels.notesDevice}</span><span>{labels.format}</span></div><p>{lastExport ? `${labels.last}: ${new Date(lastExport).toLocaleDateString()}` : labels.never}</p>{error && <p className="backup-error">{error}</p>}<input hidden ref={fileRef} type="file" accept="application/json,.json" onChange={restoreFile} /></section></section>;
 }
+const templateCategoryKeys: Array<[TemplateCategory, string]> = [
+  ["selfPr", "templateSelfPr"],
+  ["gakuchika", "templateGakuchika"],
+  ["motivation", "templateMotivation"],
+  ["interviewQuestion", "templateInterviewQuestion"],
+  ["reverseQuestion", "templateReverseQuestion"],
+  ["preparation", "templatePreparation"],
+];
+function TemplateManager({ t, data, setData }: any) {
+  const [editing, setEditing] = useState<CareerTemplate | null>(null);
+  const [draft, setDraft] = useState({ category: "selfPr" as TemplateCategory, title: "", content: "" });
+  const beginNew = () => { setEditing(null); setDraft({ category: "selfPr", title: "", content: "" }); };
+  const beginEdit = (template: CareerTemplate) => { setEditing(template); setDraft({ category: template.category, title: template.title, content: template.content }); };
+  const saveTemplate = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!draft.title.trim() || !draft.content.trim()) return;
+    const next: CareerTemplate = { id: editing?.id || id(), category: draft.category, title: draft.title.trim(), content: draft.content, updatedAt: Date.now() };
+    setData((current: Data) => ({ ...current, templates: editing ? current.templates.map((item) => item.id === editing.id ? next : item) : [next, ...current.templates] }));
+    beginNew();
+  };
+  const duplicate = (template: CareerTemplate) => setData((current: Data) => ({ ...current, templates: [{ ...template, id: id(), title: `${template.title} ${t.templateDuplicate}`, updatedAt: Date.now() }, ...current.templates] }));
+  const remove = (template: CareerTemplate) => setData((current: Data) => ({ ...current, templates: current.templates.filter((item) => item.id !== template.id) }));
+  return <div className="template-manager">
+    <div className="settings-section-heading"><div><h4>{t.templates}</h4><p>{t.templateInsert}</p></div><button type="button" className="settings-secondary-button" onClick={beginNew}><Plus />{t.templateNew}</button></div>
+    <form className="template-editor" onSubmit={saveTemplate}>
+      <label><span>{t.templateCategory}</span><select value={draft.category} onChange={(event) => setDraft((value) => ({ ...value, category: event.target.value as TemplateCategory }))}>{templateCategoryKeys.map(([value, key]) => <option key={value} value={value}>{t[key]}</option>)}</select></label>
+      <label><span>{t.templateTitle}</span><input value={draft.title} onChange={(event) => setDraft((value) => ({ ...value, title: event.target.value }))} placeholder={t.templateTitle} /></label>
+      <label className="wide"><span>{t.templateContent}</span><textarea value={draft.content} onChange={(event) => setDraft((value) => ({ ...value, content: event.target.value }))} rows={5} /></label>
+      <div className="template-editor-actions"><button type="submit" className="primary">{editing ? t.templateEdit : t.templateSave}</button>{editing && <button type="button" onClick={beginNew}>{t.cancel}</button>}</div>
+    </form>
+    <div className="template-list">{data.templates.length ? data.templates.map((template: CareerTemplate) => <article className="template-list-item" key={template.id}><div><span className="template-category">{t[templateCategoryKeys.find(([value]) => value === template.category)?.[1] || "templatePreparation"]}</span><h4>{template.title}</h4><p>{template.content}</p><small>{new Date(template.updatedAt).toLocaleDateString()}</small></div><div className="template-item-actions"><button type="button" onClick={() => beginEdit(template)}>{t.templateEdit}</button><button type="button" onClick={() => duplicate(template)}>{t.templateDuplicate}</button><button type="button" className="danger-button" onClick={() => remove(template)}>{t.templateDelete}</button></div></article>) : <p className="settings-muted">{t.templateEmpty}</p>}</div>
+  </div>;
+}
+function JobHuntSettings({ t, data, updatePreferences }: any) {
+  const settings = data.preferences.jobHunt;
+  const update = (patch: Partial<AppPreferences["jobHunt"]>) => updatePreferences((current: AppPreferences) => ({ ...current, jobHunt: { ...current.jobHunt, ...patch } }));
+  return <section className="settings-section settings-form-section"><h3>{t.jobSettings}</h3>
+    <label className="settings-field"><span>{t.homeRegion}</span><select value={settings.homeRegion} onChange={(event) => { update({ homeRegion: event.target.value }); localStorage.setItem("careerflow-home-region", event.target.value); }}><option value="">{t.notSet}</option>{prefectures.map((region) => <option key={region} value={region}>{region}</option>)}</select><small>{t.homeRegionHint}</small></label>
+    <label className="settings-field"><span>{t.actionWindow}</span><select value={settings.actionWindowDays} onChange={(event) => update({ actionWindowDays: Number(event.target.value) as 3 | 7 | 14 })}>{[[3, t.days3], [7, t.days7], [14, t.days14]].map(([value, label]) => <option key={String(value)} value={value}>{label}</option>)}</select><small>{t.actionWindowHint}</small></label>
+    <label className="settings-field"><span>{t.resultWaitingThreshold}</span><select value={settings.resultWaitingDays} onChange={(event) => update({ resultWaitingDays: Number(event.target.value) as 7 | 10 | 14 })}>{[7, 10, 14].map((value) => <option key={value} value={value}>{value}{t.days}</option>)}</select><small>{t.resultWaitingHint}</small></label>
+    <div className="settings-toggle-group"><strong>{t.actionRequired}</strong><label><input type="checkbox" checked={settings.showDeadlines} onChange={(event) => update({ showDeadlines: event.target.checked })} />{t.showDeadlines}</label><label><input type="checkbox" checked={settings.showUpcoming} onChange={(event) => update({ showUpcoming: event.target.checked })} />{t.showUpcoming}</label><label><input type="checkbox" checked={settings.showWaiting} onChange={(event) => update({ showWaiting: event.target.checked })} />{t.showWaiting}</label></div>
+    <label className="settings-field"><span>{t.defaultStage}</span><select value={settings.defaultCompanyStage} onChange={(event) => update({ defaultCompanyStage: event.target.value as Stage })}>{stages.map((stage) => <option key={stage} value={stage}>{t[stage]}</option>)}</select></label>
+    <label className="settings-field"><span>{t.defaultInterest}</span><select value={settings.defaultInterestLevel} onChange={(event) => update({ defaultInterestLevel: Number(event.target.value) })}>{[1, 2, 3, 4, 5].map((value) => <option key={value} value={value}>{value} / 5</option>)}</select></label>
+  </section>;
+}
+function CustomizeSettings({ t, data, updatePreferences }: any) {
+  const settings = data.preferences.customize;
+  const labels: Record<HomeModule, string> = { active: t.inProgress, deadlines: t.dueWeek, waiting: t.waiting, upcoming: t.next, action: t.actionRequired, progress: t.funnel };
+  const update = (patch: Partial<AppPreferences["customize"]>) => updatePreferences((current: AppPreferences) => ({ ...current, customize: { ...current.customize, ...patch } }));
+  const toggleModule = (module: HomeModule) => update({ homeModules: settings.homeModules.includes(module) ? settings.homeModules.filter((key: HomeModule) => key !== module) : [...settings.homeModules, module] });
+  const move = (index: number, amount: -1 | 1) => { const next = [...settings.homeModules]; const target = index + amount; if (target < 0 || target >= next.length) return; [next[index], next[target]] = [next[target], next[index]]; update({ homeModules: next }); };
+  const updateCard = (key: keyof AppPreferences["customize"]["companyCard"]) => update({ companyCard: { ...settings.companyCard, [key]: !settings.companyCard[key] } });
+  const sortLabels: Record<CompanySort, string> = { updated: t.sortUpdated, event: t.sortEvent, interest: t.sortInterest, name: t.sortName };
+  return <section className="settings-section settings-form-section"><h3>{t.customize}</h3><fieldset className="settings-choice-group"><legend>{t.homeModules}</legend>{defaultHomeModules.map((module: HomeModule) => <label key={module}><input type="checkbox" checked={settings.homeModules.includes(module)} onChange={() => toggleModule(module)} />{labels[module]}</label>)}</fieldset><div className="settings-order-list"><strong>{t.homeModules}</strong>{settings.homeModules.map((module: HomeModule, index: number) => <div key={module}><span>{index + 1}. {labels[module]}</span><div><button type="button" onClick={() => move(index, -1)} disabled={index === 0} aria-label={t.moveUp}><ChevronUp /></button><button type="button" onClick={() => move(index, 1)} disabled={index === settings.homeModules.length - 1} aria-label={t.moveDown}><ChevronDown /></button></div></div>)}</div><fieldset className="settings-choice-group"><legend>{t.companyCard}</legend>{(["industry", "position", "stage", "interest", "nextEvent"] as const).map((key) => <label key={key}><input type="checkbox" checked={settings.companyCard[key]} onChange={() => updateCard(key)} />{t[key === "industry" ? "showIndustry" : key === "position" ? "showPosition" : key === "stage" ? "showStage" : key === "interest" ? "showInterest" : "showNextEvent"]}</label>)}</fieldset><label className="settings-field"><span>{t.defaultCompanySort}</span><select value={settings.companySort} onChange={(event) => update({ companySort: event.target.value as CompanySort })}>{(Object.keys(sortLabels) as CompanySort[]).map((key) => <option key={key} value={key}>{sortLabels[key]}</option>)}</select></label></section>;
+}
+function CalendarSettings({ t, data, updatePreferences, exportCalendar }: any) {
+  const update = (preferShare: boolean) => updatePreferences((current: AppPreferences) => ({ ...current, calendar: { ...current.calendar, preferShare } }));
+  return <section className="settings-section settings-form-section"><h3>{t.calendarIntegration}</h3><h4>{t.calendarMethod}</h4><p className="settings-muted">{t.calendarMethodHint}</p><label className="settings-check-row"><input type="checkbox" checked={data.preferences.calendar.preferShare} onChange={(event) => update(event.target.checked)} />{t.calendarPreferShare}</label><button type="button" className="primary settings-wide-action" onClick={() => exportCalendar()}><CalendarDays />{t.calendarExportFuture}</button></section>;
+}
 function MobileSettingsDrawer({
-  t, page, setPage, close, open, theme, setTheme, locale, setLocale, data, json, download,
+  t, page, setPage, close, open, theme, setTheme, locale, setLocale, data, setData, json, download, updatePreferences, exportCalendar,
 }: any) {
   const layerRef = useRef<HTMLDivElement>(null);
   const [renderedPage, setRenderedPage] = useState<string | null>(null);
@@ -3664,12 +3981,20 @@ function MobileSettingsDrawer({
   const renderSettingsContent = (pageValue: string | null) => {
     if (!pageValue) return <nav className="mobile-settings-nav">
       <button type="button" onClick={() => changePage("data")}><Database aria-hidden="true" /><span>{t.data}</span><ChevronRight aria-hidden="true" /></button>
+      <button type="button" onClick={() => changePage("job-settings")}><Target aria-hidden="true" /><span>{t.jobSettings}</span><ChevronRight aria-hidden="true" /></button>
+      <button type="button" onClick={() => changePage("customize")}><SlidersHorizontal aria-hidden="true" /><span>{t.customize}</span><ChevronRight aria-hidden="true" /></button>
+      <button type="button" onClick={() => changePage("templates")}><FileText aria-hidden="true" /><span>{t.templates}</span><ChevronRight aria-hidden="true" /></button>
+      <button type="button" onClick={() => changePage("calendar")}><CalendarDays aria-hidden="true" /><span>{t.calendarIntegration}</span><ChevronRight aria-hidden="true" /></button>
       <button type="button" onClick={() => changePage("appearance")}><Palette aria-hidden="true" /><span>{t.appearance}</span><ChevronRight aria-hidden="true" /></button>
       <button type="button" onClick={() => changePage("language")}><Globe aria-hidden="true" /><span>{t.language}</span><ChevronRight aria-hidden="true" /></button>
       <button type="button" onClick={() => changePage("about")}><Info aria-hidden="true" /><span>{about.title}</span><ChevronRight aria-hidden="true" /></button>
     </nav>;
-    const subpageTitle = pageValue === "data" ? t.data : pageValue === "appearance" ? t.appearance : pageValue === "language" ? t.language : about.title;
+    const subpageTitle = pageValue === "data" ? t.data : pageValue === "job-settings" ? t.jobSettings : pageValue === "customize" ? t.customize : pageValue === "templates" ? t.templates : pageValue === "calendar" ? t.calendarIntegration : pageValue === "appearance" ? t.appearance : pageValue === "language" ? t.language : about.title;
     if (pageValue === "data") return <section className="mobile-settings-subpage" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><div className="mobile-settings-subpage-list mobile-data-actions"><button type="button" onClick={() => download("careerflow-backup.json", JSON.stringify(makeBackupSnapshot(data, theme, locale), null, 2), "application/json")}><DatabaseArrowUp aria-hidden="true" /><span>{t.backup}</span></button><button type="button" onClick={() => json.current?.click()}><DatabaseArrowDown aria-hidden="true" /><span>{t.restore}</span></button></div></section>;
+    if (pageValue === "job-settings") return <JobHuntSettings t={t} data={data} updatePreferences={updatePreferences} />;
+    if (pageValue === "customize") return <CustomizeSettings t={t} data={data} updatePreferences={updatePreferences} />;
+    if (pageValue === "templates") return <section className="mobile-settings-subpage"><TemplateManager t={t} data={data} setData={setData} /></section>;
+    if (pageValue === "calendar") return <CalendarSettings t={t} data={data} updatePreferences={updatePreferences} exportCalendar={exportCalendar} />;
     if (pageValue === "appearance") return <section className="mobile-settings-subpage" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><div className="mobile-settings-subpage-list">{(["light", "dark", "system"] as Theme[]).map((x) => { const Icon = x === "light" ? Sun : x === "dark" ? Moon : Monitor; return <button type="button" className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}><Icon aria-hidden="true" /><span>{t[x]}</span>{theme === x && <Check aria-hidden="true" />}</button>; })}</div></section>;
     if (pageValue === "language") return <section className="mobile-settings-subpage" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><div className="mobile-settings-subpage-list">{(["zh", "ja"] as Locale[]).map((x) => <button type="button" className={locale === x ? "selected" : ""} onClick={() => setLocale(x)} key={x}><span>{x === "zh" ? "中文" : "日本語"}</span>{locale === x && <Check aria-hidden="true" />}</button>)}</div></section>;
     return <section className="mobile-settings-subpage mobile-about" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><p>{about.version}</p><p>{about.db}</p><p>{about.privacy}</p><p>{about.license}</p></section>;
@@ -3699,15 +4024,20 @@ function SettingsDrawer({ close, children, title }: { close: () => void; childre
   useEffect(() => { const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") dismiss(); }; document.addEventListener("keydown", onKey); document.body.classList.add("settings-drawer-open"); return () => { document.removeEventListener("keydown", onKey); document.body.classList.remove("settings-drawer-open"); }; }, []);
   return <div className={`settings-drawer-layer ${closing ? "closing" : ""}`}><button className="settings-drawer-backdrop" onClick={dismiss} aria-label="Close settings"/><aside className="settings-drawer-panel" role="dialog" aria-modal="true" aria-label={title} onTouchStart={(e) => { startX.current = e.touches[0].clientX; }} onTouchEnd={(e) => { if (startX.current !== null && e.changedTouches[0].clientX - startX.current > 70) dismiss(); startX.current = null; }}><header><h2>{title}</h2><CloseButton onClick={dismiss} label="Close settings" /></header><div className="settings-drawer-scroll">{children}</div></aside></div>;
 }
-function SettingsPanel({ t, theme, setTheme, locale, setLocale, close, data, setData, iconRef, json, upload, importJson, download }: any) {
+function SettingsPanel({ t, theme, setTheme, locale, setLocale, close, data, setData, iconRef, json, upload, importJson, updatePreferences, exportCalendar }: any) {
   const [tab, setTab] = useState("general");
-  const [homeRegion, setHomeRegion] = useState(() => localStorage.getItem("careerflow-home-region") || "");
   const ja = locale === "ja";
-  const ui = locale === "ja" ? { general:"一般", appearance:"表示", language:"言語", data:"データとバックアップ", about:"CareerFlowについて", storage:"このデバイスの保存状況", backup:"バックアップ", aboutTitle:"CareerFlowについて", version:"CareerFlow バージョン 1.0", db:"データベースバージョン", pwa:"PWA ステータス: standalone 対応", icon:"アイコン: CareerFlow ブランドアイコン", privacy:"プライバシー: データは主にこのデバイスに保存されます。", license:"オープンソースライセンス: MIT License" } : locale === "en" ? { general:"General", appearance:"Appearance", language:"Language", data:"Data & backups", about:"About CareerFlow", storage:"Device storage", backup:"Backup", aboutTitle:"About CareerFlow", version:"CareerFlow version 1.0", db:"Database version", pwa:"PWA status: standalone supported", icon:"Icon: CareerFlow brand icon", privacy:"Privacy: Data is mainly stored on this device.", license:"Open-source license: MIT License" } : { general:"常规", appearance:"外观", language:"语言", data:"数据与备份", about:"关于 CareerFlow", storage:"当前设备存储", backup:"备份", aboutTitle:"关于 CareerFlow", version:"CareerFlow 版本 1.0", db:"数据库版本", pwa:"PWA 状态：支持 standalone", icon:"图标：CareerFlow 品牌图标", privacy:"隐私：数据主要保存在当前设备。", license:"开源许可：MIT License" };
-  const tabs = [["general", ui.general, Settings], ["appearance", ui.appearance, Palette], ["language", ui.language, Globe], ["data", ui.data, Database], ["about", ui.about, Info]] as const;
+  const ui = locale === "ja"
+    ? { general: "一般", appearance: t.appearance, language: t.language, data: "データとバックアップ", about: "CareerFlowについて", storage: "このデバイスの保存状況", backup: "バックアップ", aboutTitle: "CareerFlowについて", version: "CareerFlow バージョン 1.0", db: "データベースバージョン", pwa: "PWA ステータス: standalone 対応", icon: "アイコン: CareerFlow ブランドアイコン", privacy: "プライバシー: データは主にこのデバイスに保存されます。", license: "オープンソースライセンス: MIT License" }
+    : { general: "常规", appearance: t.appearance, language: t.language, data: "数据与备份", about: "关于 CareerFlow", storage: "当前设备存储", backup: "备份", aboutTitle: "关于 CareerFlow", version: "CareerFlow 版本 1.0", db: "数据库版本", pwa: "PWA 状态：支持 standalone", icon: "图标：CareerFlow 品牌图标", privacy: "隐私：数据主要保存在当前设备。", license: "开源许可：MIT License" };
+  const tabs = [["general", ui.general, Settings], ["job-settings", t.jobSettings, Target], ["customize", t.customize, SlidersHorizontal], ["templates", t.templates, FileText], ["calendar", t.calendarIntegration, CalendarDays], ["appearance", ui.appearance, Palette], ["language", ui.language, Globe], ["data", ui.data, Database], ["about", ui.about, Info]] as const;
   return <SettingsDrawer title={t.settings} close={close}><div className="desktop-settings-layout"><nav className="desktop-settings-nav settings-sidebar"><div className="settings-nav-list">{tabs.map(([key, text, Icon]) => <SettingsNavItem key={key} label={text} icon={Icon} active={tab === key} onClick={() => setTab(key)} />)}</div></nav><div className="desktop-settings-content">
-    {tab === "general" && <section className="settings-section"><h3>{ui.storage}</h3><div className="settings-stats">{[[ja ? "企業数" : locale === "en" ? "Companies" : "企业数", data.companies.length], [ja ? "日程数" : locale === "en" ? "Schedules" : "日程数", data.events.length], [ja ? "資料数" : locale === "en" ? "Resources" : "资料数", data.materials.length], [ja ? "面接記録数" : locale === "en" ? "Interviews" : "面试记录数", data.interviews.length], [ja ? "準備事項数" : locale === "en" ? "Preparations" : "准备事项数", data.preparations.length], [ui.db, "v" + data.schemaVersion]].map(([label, value]) => <div key={String(label)}><span>{label}</span><strong>{value}</strong></div>)}</div><div className="home-region-setting"><label>{ja ? "常駐就活地域" : "常驻就活地区"}<select value={homeRegion} onChange={(e) => { setHomeRegion(e.target.value); localStorage.setItem("careerflow-home-region", e.target.value); }}><option value="">{ja ? "未設定" : "未设置"}</option>{["東京都", "大阪府", "愛知県", "福岡県", "北海道", "宮城県", "広島県", "京都府"].map((region) => <option key={region} value={region}>{region}</option>)}</select></label><p>{ja ? "日程に詳しい場所がない場合、地域の天気と移動の目安に使用します。" : "当日程没有填写详细地点时，用于显示当地天气和出行提醒。"}</p></div></section>}
-    {tab === "appearance" && <section className="settings-section"><h3>{ui.appearance}</h3><div className="settings-segmented">{(["light", "dark", "system"] as Theme[]).map((x) => { const Icon = x === "light" ? Sun : x === "dark" ? Moon : Monitor; return <button aria-pressed={theme === x} className={theme === x ? "active" : ""} onClick={() => setTheme(x)} key={x}><Icon aria-hidden="true" />{t[x]}</button>; })}</div></section>}
+    {tab === "general" && <section className="settings-section"><h3>{ui.storage}</h3><div className="settings-stats">{[[ja ? "企業数" : "企业数", data.companies.length], [ja ? "日程数" : "日程数", data.events.length], [ja ? "資料数" : "资料数", data.materials.length], [ja ? "面接記録数" : "面试记录数", data.interviews.length], [ja ? "準備事項数" : "准备事项数", data.preparations.length], [ui.db, "v" + data.schemaVersion]].map(([label, value]) => <div key={String(label)}><span>{label}</span><strong>{value}</strong></div>)}</div></section>}
+    {tab === "job-settings" && <JobHuntSettings t={t} data={data} updatePreferences={updatePreferences} />}
+    {tab === "customize" && <CustomizeSettings t={t} data={data} updatePreferences={updatePreferences} />}
+    {tab === "templates" && <section className="settings-section"><TemplateManager t={t} data={data} setData={setData} /></section>}
+    {tab === "calendar" && <CalendarSettings t={t} data={data} updatePreferences={updatePreferences} exportCalendar={exportCalendar} />}
+    {tab === "appearance" && <section className="settings-section"><h3>{ui.appearance}</h3><div className="settings-segmented">{(["light", "dark", "system"] as Theme[]).map((x) => { const Icon = x === "light" ? Sun : x === "dark" ? Moon : Monitor; return <button type="button" aria-pressed={theme === x} className={theme === x ? "active" : ""} onClick={() => setTheme(x)} key={x}><Icon aria-hidden="true" />{t[x]}</button>; })}</div></section>}
     {tab === "language" && <section className="settings-section"><h3>{ui.language}</h3><div className="settings-segmented">{(["zh", "ja"] as Locale[]).map((x) => <button type="button" aria-pressed={locale === x} className={locale === x ? "active" : ""} onClick={() => setLocale(x)} key={x}>{x === "zh" ? "中文" : "日本語"}</button>)}</div></section>}
     {tab === "data" && <section className="settings-section settings-data-section"><h3>{ui.backup}</h3><BackupControls data={data} theme={theme} locale={locale} setData={setData} /></section>}
     {tab === "about" && <section className="settings-section"><h3>{ui.aboutTitle}</h3><div className="settings-about-list"><p>{ui.version}</p><p>{ui.db}: v{data.schemaVersion}</p><p>{ui.pwa}</p><p>{ui.icon}</p><p>{ui.privacy}</p><p>{ui.license}</p></div></section>}
