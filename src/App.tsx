@@ -98,6 +98,8 @@ type Company = {
   name: string;
   industry: string;
   position: string;
+  jobCategory?: string;
+  jobTitle?: string;
   interestLevel: number;
   stage: Stage;
   nextEventAt?: string;
@@ -311,6 +313,12 @@ const stages: Stage[] = [
 const prefectures = prefectureData as string[];
 const cityOptions = Object.fromEntries(Object.entries(municipalityData).map(([prefecture, municipalities]) => [prefecture, (municipalities as { name: string }[]).map((x) => x.name)])) as Record<string, string[]>;
 const locationCoordinates: Record<string, [number, number]> = { "東京都渋谷区": [35.6618, 139.7041], "東京都新宿区": [35.6938, 139.7034], "東京都豊島区": [35.7263, 139.7169], "東京都千代田区": [35.6938, 139.7532], "東京都港区": [35.6581, 139.7516], "栃木県鹿沼市": [36.5671, 139.7454], "大阪府大阪市": [34.6937, 135.5023], "神奈川県横浜市": [35.4437, 139.638], "埼玉県さいたま市": [35.8617, 139.6455], "千葉県千葉市": [35.6073, 140.1063] };
+const industryOptions = [
+  "IT・ソフトウェア", "インターネット・Web", "通信", "SIer・システム開発", "メーカー", "電機・電子", "機械", "自動車", "化学", "食品", "建設", "不動産", "インフラ", "電力・ガス", "鉄道・交通", "物流", "商社", "小売", "金融", "銀行", "証券", "保険", "コンサルティング", "人材", "広告・メディア", "出版", "教育", "医療・福祉", "官公庁・公社",
+];
+const occupationOptions = [
+  "インフラエンジニア", "ネットワークエンジニア", "サーバーエンジニア", "クラウドエンジニア", "システムエンジニア（SE）", "アプリケーションエンジニア", "Webエンジニア", "フロントエンドエンジニア", "バックエンドエンジニア", "ソフトウェアエンジニア", "組み込みエンジニア", "セキュリティエンジニア", "データエンジニア", "AI・機械学習エンジニア", "QA・テストエンジニア", "社内SE", "ITコンサルタント", "プリセールス", "テクニカルサポート", "営業", "企画", "マーケティング", "経理・財務", "人事", "総務", "法務", "事務", "研究開発", "生産技術", "品質管理", "設計", "施工管理", "販売・サービス",
+];
 const funnelStages: FunnelStage[] = ["funnelInterested", "funnelDocuments", "funnelAptitude", "funnelInterview", "funnelFinal", "funnelOffer"];
 type FunnelStage = "funnelInterested" | "funnelDocuments" | "funnelAptitude" | "funnelInterview" | "funnelFinal" | "funnelOffer";
 function funnelStageFor(stage: Company["stage"]): FunnelStage | null {
@@ -412,6 +420,22 @@ const tr = {
     funnelFinal: "最终选考",
     funnelOffer: "内定",
     company: "企业",
+    companyInfo: "企业信息",
+    selectionOverview: "选考概况",
+    currentStage: "当前选考阶段",
+    nextSchedule: "下一日程",
+    futureSchedule: "后续日程",
+    selectionHistory: "选考记录",
+    noFutureSchedules: "暂无后续日程",
+    noNextSchedule: "暂无下一日程",
+    noSelectionRecords: "还没有选考记录",
+    selectionRecordsHint: "从材料、测试、说明会或面试开始记录。",
+    notSet: "未设置",
+    editSchedule: "编辑日程",
+    addSchedule: "添加日程",
+    jobTitle: "招聘职位・类别",
+    otherCustom: "其他（手动输入）",
+    searchOptions: "搜索或选择",
     industry: "行业",
     position: "职位",
     interest: "志望度",
@@ -447,6 +471,9 @@ const tr = {
     completed: "已完成",
     overdue: "已逾期",
     urgent: "24 小时内",
+    today: "今天",
+    tomorrow: "明天",
+    daysAfter: (n: number) => `${n}天后`,
     days: "天",
     save: "保存",
     cancel: "取消",
@@ -462,6 +489,8 @@ const tr = {
     data: "数据管理",
     icon: "自定义图标",
     online: "线上",
+    offline: "线下",
+    undecided: "形式未确定",
     noData: "暂无事项",
     noSchedule: "暂无日程",
     deleteCompany: "删除企业",
@@ -541,6 +570,22 @@ const tr = {
     funnelFinal: "最終選考",
     funnelOffer: "内定",
     company: "企業",
+    companyInfo: "企業情報",
+    selectionOverview: "選考概要",
+    currentStage: "現在の選考段階",
+    nextSchedule: "次の予定",
+    futureSchedule: "今後の予定",
+    selectionHistory: "選考記録",
+    noFutureSchedules: "今後の予定はありません",
+    noNextSchedule: "予定なし",
+    noSelectionRecords: "選考記録がまだありません",
+    selectionRecordsHint: "書類、テスト、説明会、面接から記録を始めましょう。",
+    notSet: "未設定",
+    editSchedule: "日程を編集",
+    addSchedule: "日程を追加",
+    jobTitle: "募集職種・コース",
+    otherCustom: "その他（自由入力）",
+    searchOptions: "検索または選択",
     industry: "業界",
     position: "職種",
     interest: "志望度",
@@ -576,6 +621,9 @@ const tr = {
     completed: "完了",
     overdue: "期限切れ",
     urgent: "24時間以内",
+    today: "今日",
+    tomorrow: "明日",
+    daysAfter: (n: number) => `あと${n}日`,
     days: "日",
     save: "保存",
     cancel: "キャンセル",
@@ -591,6 +639,8 @@ const tr = {
     data: "データ",
     icon: "アイコン",
     online: "オンライン",
+    offline: "対面",
+    undecided: "形式未定",
     noData: "予定なし",
     noSchedule: "日程なし",
     deleteCompany: "企業を削除",
@@ -834,7 +884,7 @@ function inferEventMode(value: string): Event["eventMode"] {
 function getUpcomingEvent(events: Event[], companyId: string | undefined): Event | undefined {
   if (!companyId) return undefined;
   return events
-    .filter((event) => event.companyId === companyId && new Date(event.startsAt).getTime() >= Date.now())
+    .filter((event) => event.companyId === companyId && !(event as Event & { deletedAt?: boolean }).deletedAt && Number.isFinite(new Date(event.startsAt).getTime()) && new Date(event.startsAt).getTime() >= Date.now())
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0];
 }
 function getLegacyCompanyEventAt(company: any): string {
@@ -846,11 +896,12 @@ function getLegacyCompanyEventAt(company: any): string {
 }
 function makeCompanyNextEvent(company: Company, startsAt: string, existing?: Event): Event {
   const locationOrOnline = company.locationOrOnline || "";
+  const type: ItemType = company.stage === "briefing" ? "briefing" : company.stage === "web_test" ? "web_test" : company.stage.includes("interview") ? "interview" : "general";
   return {
     id: existing?.id || `company-next-${company.id}-${startsAt}`,
     companyId: company.id,
-    title: "",
-    type: "general",
+    title: type === "general" ? "" : type,
+    type,
     stage: company.stage,
     startsAt,
     locationOrOnline,
@@ -1004,6 +1055,7 @@ export default function App() {
     [recordPickerOpen, setRecordPickerOpen] = useState(false),
     [editCompany, setEditCompany] = useState<Company>(),
     [editEvent, setEditEvent] = useState<Event>(),
+    [scheduleCompanyId, setScheduleCompanyId] = useState<string>(),
     [editInterview, setEditInterview] = useState<InterviewRecord>(),
     [editPrep, setEditPrep] = useState<Preparation>(),
     [selected, setSelected] = useState<string>(),
@@ -1207,10 +1259,12 @@ export default function App() {
       id: base?.id || id(),
       name: String(f.get("name")),
       industry: String(f.get("industry")),
-      position: String(f.get("position")),
+      position: String(f.get("jobCategory") || f.get("position") || ""),
+      jobCategory: String(f.get("jobCategory") || f.get("position") || "") || undefined,
+      jobTitle: String(f.get("jobTitle") || "") || undefined,
       interestLevel: Number(f.get("interest")),
       stage: f.get("stage") as Stage,
-      locationOrOnline: String(f.get("place") || ""),
+      locationOrOnline: String(f.get("place") || base?.locationOrOnline || ""),
       careersUrl: String(f.get("url")),
       notes: String(f.get("notes")),
       tags: base?.tags || [],
@@ -1223,10 +1277,10 @@ export default function App() {
       events: (() => {
         const managed = d.events.filter((event) =>
           event.companyId === v.id &&
-          (event.source === "company-next" || (!!base?.nextEventAt && event.startsAt === base.nextEventAt)),
+          event.source === "company-next",
         );
         const remaining = d.events.filter((event) => !managed.some((item) => item.id === event.id));
-        if (!eventAt) return remaining;
+        if (!eventAt) return base ? d.events : remaining;
         return [makeCompanyNextEvent(v, eventAt, managed[0]), ...remaining];
       })(),
       companies: base
@@ -1320,10 +1374,11 @@ export default function App() {
         longitude: coordinates?.[1],
         notes: String(f.get("notes")),
         createdAt: base?.createdAt || Date.now(),
+        source: base?.source,
       };
     setData((d) => ({
       ...d,
-      events: base
+      events: base && d.events.some((x) => x.id === v.id)
         ? d.events.map((x) => (x.id === v.id ? v : x))
         : [v, ...d.events],
     }));
@@ -1543,6 +1598,9 @@ export default function App() {
                 setSelected,
                 open,
                 setEditCompany,
+                setEditEvent,
+                setScheduleCompanyId,
+                setForm,
                 setConfirm,
                 companyFilter,
                 clearCompanyFilter: () => navigate("companies"),
@@ -1644,6 +1702,13 @@ export default function App() {
           <CompanyForm
             t={t}
             initial={editCompany}
+            nextEvent={editCompany ? getUpcomingEvent(data.events, editCompany.id) : undefined}
+            openNextEvent={(event?: Event) => {
+              setEditEvent(event);
+              setScheduleCompanyId(editCompany?.id);
+              setEditCompany(undefined);
+              setForm("schedule");
+            }}
             close={() => {
               setForm(null);
               setEditCompany(undefined);
@@ -1664,9 +1729,11 @@ export default function App() {
             t={t}
             companies={data.companies}
             initial={editEvent}
+            defaultCompanyId={scheduleCompanyId}
             close={() => {
               setForm(null);
               setEditEvent(undefined);
+              setScheduleCompanyId(undefined);
             }}
             save={saveEvent}
             remove={setDeleteEvent}
@@ -2203,6 +2270,42 @@ function when(s: string) {
     minute: "2-digit",
   }).format(new Date(s));
 }
+function whenForLocale(s: string, t: any) {
+  return new Intl.DateTimeFormat(t.language === "言語" ? "ja-JP" : "zh-CN", {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(s));
+}
+function daysUntilLabel(s: string, t: any) {
+  const days = Math.ceil((new Date(s).getTime() - Date.now()) / 864e5);
+  if (days <= 0) return t.today;
+  if (days === 1) return t.tomorrow;
+  return t.daysAfter(days);
+}
+function companyJobCategory(company: Company) {
+  return company.jobCategory || company.position || "";
+}
+function formatInterest(company: Company) {
+  return `${"★".repeat(Math.max(0, Math.min(5, company.interestLevel)))}${"☆".repeat(Math.max(0, 5 - Math.min(5, company.interestLevel)))}`;
+}
+function formatCompanyMetadata(company: Company) {
+  return [company.industry, companyJobCategory(company), formatInterest(company)].filter((value) => Boolean(value && value.trim()));
+}
+function companyFutureEvents(events: Event[], companyId: string | undefined) {
+  if (!companyId) return [];
+  return events
+    .filter((event) => event.companyId === companyId && !(event as Event & { deletedAt?: boolean }).deletedAt && Number.isFinite(new Date(event.startsAt).getTime()) && new Date(event.startsAt).getTime() >= Date.now())
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+}
+function companyHistoryEvents(events: Event[], companyId: string | undefined) {
+  if (!companyId) return [];
+  return events
+    .filter((event) => event.companyId === companyId && !(event as Event & { deletedAt?: boolean }).deletedAt && Number.isFinite(new Date(event.startsAt).getTime()) && new Date(event.startsAt).getTime() < Date.now())
+    .sort((a, b) => b.startsAt.localeCompare(a.startsAt));
+}
 function relative(s: string, t: any) {
   const h = Math.ceil((new Date(s).getTime() - Date.now()) / 36e5);
   return h < 1 ? "Now" : h < 24 ? `${h}h` : `${Math.ceil(h / 24)} ${t.days}`;
@@ -2236,10 +2339,10 @@ function WeatherLine({ location, prefecture, municipality, date, latitude, longi
   const description = weather.code === 0 ? (locale === "ja" ? "晴れ" : "晴") : weather.code <= 3 ? (locale === "ja" ? "曇り" : "多云") : weather.code >= 51 ? (locale === "ja" ? "雨の可能性" : "有降雨可能") : (locale === "ja" ? "天気の変化" : "天气变化");
   return <span className="weather-line"><Icon aria-hidden="true" />{weather.forecastTime.slice(11, 13)}{locale === "ja" ? "時ごろ" : "时左右"} · {description}</span>;
 }
-function eventModeText(event: Event | undefined, ja: boolean) {
-  if (event?.eventMode === "offline") return `${ja ? "対面" : "线下"}${formatScheduleLocation(event) ? ` · ${formatScheduleLocation(event)}` : ""}`;
-  if (event?.eventMode === "online") return `${ja ? "オンライン" : "线上"}${event.onlinePlatform ? ` · ${event.onlinePlatform}` : ""}`;
-  return ja ? "形式未定" : "形式未确定";
+function eventModeText(event: Event | undefined, t: any) {
+  if (event?.eventMode === "offline") return `${t.offline}${formatScheduleLocation(event) ? ` · ${formatScheduleLocation(event)}` : ""}`;
+  if (event?.eventMode === "online") return `${t.online}${event.onlinePlatform ? ` · ${event.onlinePlatform}` : ""}`;
+  return t.undecided;
 }
 function formatScheduleLocation(event: Event | undefined) {
   if (!event) return "";
@@ -2269,6 +2372,9 @@ function Companies({
   setSelected,
   open,
   setEditCompany,
+  setEditEvent,
+  setScheduleCompanyId,
+  setForm,
   setConfirm,
   companyFilter,
   clearCompanyFilter,
@@ -2304,7 +2410,10 @@ function Companies({
     const materials = data.materials.filter((x: any) => x.companyId === co.id),
       interviews = data.interviews.filter((x: any) => x.companyId === co.id),
       preps = data.preparations.filter((x: any) => x.companyId === co.id),
-      nextEvent = getUpcomingEvent(data.events, co.id);
+      futureEvents = companyFutureEvents(data.events, co.id),
+      historyEvents = companyHistoryEvents(data.events, co.id),
+      nextEvent = futureEvents[0],
+      metadata = formatCompanyMetadata(co);
     return (
       <>
         <div className="page-head">
@@ -2313,14 +2422,12 @@ function Companies({
               ‹ {t.companies}
             </button>
             <h1>{co.name}</h1>
-            <p>
-              {co.industry} · {co.position} · {"★".repeat(co.interestLevel)}
-            </p>
+            <p>{metadata.length ? metadata.join(" · ") : t.notSet}</p>
           </div>
           <div className="head-actions">
             <button
               onClick={() => {
-                setEditCompany({ ...co, nextEventAt: nextEvent?.startsAt });
+                setEditCompany({ ...co });
                 open("company");
               }}
             >
@@ -2334,22 +2441,48 @@ function Companies({
         <div className="course-detail">
           <section className="entity-card course-profile">
             <i style={{ background: co.color }} />
-            <h2>{stageDisplayLabel(co.stage, t)}</h2>
-            <p>{co.notes || t.noData}</p>
-            {co.careersUrl && (
-              <a className="recruitment-link" href={co.careersUrl} target="_blank" rel="noopener noreferrer" title={co.careersUrl}>
-                {t.recruitmentPage} <ExternalLink aria-hidden="true" />
-              </a>
-            )}
-            {materials.filter((x: Material) => x.documentType).map((x: Material) => (
-              <div className="document-summary" key={x.id}>
-                <strong>{x.documentType === "resume" ? "履歴書" : x.documentType === "open_es" ? "OpenES" : x.documentType === "es" ? "ES" : x.documentType}</strong>
-                <span>{x.dueAt ? when(x.dueAt) : "—"} · {x.submissionStatus || "未着手"}</span>
-                <span>{x.versionName || ""} {x.result && `· ${x.result}`}</span>
+            <h2>{t.selectionOverview}</h2>
+            <dl className="company-detail-list">
+              <div>
+                <dt>{t.currentStage}</dt>
+                <dd>{stageDisplayLabel(co.stage, t)}</dd>
               </div>
-            ))}
+              <div>
+                <dt>{t.nextSchedule}</dt>
+                <dd className="company-next-summary">
+                  {nextEvent ? <>
+                    <strong>{whenForLocale(nextEvent.startsAt, t)}</strong>
+                    <span>{nextEvent.type === "general" ? (nextEvent.title || t.general) : t[nextEvent.type] || nextEvent.title || t.general}</span>
+                    <span>{daysUntilLabel(nextEvent.startsAt, t)}</span>
+                  </> : t.noNextSchedule}
+                </dd>
+              </div>
+              <div>
+                <dt>{t.interest}</dt>
+                <dd>{formatInterest(co)}</dd>
+              </div>
+            </dl>
+            <h2>{t.companyInfo}</h2>
+            <dl className="company-detail-list company-info-list">
+              {co.industry && <div><dt>{t.industry}</dt><dd>{co.industry}</dd></div>}
+              {companyJobCategory(co) && <div><dt>{t.position}</dt><dd>{companyJobCategory(co)}</dd></div>}
+              {co.jobTitle && <div><dt>{t.jobTitle}</dt><dd>{co.jobTitle}</dd></div>}
+              {co.careersUrl && <div><dt>{t.recruitmentPage}</dt><dd><a className="recruitment-link" href={co.careersUrl} target="_blank" rel="noopener noreferrer" title={co.careersUrl}>{t.recruitmentPage} <ExternalLink aria-hidden="true" /></a></dd></div>}
+              {co.notes && <div><dt>{t.notes}</dt><dd>{co.notes}</dd></div>}
+              {!co.industry && !companyJobCategory(co) && !co.jobTitle && !co.careersUrl && !co.notes && <div><dd className="company-detail-muted">{t.notSet}</dd></div>}
+            </dl>
           </section>
           <section className="detail-stack">
+            <section className="entity-card company-detail-section">
+              <Title>{t.futureSchedule}</Title>
+              {futureEvents.length ? <div className="company-future-list">
+                {futureEvents.map((event) => <button type="button" className="company-future-item" key={event.id} onClick={() => { setEditEvent(event); setScheduleCompanyId(co.id); setForm("schedule"); }}>
+                  <CalendarClock aria-hidden="true" />
+                  <span><strong>{whenForLocale(event.startsAt, t)}</strong><small>{event.type === "general" ? (event.title || t.general) : t[event.type] || event.title || t.general}</small><small>{eventModeText(event, t)}</small></span>
+                  <ChevronRight aria-hidden="true" />
+                </button>)}
+              </div> : <p className="company-detail-muted">{t.noFutureSchedules}</p>}
+            </section>
             <Title action={<div className="record-action-wrap">
               <button className="primary" onClick={() => setRecordMenu(!recordMenu)}><Plus />{t.addRecord}</button>
               {recordMenu && <div className="record-action-menu">
@@ -2363,6 +2496,7 @@ function Companies({
               {t.selectionRecords}
             </Title>
             <div className="deadline-list">
+              {historyEvents.map((event) => <EventHistoryRow key={event.id} event={event} t={t} />)}
               {materials.map((x: any) => (
                 <MaterialRow
                   key={x.id}
@@ -2386,10 +2520,10 @@ function Companies({
                   focus={() => {}}
                 />
               ))}
-              {!materials.length && !interviews.length && !preps.length && <div className="selection-empty">
+              {!historyEvents.length && !materials.length && !interviews.length && !preps.length && <div className="selection-empty">
                 <BriefcaseBusiness aria-hidden="true" />
-                <strong>{t.language === "言語" ? "選考記録がまだありません" : t.language === "Language" ? "No selection records yet" : "还没有选考记录"}</strong>
-                <p>{t.language === "言語" ? "書類、テスト、説明会、面接から記録を始めましょう。" : t.language === "Language" ? "Start with a document, test, briefing, or interview." : "从材料、测试、说明会或面试开始记录。"}</p>
+                <strong>{t.noSelectionRecords}</strong>
+                <p>{t.selectionRecordsHint}</p>
               </div>}
             </div>
           </section>
@@ -2459,9 +2593,9 @@ function Companies({
               <i style={{ background: x.color }} />
               <div className="company-card-body">
                 <h3 title={x.name}>{x.name}</h3>
-                <p>{x.industry || x.position || t.general}</p>
-                <span>{stageDisplayLabel(x.stage, t)} · {t.interest} {"★".repeat(x.interestLevel)}{"☆".repeat(5 - x.interestLevel)}</span>
-                <span>{nextEvent ? `${t.event} · ${when(nextEvent.startsAt)} · ${relative(nextEvent.startsAt, t)}` : t.noSchedule}</span>
+                <p>{[x.industry, companyJobCategory(x)].filter(Boolean).join(" / ") || t.notSet}</p>
+                <span>{stageDisplayLabel(x.stage, t)} · {t.interest} {formatInterest(x)}</span>
+                <span>{nextEvent ? `${t.nextSchedule} · ${whenForLocale(nextEvent.startsAt, t)} · ${daysUntilLabel(nextEvent.startsAt, t)}` : t.noSchedule}</span>
               </div>
               <ChevronRight />
             </button>;
@@ -2534,7 +2668,7 @@ function Schedule({
                   <span>
                     {x.company?.name || t.general} · {t[x.type]}
                   </span>
-                  {x.kind === "event" && <><span>{eventModeText(x.event, t.language === "言語")}</span><WeatherLine location={x.event.eventMode === "offline" ? formatScheduleLocation(x.event) : undefined} prefecture={x.event.prefecture} municipality={x.event.municipality || x.event.city} latitude={x.event.latitude} longitude={x.event.longitude} date={x.at} locale={t.language === "言語" ? "ja" : "zh"} />{x.event.meetingUrl && <a className="meeting-link" href={x.event.meetingUrl} target="_blank" rel="noopener noreferrer">{t.language === "言語" ? "会議リンクを開く" : "打开会议链接"}</a>}</>}
+                  {x.kind === "event" && <><span>{eventModeText(x.event, t)}</span><WeatherLine location={x.event.eventMode === "offline" ? formatScheduleLocation(x.event) : undefined} prefecture={x.event.prefecture} municipality={x.event.municipality || x.event.city} latitude={x.event.latitude} longitude={x.event.longitude} date={x.at} locale={t.language === "言語" ? "ja" : "zh"} />{x.event.meetingUrl && <a className="meeting-link" href={x.event.meetingUrl} target="_blank" rel="noopener noreferrer">{t.language === "言語" ? "会議リンクを開く" : "打开会议链接"}</a>}</>}
                 </div>
                 <ChevronRight />
               </button>
@@ -2672,6 +2806,18 @@ function Swipe({
     </div>
   );
 }
+function EventHistoryRow({ event, t }: { event: Event; t: any }) {
+  const label = event.type === "general" ? (event.title || t.general) : t[event.type] || event.title || t.general;
+  return (
+    <article className="task-row-card entity-card company-history-event">
+      <CalendarClock aria-hidden="true" />
+      <div>
+        <h3>{label}</h3>
+        <p>{whenForLocale(event.startsAt, t)} · {eventModeText(event, t)}</p>
+      </div>
+    </article>
+  );
+}
 function InterviewRow({
   x,
   company,
@@ -2795,20 +2941,104 @@ function CloseButton({
     </button>
   );
 }
+function SearchableChoiceField({
+  t,
+  label,
+  name,
+  value,
+  options,
+  onChange,
+}: {
+  t: any;
+  label: string;
+  name: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+}) {
+  const root = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState(value);
+  const [highlighted, setHighlighted] = useState(0);
+  const matches = options.filter((option) => !query.trim() || option.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
+  useEffect(() => setQuery(value), [value]);
+  useEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      if (root.current && !root.current.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, []);
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+  const select = (option: string) => {
+    setQuery(option);
+    onChange(option);
+    setOpen(false);
+  };
+  const chooseOther = () => {
+    setQuery("");
+    onChange("");
+    setOpen(true);
+  };
+  return (
+    <div className="form-combobox" ref={root}>
+      <span>{label}</span>
+      <div className="form-combobox-control">
+        <input
+          type="text"
+          value={query}
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={`${name}-options`}
+          aria-autocomplete="list"
+          placeholder={t.searchOptions}
+          onFocus={() => setOpen(true)}
+          onChange={(event) => { setQuery(event.target.value); onChange(event.target.value); setHighlighted(0); setOpen(true); }}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowDown") { event.preventDefault(); setOpen(true); setHighlighted((index) => Math.min(index + 1, Math.max(0, matches.length - 1))); }
+            if (event.key === "ArrowUp") { event.preventDefault(); setOpen(true); setHighlighted((index) => Math.max(index - 1, 0)); }
+            if (event.key === "Enter" && open && matches[highlighted]) { event.preventDefault(); select(matches[highlighted]); }
+            if (event.key === "Escape") { event.preventDefault(); setOpen(false); }
+          }}
+        />
+        <ChevronDown aria-hidden="true" />
+      </div>
+      <input type="hidden" name={name} value={value} readOnly />
+      {open && <div className="form-combobox-menu" id={`${name}-options`} role="listbox">
+        {matches.map((option, index) => <button type="button" role="option" aria-selected={value === option} className={value === option || highlighted === index ? "selected" : ""} key={option} onMouseDown={(event) => event.preventDefault()} onClick={() => select(option)}>{option}{value === option && <Check aria-hidden="true" />}</button>)}
+        <button type="button" role="option" className="form-combobox-other" onMouseDown={(event) => event.preventDefault()} onClick={chooseOther}>{t.otherCustom}</button>
+        {!matches.length && <p className="form-combobox-empty">{t.notSet}</p>}
+      </div>}
+    </div>
+  );
+}
 function CompanyForm({
   t,
   initial,
+  nextEvent,
+  openNextEvent,
   close,
   save,
 }: {
   t: any;
   initial?: Company;
+  nextEvent?: Event;
+  openNextEvent: (event?: Event) => void;
   close: () => void;
   save: any;
 }) {
   const colors = ["#555555", "#777777", "#d18135", "#d4534d", "#2d9b78", "#9a6b44", "#6e7d91", "#c04f8a"];
   const [color, setColor] = useState(initial?.color || colors[0]);
   const [interest, setInterest] = useState(Math.min(5, Math.max(1, initial?.interestLevel || 3)));
+  const [industry, setIndustry] = useState(initial?.industry || "");
+  const [jobCategory, setJobCategory] = useState(initial?.jobCategory || initial?.position || "");
   return (
     <Modal title={initial ? t.edit : t.addCompany} close={close}>
       <form className="form-grid" onSubmit={save}>
@@ -2816,13 +3046,11 @@ function CompanyForm({
           <span>{t.company}</span>
           <input name="name" defaultValue={initial?.name} required />
         </label>
+        <SearchableChoiceField t={t} label={t.industry} name="industry" value={industry} options={industryOptions} onChange={setIndustry} />
+        <SearchableChoiceField t={t} label={t.position} name="jobCategory" value={jobCategory} options={occupationOptions} onChange={setJobCategory} />
         <label>
-          <span>{t.industry}</span>
-          <input name="industry" defaultValue={initial?.industry} />
-        </label>
-        <label>
-          <span>{t.position}</span>
-          <input name="position" defaultValue={initial?.position} />
+          <span>{t.jobTitle}</span>
+          <input name="jobTitle" defaultValue={initial?.jobTitle} placeholder={t.notSet} />
         </label>
         <label className="interest-field">
           <span>{t.interest}</span>
@@ -2842,14 +3070,14 @@ function CompanyForm({
             ))}
           </select>
         </label>
-        <label>
-          <span>{t.event}</span>
-          <input
-            name="event"
-            type="datetime-local"
-            defaultValue={initial?.nextEventAt}
-          />
-        </label>
+        {!initial && <label>
+          <span>{t.nextSchedule}</span>
+          <input name="event" type="datetime-local" />
+        </label>}
+        {initial && <div className="company-next-editor wide">
+          <span>{t.nextSchedule}</span>
+          {nextEvent ? <div className="company-next-editor-card"><div><strong>{whenForLocale(nextEvent.startsAt, t)}</strong><small>{nextEvent.type === "general" ? (nextEvent.title || t.general) : t[nextEvent.type] || nextEvent.title || t.general}</small></div><button type="button" onClick={() => openNextEvent(nextEvent)}>{t.editSchedule}</button></div> : <button type="button" className="company-next-add" onClick={() => openNextEvent()}><Plus />{t.addSchedule}</button>}
+        </div>}
         <label>
           <span>{t.url}</span>
           <input name="url" type="url" defaultValue={initial?.careersUrl} />
@@ -2996,6 +3224,7 @@ function EventForm({
   t,
   companies,
   initial,
+  defaultCompanyId,
   close,
   save,
   remove,
@@ -3003,6 +3232,7 @@ function EventForm({
   t: any;
   companies: Company[];
   initial?: Event;
+  defaultCompanyId?: string;
   close: () => void;
   save: any;
   remove: (event: Event) => void;
@@ -3031,7 +3261,7 @@ function EventForm({
       <form className="form-grid" onSubmit={handleSubmit}>
         <label>
           <span>{t.company}</span>
-          <select name="company" defaultValue={initial?.companyId}>
+          <select name="company" defaultValue={initial?.companyId || defaultCompanyId}>
             <option value="">—</option>
             {companies.map((x) => (
               <option key={x.id} value={x.id}>

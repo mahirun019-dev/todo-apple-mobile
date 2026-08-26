@@ -2696,6 +2696,188 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   }
 }
 
+/* Company detail and searchable company fields. */
+.company-detail-list {
+  display: grid;
+  gap: 13px;
+  margin: 14px 0 22px;
+}
+.company-detail-list > div {
+  display: grid;
+  gap: 4px;
+}
+.company-detail-list dt {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+}
+.company-detail-list dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.company-detail-list dd strong,
+.company-next-summary strong {
+  display: block;
+  font-size: 16px;
+}
+.company-next-summary {
+  display: grid;
+  gap: 2px;
+}
+.company-next-summary span,
+.company-future-item small {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.company-detail-list + h2 {
+  margin-top: 24px;
+}
+.company-detail-muted {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.company-detail-section {
+  padding: 18px;
+}
+.company-future-list {
+  display: grid;
+  gap: 8px;
+}
+.company-future-item {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 18px;
+  gap: 10px;
+  width: 100%;
+  align-items: center;
+  padding: 10px 0;
+  border: 0;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-primary);
+  background: transparent;
+  text-align: left;
+}
+.company-future-item:first-child { border-top: 0; }
+.company-future-item > svg:first-child { color: var(--text-secondary); }
+.company-future-item > span { display: grid; min-width: 0; gap: 2px; }
+.company-future-item > span strong,
+.company-future-item > span small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.company-future-item > svg:last-child { color: var(--text-muted); }
+.company-history-event {
+  grid-template-columns: 22px minmax(0, 1fr);
+}
+.company-history-event > svg { color: var(--text-secondary); }
+.company-next-editor {
+  display: grid;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+}
+.company-next-editor-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  color: var(--text-primary);
+  background: var(--bg-muted);
+}
+.company-next-editor-card > div { display: grid; min-width: 0; gap: 2px; }
+.company-next-editor-card small { color: var(--text-secondary); font-size: 12px; }
+.company-next-editor-card button,
+.company-next-add {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.company-next-add { width: fit-content; }
+.company-next-add svg { width: 16px; height: 16px; }
+.form-combobox {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+}
+.form-combobox-control {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.form-combobox-control input {
+  padding-right: 36px;
+}
+.form-combobox-control > svg {
+  position: absolute;
+  right: 11px;
+  width: 16px;
+  height: 16px;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+.form-combobox-menu {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  left: 0;
+  z-index: 30;
+  display: grid;
+  max-height: min(300px, calc(100dvh - 180px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 5px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-surface);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, .16);
+}
+.form-combobox-menu button {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 7px;
+  color: var(--text-primary);
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+}
+.form-combobox-menu button:hover,
+.form-combobox-menu button.selected { background: var(--bg-muted); }
+.form-combobox-menu button svg { width: 16px; height: 16px; color: var(--accent, #2477d9); }
+.form-combobox-menu .form-combobox-other { border-top: 1px solid var(--border-color); border-radius: 0; color: var(--accent, #2477d9); }
+.form-combobox-empty { margin: 8px 10px; color: var(--text-secondary); font-size: 12px; font-weight: 500; }
+@media (max-width: 760px) {
+  .course-detail { grid-template-columns: 1fr; }
+  .company-next-editor-card { align-items: flex-start; flex-direction: column; }
+  .company-next-editor-card button { width: 100%; }
+  .form-combobox-menu { position: fixed; top: auto; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); left: 16px; max-height: min(44dvh, 360px); }
+}
+
 .mobile-action-required { display: none; }
 @media (max-width: 767px) {
   .mobile-action-required {
