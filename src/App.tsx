@@ -107,7 +107,7 @@ type AppPreferences = {
     actionWindowDays: 3 | 7 | 14;
     resultWaitingDays: 7 | 10 | 14;
     showDeadlines: boolean;
-    showUpcoming: boolean;
+    showPreparations: boolean;
     showWaiting: boolean;
     defaultCompanyStage: Stage;
     defaultInterestLevel: number;
@@ -203,6 +203,9 @@ type Event = {
   type: ItemType;
   stage: Stage;
   startsAt: string;
+  endsAt?: string;
+  endAt?: string;
+  durationMinutes?: number;
   locationOrOnline: string;
   eventMode?: "offline" | "online" | "undecided";
   isOnline?: boolean;
@@ -278,7 +281,7 @@ function defaultPreferences(): AppPreferences {
       actionWindowDays: 7,
       resultWaitingDays: 7,
       showDeadlines: true,
-      showUpcoming: true,
+      showPreparations: true,
       showWaiting: true,
       defaultCompanyStage: "saved",
       defaultInterestLevel: 3,
@@ -624,7 +627,7 @@ const tr = {
     homeRegion: "常驻就活地区", homeRegionHint: "没有填写详细地点的日程将使用此地区作为天气和出行参考。",
     actionWindow: "待处理时间范围", actionWindowHint: "用于首页待处理事项和临近截止提醒。", days3: "3天内", days7: "7天内", days14: "14天内",
     resultWaitingThreshold: "等待结果判定", resultWaitingHint: "选考结束后持续未更新达到此天数时进入待处理。",
-    showDeadlines: "显示截止事项", showUpcoming: "显示近期日程", showWaiting: "显示长期等待结果",
+    showDeadlines: "显示截止事项", showPreparations: "显示未完成准备事项", showWaiting: "显示长期等待结果",
     defaultStage: "新企业默认选考阶段", defaultInterest: "新企业默认志望度", defaultStageHint: "这是新增企业时自动填入的默认值。", defaultInterestHint: "保存前仍可单独修改，不会影响已经登记的企业。", homeModules: "主页显示项目", homeSummary: "顶部摘要", homeSummaryOrder: "摘要卡片顺序", homeSections: "主页内容区块", homeSectionsOrder: "内容区块顺序", companyCard: "企业卡片显示信息",
     showIndustry: "行业", showPosition: "职种", showStage: "选考阶段", showInterest: "志望度", showNextEvent: "下一日程", defaultCompanySort: "默认企业排序",
     sortUpdated: "最近更新", sortEvent: "下一日程", sortInterest: "志望度从高到低", sortName: "企业名称", moveUp: "上移", moveDown: "下移",
@@ -788,7 +791,7 @@ const tr = {
     homeRegion: "常駐就活地域", homeRegionHint: "詳細な場所がない日程では、この地域を天気や移動の目安に使用します。",
     actionWindow: "要対応の対象期間", actionWindowHint: "ホームの要対応と締切の目安に使用します。", days3: "3日以内", days7: "7日以内", days14: "14日以内",
     resultWaitingThreshold: "結果待ち判定", resultWaitingHint: "選考終了後、この日数更新がない項目を要対応に表示します。",
-    showDeadlines: "締切を表示", showUpcoming: "近日の日程を表示", showWaiting: "長期間の結果待ちを表示",
+    showDeadlines: "締切を表示", showPreparations: "未完了の準備事項を表示", showWaiting: "長期間の結果待ちを表示",
     defaultStage: "新規企業のデフォルト選考段階", defaultInterest: "新規企業のデフォルト志望度", defaultStageHint: "新しく企業を追加するときの初期値です。登録時に個別に変更できます。既存の企業には影響しません。", defaultInterestHint: "新しく企業を追加するときの初期値です。登録時に個別に変更できます。既存の企業には影響しません。", homeModules: "ホーム画面の表示項目", homeSummary: "上部サマリー", homeSummaryOrder: "サマリーカードの順序", homeSections: "ホームセクション", homeSectionsOrder: "セクションの順序", companyCard: "企業カードの表示情報",
     showIndustry: "業界", showPosition: "職種", showStage: "選考段階", showInterest: "志望度", showNextEvent: "次の日程", defaultCompanySort: "既定の企業並び替え",
     sortUpdated: "最近更新", sortEvent: "次の日程", sortInterest: "志望度の高い順", sortName: "企業名", moveUp: "上へ", moveDown: "下へ",
@@ -934,7 +937,7 @@ const tr = {
     homeRegion: "Home job-search region", homeRegionHint: "Used as a weather and travel reference when an event has no detailed location.",
     actionWindow: "Attention window", actionWindowHint: "Used for upcoming deadlines and the home attention list.", days3: "Within 3 days", days7: "Within 7 days", days14: "Within 14 days",
     resultWaitingThreshold: "Waiting-result threshold", resultWaitingHint: "Items with no update after this many days appear in Needs attention.",
-    showDeadlines: "Show deadlines", showUpcoming: "Show upcoming events", showWaiting: "Show long-waiting results",
+    showDeadlines: "Show deadlines", showPreparations: "Show incomplete preparation", showWaiting: "Show long-waiting results",
     defaultStage: "Default stage for new companies", defaultInterest: "Default interest for new companies", defaultStageHint: "Used as the initial value when adding a company. You can change it before saving; existing companies are unaffected.", defaultInterestHint: "Used as the initial value when adding a company. You can change it before saving; existing companies are unaffected.", homeModules: "Home modules", homeSummary: "Summary cards", homeSummaryOrder: "Summary card order", homeSections: "Home sections", homeSectionsOrder: "Section order", companyCard: "Company card details",
     showIndustry: "Industry", showPosition: "Position", showStage: "Stage", showInterest: "Interest", showNextEvent: "Next event", defaultCompanySort: "Default company sort",
     sortUpdated: "Recently updated", sortEvent: "Next event", sortInterest: "Interest", sortName: "Company name", moveUp: "Move up", moveDown: "Move down",
@@ -1053,18 +1056,31 @@ function getUpcomingEvent(events: Event[], companyId: string | undefined): Event
 function icsEscape(value: string) {
   return value.replace(/\\/g, "\\\\").replace(/\r?\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
 }
-function calendarParts(value: string) {
-  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
-  if (match) return { year: match[1], month: match[2], day: match[3], hour: match[4], minute: match[5] };
-  const date = new Date(value);
-  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(date);
+function tokyoCalendarParts(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
   return Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value])) as { year: string; month: string; day: string; hour: string; minute: string };
 }
-function calendarTimestamp(value: string, addMinutes = 0) {
+function calendarParts(value: string) {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::\d{2})?$/);
+  if (match) return { year: match[1], month: match[2], day: match[3], hour: match[4], minute: match[5] };
+  return tokyoCalendarParts(new Date(value));
+}
+function parseTokyoCalendarDate(value: string) {
   const parts = calendarParts(value);
-  const base = new Date(`${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:00+09:00`);
+  return new Date(`${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:00+09:00`);
+}
+function calendarTimestamp(value: string, addMinutes = 0) {
+  const base = parseTokyoCalendarDate(value);
   base.setMinutes(base.getMinutes() + addMinutes);
-  const next = calendarParts(base.toISOString());
+  const next = tokyoCalendarParts(base);
   return `${next.year}${next.month}${next.day}T${next.hour}${next.minute}00`;
 }
 function utcCalendarTimestamp(value: string) {
@@ -1081,14 +1097,22 @@ function eventToIcs(event: Event, company: Company | undefined, t: any) {
     event.eventMode ? `${t.format}: ${t[event.eventMode] || event.eventMode}` : "",
     event.notes ? `${t.notes}: ${event.notes}` : "",
     company?.careersUrl ? `${t.url}: ${company.careersUrl}` : "",
-  ].filter(Boolean).join("\\n");
+  ].filter(Boolean).join("\n");
+  const endAt = event.endsAt || event.endAt;
+  const parsedEnd = endAt ? parseTokyoCalendarDate(endAt) : undefined;
+  const startDate = parseTokyoCalendarDate(event.startsAt);
+  const hasValidEnd = parsedEnd && Number.isFinite(parsedEnd.getTime()) && parsedEnd.getTime() > startDate.getTime();
+  const durationMinutes = Number(event.durationMinutes);
+  const endTimestamp = hasValidEnd
+    ? calendarTimestamp(endAt!)
+    : calendarTimestamp(event.startsAt, Number.isFinite(durationMinutes) && durationMinutes > 0 ? durationMinutes : 60);
   const uid = `${event.id}@careerflow`;
   return [
     "BEGIN:VEVENT",
     `UID:${icsEscape(uid)}`,
     `DTSTAMP:${utcCalendarTimestamp(new Date().toISOString())}Z`,
     `DTSTART;TZID=Asia/Tokyo:${calendarTimestamp(event.startsAt)}`,
-    `DTEND;TZID=Asia/Tokyo:${calendarTimestamp(event.startsAt, 60)}`,
+    `DTEND;TZID=Asia/Tokyo:${endTimestamp}`,
     `SUMMARY:${icsEscape(`${company?.name ? `${company.name} - ` : ""}${eventLabel}`)}`,
     `DESCRIPTION:${icsEscape(description)}`,
     location ? `LOCATION:${icsEscape(location)}` : "",
@@ -1103,6 +1127,7 @@ function makeIcs(events: Event[], byId: Record<string, Company>, t: any) {
     "PRODID:-//CareerFlow//CareerFlow Calendar//JA",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
+    "X-WR-TIMEZONE:Asia/Tokyo",
     ...events.map((event) => eventToIcs(event, byId[event.companyId || ""], t)),
     "END:VCALENDAR",
     "",
@@ -1169,6 +1194,7 @@ function normalize(x: any): Data {
       homeRegion: typeof rawJobHunt.homeRegion === "string" ? rawJobHunt.homeRegion : defaults.jobHunt.homeRegion,
       actionWindowDays: [3, 7, 14].includes(Number(rawJobHunt.actionWindowDays)) ? Number(rawJobHunt.actionWindowDays) as 3 | 7 | 14 : defaults.jobHunt.actionWindowDays,
       resultWaitingDays: [7, 10, 14].includes(Number(rawJobHunt.resultWaitingDays)) ? Number(rawJobHunt.resultWaitingDays) as 7 | 10 | 14 : defaults.jobHunt.resultWaitingDays,
+      showPreparations: typeof rawJobHunt.showPreparations === "boolean" ? rawJobHunt.showPreparations : defaults.jobHunt.showPreparations,
       defaultCompanyStage: stages.includes(rawJobHunt.defaultCompanyStage as Stage) ? rawJobHunt.defaultCompanyStage as Stage : defaults.jobHunt.defaultCompanyStage,
       defaultInterestLevel: Math.min(5, Math.max(1, Number(rawJobHunt.defaultInterestLevel) || defaults.jobHunt.defaultInterestLevel)),
     },
@@ -1419,7 +1445,8 @@ export default function App() {
     due = allDue
       .filter((x) => new Date(x.dueAt!).getTime() < Date.now() + 6048e5)
       .sort((a, b) => String(a.dueAt).localeCompare(String(b.dueAt))),
-    actionDue = allDue
+    actionDue = data.materials
+      .filter((x) => !x.completed && x.dueAt)
       .filter((x) => new Date(x.dueAt!).getTime() < Date.now() + data.preferences.jobHunt.actionWindowDays * 864e5)
       .sort((a, b) => String(a.dueAt).localeCompare(String(b.dueAt))),
     waiting = data.companies.filter((x) => isWaitingResultCompany(x, data.events)),
@@ -1634,6 +1661,9 @@ export default function App() {
         type: f.get("type") as ItemType,
         stage: f.get("stage") as Stage,
         startsAt: String(f.get("startsAt")),
+        endsAt: base?.endsAt,
+        endAt: base?.endAt,
+        durationMinutes: base?.durationMinutes,
         locationOrOnline: String(f.get("location") || f.get("onlinePlatform") || (String(f.get("eventMode") || base?.eventMode) === "offline" ? generatedLocation : base?.locationOrOnline || "")),
         eventMode: String(f.get("eventMode") || base?.eventMode || "undecided") as Event["eventMode"],
         location: String(f.get("location") || (String(f.get("eventMode") || base?.eventMode) === "offline" ? generatedLocation : base?.location || "")),
@@ -1754,7 +1784,7 @@ export default function App() {
     URL.revokeObjectURL(a.href);
   };
   const exportCalendar = async (requestedEvents?: Event[]) => {
-    const events = (requestedEvents || data.events).filter((event) => Number.isFinite(new Date(event.startsAt).getTime()) && new Date(event.startsAt).getTime() >= Date.now());
+    const events = (requestedEvents || data.events).filter((event) => Number.isFinite(parseTokyoCalendarDate(event.startsAt).getTime()) && parseTokyoCalendarDate(event.startsAt).getTime() >= Date.now());
     if (!events.length) {
       setToast({ text: t.calendarNoEvents, undo: () => undefined });
       return;
@@ -2286,13 +2316,24 @@ function Dashboard({
     setView("companies");
   };
   const daysUntil = (at: string) => Math.ceil((new Date(at).getTime() - Date.now()) / 864e5);
+  const actionWindowEnd = Date.now() + data.preferences.jobHunt.actionWindowDays * 864e5;
+  const preparationActions = data.preparations
+    .filter((item: Preparation) => !item.completed)
+    .filter((item: Preparation) => {
+      const dueTime = item.dueAt ? new Date(item.dueAt).getTime() : NaN;
+      const dueSoon = Number.isFinite(dueTime) && dueTime < actionWindowEnd;
+      const eventSoon = !!item.companyId && upcoming.some((event: any) => event.event?.companyId === item.companyId && new Date(event.at).getTime() < actionWindowEnd);
+      return dueSoon || eventSoon;
+    });
   const actionItems = [
     ...(data.preferences.jobHunt.showDeadlines ? actionDue : []).map((x: any) => {
       const days = daysUntil(x.dueAt);
-      const isMaterial = "isWeeklyFocus" in x;
-      return { id: `due-${x.id}`, kind: isMaterial ? "material" : "preparation", label: isMaterial ? t.actionMaterial : t.actionPreparation, company: byId[x.companyId || ""]?.name || t.general, detail: x.title, at: x.dueAt, urgency: days <= 0 ? "urgent" : days === 1 ? "warning" : "normal", meta: days < 0 ? t.overdueLabel : days === 0 ? t.dueToday : days === 1 ? t.dueTomorrow : when(x.dueAt) };
+      return { id: `due-${x.id}`, kind: "material", label: t.actionDeadline, company: byId[x.companyId || ""]?.name || t.general, detail: x.title, at: x.dueAt, urgency: days <= 0 ? "urgent" : days === 1 ? "warning" : "normal", meta: days < 0 ? t.overdueLabel : days === 0 ? t.dueToday : days === 1 ? t.dueTomorrow : when(x.dueAt) };
     }),
-    ...(data.preferences.jobHunt.showUpcoming ? upcoming : []).map((x: any) => ({ id: `event-${x.id}`, kind: "schedule", label: t.actionSchedule, company: x.company?.name || t.general, detail: t[x.type] || t.schedule, at: x.at, event: x.event, urgency: daysUntil(x.at) <= 0 ? "urgent" : daysUntil(x.at) === 1 ? "warning" : "normal", meta: when(x.at) })),
+    ...(data.preferences.jobHunt.showPreparations ? preparationActions : []).map((x: Preparation) => {
+      const days = x.dueAt ? daysUntil(x.dueAt) : null;
+      return { id: `preparation-${x.id}`, kind: "preparation", label: t.actionPreparation, company: byId[x.companyId || ""]?.name || t.general, detail: x.title, at: x.dueAt, urgency: days !== null && days <= 0 ? "urgent" : days === 1 ? "warning" : "normal", meta: days === null ? t.incomplete : days < 0 ? t.overdueLabel : days === 0 ? t.dueToday : days === 1 ? t.dueTomorrow : when(x.dueAt!) };
+    }),
     ...(data.preferences.jobHunt.showWaiting ? waiting : []).map((x: any) => {
       const days = Math.max(1, Math.floor((Date.now() - x.updatedAt) / 864e5));
       return days >= data.preferences.jobHunt.resultWaitingDays ? { id: `waiting-${x.id}`, kind: "waiting", label: t.actionWaiting, company: x.name, detail: t.waitingDays(days), at: undefined, urgency: days >= 14 ? "urgent" : "warning", meta: t.waitingDays(days) } : null;
@@ -3850,7 +3891,7 @@ function JobHuntSettings({ t, data, updatePreferences }: any) {
     <label className="settings-field"><span>{t.homeRegion}</span><select value={settings.homeRegion} onChange={(event) => { update({ homeRegion: event.target.value }); localStorage.setItem("careerflow-home-region", event.target.value); }}><option value="">{t.notSet}</option>{prefectures.map((region) => <option key={region} value={region}>{region}</option>)}</select><small>{t.homeRegionHint}</small></label>
     <label className="settings-field"><span>{t.actionWindow}</span><select value={settings.actionWindowDays} onChange={(event) => update({ actionWindowDays: Number(event.target.value) as 3 | 7 | 14 })}>{[[3, t.days3], [7, t.days7], [14, t.days14]].map(([value, label]) => <option key={String(value)} value={value}>{label}</option>)}</select><small>{t.actionWindowHint}</small></label>
     <label className="settings-field"><span>{t.resultWaitingThreshold}</span><select value={settings.resultWaitingDays} onChange={(event) => update({ resultWaitingDays: Number(event.target.value) as 7 | 10 | 14 })}>{[7, 10, 14].map((value) => <option key={value} value={value}>{value}{t.days}</option>)}</select><small>{t.resultWaitingHint}</small></label>
-    <div className="settings-toggle-group"><strong>{t.actionRequired}</strong><label><input type="checkbox" checked={settings.showDeadlines} onChange={(event) => update({ showDeadlines: event.target.checked })} />{t.showDeadlines}</label><label><input type="checkbox" checked={settings.showUpcoming} onChange={(event) => update({ showUpcoming: event.target.checked })} />{t.showUpcoming}</label><label><input type="checkbox" checked={settings.showWaiting} onChange={(event) => update({ showWaiting: event.target.checked })} />{t.showWaiting}</label></div>
+    <div className="settings-toggle-group"><strong>{t.actionRequired}</strong><label><input type="checkbox" checked={settings.showDeadlines} onChange={(event) => update({ showDeadlines: event.target.checked })} />{t.showDeadlines}</label><label><input type="checkbox" checked={settings.showPreparations} onChange={(event) => update({ showPreparations: event.target.checked })} />{t.showPreparations}</label><label><input type="checkbox" checked={settings.showWaiting} onChange={(event) => update({ showWaiting: event.target.checked })} />{t.showWaiting}</label></div>
     <label className="settings-field"><span>{t.defaultStage}</span><select value={settings.defaultCompanyStage} onChange={(event) => update({ defaultCompanyStage: event.target.value as Stage })}>{stages.map((stage) => <option key={stage} value={stage}>{t[stage]}</option>)}</select><small>{t.defaultStageHint}</small></label>
     <label className="settings-field"><span>{t.defaultInterest}</span><select value={settings.defaultInterestLevel} onChange={(event) => update({ defaultInterestLevel: Number(event.target.value) })}>{[1, 2, 3, 4, 5].map((value) => <option key={value} value={value}>{value} / 5</option>)}</select><small>{t.defaultInterestHint}</small></label>
   </section>;
