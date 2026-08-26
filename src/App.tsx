@@ -1579,7 +1579,7 @@ export default function App() {
           </button>
         </aside>
         <header className="mobile-header glass-lite">
-          <button className="mobile-menu-button" onClick={() => setSettings((open) => !open)} aria-label={settings ? t.cancel : t.settings}>
+          <button className="mobile-menu-button" data-menu-open={settings ? "true" : "false"} onClick={() => setSettings((open) => !open)} aria-label={settings ? t.cancel : t.settings}>
             {settings ? <X /> : <Menu />}
           </button>
           <strong className="mobile-header-title">CareerFlow</strong>
