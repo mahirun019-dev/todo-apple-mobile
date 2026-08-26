@@ -3510,6 +3510,7 @@ function MobileSettingsDrawer({
 }: any) {
   const layerRef = useRef<HTMLDivElement>(null);
   const [renderedPage, setRenderedPage] = useState<string | null>(null);
+  const [transitionPage, setTransitionPage] = useState<string | null | undefined>(undefined);
   const [contentPhase, setContentPhase] = useState<"idle" | "out" | "in">("idle");
   const label = "CareerFlow";
   const about = locale === "ja"
@@ -3546,19 +3547,24 @@ function MobileSettingsDrawer({
   useEffect(() => {
     if (!open) {
       setRenderedPage(null);
+      setTransitionPage(undefined);
       setContentPhase("idle");
       return;
     }
-    if (page === renderedPage) return;
+    if (page === renderedPage && transitionPage === undefined) return;
+    setTransitionPage(page);
     setContentPhase("out");
-    const swapTimer = window.setTimeout(() => {
+    const enterFrame = window.requestAnimationFrame(() => setContentPhase("in"));
+    const finishTimer = window.setTimeout(() => {
       setRenderedPage(page);
-      setContentPhase("in");
-      const settleFrame = window.requestAnimationFrame(() => setContentPhase("idle"));
-      window.setTimeout(() => window.cancelAnimationFrame(settleFrame), 320);
-    }, 120);
-    return () => window.clearTimeout(swapTimer);
-  }, [open, page, renderedPage]);
+      setTransitionPage(undefined);
+      setContentPhase("idle");
+    }, 300);
+    return () => {
+      window.cancelAnimationFrame(enterFrame);
+      window.clearTimeout(finishTimer);
+    };
+  }, [open, page]);
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -3650,29 +3656,38 @@ function MobileSettingsDrawer({
       layer.removeEventListener("transitionend", onTransitionEnd);
     };
   }, [open]);
-  const subpageTitle = renderedPage === "data" ? t.data : renderedPage === "appearance" ? t.appearance : renderedPage === "language" ? t.language : about.title;
-  const subpage = renderedPage === "data"
-    ? <section className="mobile-settings-subpage" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><div className="mobile-settings-subpage-list mobile-data-actions"><button type="button" onClick={() => download("careerflow-backup.json", JSON.stringify(makeBackupSnapshot(data, theme, locale), null, 2), "application/json")}><DatabaseArrowUp aria-hidden="true" /><span>{t.backup}</span></button><button type="button" onClick={() => json.current?.click()}><DatabaseArrowDown aria-hidden="true" /><span>{t.restore}</span></button></div></section>
-    : renderedPage === "appearance"
-      ? <section className="mobile-settings-subpage" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><div className="mobile-settings-subpage-list">{(["light", "dark", "system"] as Theme[]).map((x) => { const Icon = x === "light" ? Sun : x === "dark" ? Moon : Monitor; return <button type="button" className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}><Icon aria-hidden="true" /><span>{t[x]}</span>{theme === x && <Check aria-hidden="true" />}</button>; })}</div></section>
-      : renderedPage === "language"
-        ? <section className="mobile-settings-subpage" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><div className="mobile-settings-subpage-list">{(["zh", "ja"] as Locale[]).map((x) => <button type="button" className={locale === x ? "selected" : ""} onClick={() => setLocale(x)} key={x}><span>{x === "zh" ? "中文" : "日本語"}</span>{locale === x && <Check aria-hidden="true" />}</button>)}</div></section>
-        : <section className="mobile-settings-subpage mobile-about" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><p>{about.version}</p><p>{about.db}</p><p>{about.privacy}</p><p>{about.license}</p></section>;
+  const changePage = (nextPage: string | null) => {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && layerRef.current?.contains(active)) active.blur();
+    setPage(nextPage);
+  };
+  const renderSettingsContent = (pageValue: string | null) => {
+    if (!pageValue) return <nav className="mobile-settings-nav">
+      <button type="button" onClick={() => changePage("data")}><Database aria-hidden="true" /><span>{t.data}</span><ChevronRight aria-hidden="true" /></button>
+      <button type="button" onClick={() => changePage("appearance")}><Palette aria-hidden="true" /><span>{t.appearance}</span><ChevronRight aria-hidden="true" /></button>
+      <button type="button" onClick={() => changePage("language")}><Globe aria-hidden="true" /><span>{t.language}</span><ChevronRight aria-hidden="true" /></button>
+      <button type="button" onClick={() => changePage("about")}><Info aria-hidden="true" /><span>{about.title}</span><ChevronRight aria-hidden="true" /></button>
+    </nav>;
+    const subpageTitle = pageValue === "data" ? t.data : pageValue === "appearance" ? t.appearance : pageValue === "language" ? t.language : about.title;
+    if (pageValue === "data") return <section className="mobile-settings-subpage" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><div className="mobile-settings-subpage-list mobile-data-actions"><button type="button" onClick={() => download("careerflow-backup.json", JSON.stringify(makeBackupSnapshot(data, theme, locale), null, 2), "application/json")}><DatabaseArrowUp aria-hidden="true" /><span>{t.backup}</span></button><button type="button" onClick={() => json.current?.click()}><DatabaseArrowDown aria-hidden="true" /><span>{t.restore}</span></button></div></section>;
+    if (pageValue === "appearance") return <section className="mobile-settings-subpage" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><div className="mobile-settings-subpage-list">{(["light", "dark", "system"] as Theme[]).map((x) => { const Icon = x === "light" ? Sun : x === "dark" ? Moon : Monitor; return <button type="button" className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}><Icon aria-hidden="true" /><span>{t[x]}</span>{theme === x && <Check aria-hidden="true" />}</button>; })}</div></section>;
+    if (pageValue === "language") return <section className="mobile-settings-subpage" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><div className="mobile-settings-subpage-list">{(["zh", "ja"] as Locale[]).map((x) => <button type="button" className={locale === x ? "selected" : ""} onClick={() => setLocale(x)} key={x}><span>{x === "zh" ? "中文" : "日本語"}</span>{locale === x && <Check aria-hidden="true" />}</button>)}</div></section>;
+    return <section className="mobile-settings-subpage mobile-about" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><p>{about.version}</p><p>{about.db}</p><p>{about.privacy}</p><p>{about.license}</p></section>;
+  };
+  const headerPage = transitionPage !== undefined
+    ? (transitionPage === null ? renderedPage : transitionPage)
+    : renderedPage;
   return <div ref={layerRef} className="mobile-settings-layer" data-mobile-global-nav="true" data-open={open ? "true" : "false"}>
     <button className="mobile-settings-backdrop" onClick={dismiss} aria-label={t.cancel} />
     <aside className="mobile-settings-drawer drawer-shell" role="dialog" aria-modal="true" aria-label={label}>
-      <header className={`mobile-navigation-header mobile-header glass-lite${renderedPage ? " mobile-settings-subheader" : ""}`}>
-        {renderedPage ? <button className="mobile-settings-back-button" type="button" onClick={() => setPage(null)} aria-label={locale === "ja" ? "戻る" : "返回"}><ArrowLeft aria-hidden="true" /></button> : <button className="mobile-menu-button" onClick={dismiss} aria-label={t.cancel}><X aria-hidden="true" /></button>}
+      <header className={`mobile-navigation-header mobile-header glass-lite${headerPage ? " mobile-settings-subheader" : ""}`}>
+        {headerPage ? <button className="mobile-settings-back-button" type="button" onClick={() => changePage(null)} aria-label={locale === "ja" ? "戻る" : "返回"}><ArrowLeft aria-hidden="true" /></button> : <button className="mobile-menu-button" onClick={dismiss} aria-label={t.cancel}><X aria-hidden="true" /></button>}
         <strong className="mobile-header-title">CareerFlow</strong>
-        {renderedPage ? <button className="mobile-settings-close-button" type="button" onClick={dismiss} aria-label={t.cancel}><X aria-hidden="true" /></button> : <span className="mobile-header-action-slot" aria-hidden="true" />}
+        {headerPage ? <button className="mobile-settings-close-button" type="button" onClick={dismiss} aria-label={t.cancel}><X aria-hidden="true" /></button> : <span className="mobile-header-action-slot" aria-hidden="true" />}
       </header>
-      <div className="drawer-main drawer-scroll"><div className={`mobile-settings-content-switch ${contentPhase === "out" ? "is-out" : contentPhase === "in" ? "is-in" : ""}`}>
-        {renderedPage ? subpage : <nav className="mobile-settings-nav">
-          <button type="button" onClick={() => setPage("data")}><Database aria-hidden="true" /><span>{t.data}</span><ChevronRight aria-hidden="true" /></button>
-          <button type="button" onClick={() => setPage("appearance")}><Palette aria-hidden="true" /><span>{t.appearance}</span><ChevronRight aria-hidden="true" /></button>
-          <button type="button" onClick={() => setPage("language")}><Globe aria-hidden="true" /><span>{t.language}</span><ChevronRight aria-hidden="true" /></button>
-          <button type="button" onClick={() => setPage("about")}><Info aria-hidden="true" /><span>{about.title}</span><ChevronRight aria-hidden="true" /></button>
-        </nav>}
+      <div className="drawer-main drawer-scroll"><div className={`mobile-settings-content-switch ${transitionPage !== undefined ? "is-transitioning" : ""}`}>
+        <div className={`mobile-settings-content-layer mobile-settings-content-current ${transitionPage !== undefined ? "is-leaving" : ""}`}>{renderSettingsContent(renderedPage)}</div>
+        {transitionPage !== undefined && <div className={`mobile-settings-content-layer mobile-settings-content-next ${contentPhase === "in" ? "is-entering" : ""}`}>{renderSettingsContent(transitionPage)}</div>}
       </div></div>
     </aside>
   </div>;

@@ -4908,21 +4908,60 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
   }
 
   .mobile-settings-content-switch {
-    opacity: 1;
-    transform: translateY(0);
-    transition: opacity 120ms cubic-bezier(.4, 0, .2, 1), transform 120ms cubic-bezier(.4, 0, .2, 1);
+    display: grid;
+    grid-template-areas: "settings-content";
+    position: relative;
+    min-width: 0;
   }
 
-  .mobile-settings-content-switch.is-out {
+  .mobile-settings-content-layer {
+    grid-area: settings-content;
+    min-width: 0;
+    align-self: start;
+  }
+
+  .mobile-settings-content-current {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .mobile-settings-content-current.is-leaving {
     opacity: 0;
-    transform: translateY(-4px);
+    transform: translateY(-2px);
+    pointer-events: none;
+    transition: opacity 170ms cubic-bezier(.4, 0, .2, 1), transform 170ms cubic-bezier(.4, 0, .2, 1);
+  }
+
+  .mobile-settings-content-next {
+    opacity: 0;
+    transform: translateY(3px);
     pointer-events: none;
   }
 
-  .mobile-settings-content-switch.is-in {
-    opacity: 0;
-    transform: translateY(4px);
+  .mobile-settings-content-next.is-entering {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
     transition: opacity 180ms cubic-bezier(.4, 0, .2, 1), transform 180ms cubic-bezier(.4, 0, .2, 1);
+    transition-delay: 70ms;
+  }
+
+  .mobile-settings-content-switch.is-transitioning .mobile-settings-content-layer .mobile-settings-nav > button {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    transition-delay: 0ms !important;
+  }
+
+  .mobile-settings-nav button,
+  .mobile-settings-subpage-list > button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-settings-nav button:not(.selected):focus:not(:focus-visible),
+  .mobile-settings-subpage-list > button:not(.selected):focus:not(:focus-visible) {
+    outline: none;
+    background: transparent;
   }
 
   .mobile-settings-subheader {
