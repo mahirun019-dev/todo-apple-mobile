@@ -3265,7 +3265,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .app-shell { min-height: 100dvh; height: auto; }
   .student-app { min-height: 0; height: auto; }
   .app-shell, .student-app, .career-app, .career-app .workspace { background: var(--page-bg); }
-  .career-app .workspace { height: auto; min-height: 0; padding-bottom: calc(96px + env(safe-area-inset-bottom)); box-sizing: border-box; }
+  .career-app .workspace { height: auto; min-height: 0; box-sizing: border-box; }
   [data-testid="mobile-bottom-nav"] {
     position: fixed !important;
     left: 22px !important;
@@ -4188,7 +4188,6 @@ option { color: var(--text-primary); background: var(--bg-input); }
   .career-app .workspace {
     min-height: auto;
     height: auto;
-    padding-bottom: calc(96px + env(safe-area-inset-bottom));
   }
   .career-app .overview-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -4604,9 +4603,9 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     align-items: center;
     justify-content: center;
     padding: 50px 60px;
-    background: rgba(20, 24, 30, 0.10);
-    backdrop-filter: blur(4px) saturate(103%);
-    -webkit-backdrop-filter: blur(4px) saturate(103%);
+    background: rgba(20, 24, 30, 0.08);
+    backdrop-filter: blur(3px) saturate(102%);
+    -webkit-backdrop-filter: blur(3px) saturate(102%);
   }
 
   .settings-drawer-backdrop {
@@ -4766,9 +4765,9 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
   }
 
   [data-theme="dark"] .settings-drawer-layer {
-    background: rgba(0, 0, 0, 0.18);
-    backdrop-filter: blur(4px) saturate(103%);
-    -webkit-backdrop-filter: blur(4px) saturate(103%);
+    background: rgba(0, 0, 0, 0.14);
+    backdrop-filter: blur(3px) saturate(102%);
+    -webkit-backdrop-filter: blur(3px) saturate(102%);
   }
 
   [data-theme="dark"] .settings-drawer-panel {
@@ -4841,5 +4840,139 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     animation: none;
     opacity: 1;
     transform: none;
+  }
+}
+
+/* Final mobile dashboard and company-detail density rules. */
+@media (max-width: 767px) {
+  :root {
+    /* Keeps the existing safe-area reserve while centralizing it in workspace. */
+    --mobile-bottom-nav-height: calc(120px + env(safe-area-inset-bottom) + env(safe-area-inset-bottom));
+  }
+
+  .career-app .workspace {
+    height: auto;
+    min-height: 0;
+    padding-bottom: calc(var(--mobile-bottom-nav-height) - env(safe-area-inset-bottom) - 24px);
+    box-sizing: border-box;
+  }
+
+  .career-app .next-class,
+  .career-app .mobile-action-required,
+  .career-app .dashboard-sidebar > .entity-card {
+    padding: 22px 20px;
+    border-radius: 16px;
+  }
+
+  .career-app .next-class > .section-title,
+  .career-app .mobile-action-required > .section-title,
+  .career-app .dashboard-sidebar > .entity-card > .section-title {
+    margin-bottom: 16px;
+  }
+
+  .mobile-action-item {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 10px;
+    padding: 12px 0;
+  }
+
+  .mobile-action-kind,
+  .mobile-action-item strong {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .mobile-action-item strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-action-item p {
+    grid-column: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-action-item time {
+    grid-column: 2;
+    align-self: end;
+  }
+
+  .company-detail-page-head {
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .company-detail-page-head > div:first-child {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .company-detail-page-head .back {
+    display: block;
+    margin-bottom: 14px;
+  }
+
+  .company-detail-page-head h1 {
+    max-width: 100%;
+    font-size: 29px;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .company-detail-page-head .head-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
+    margin-top: 16px;
+    gap: 8px;
+  }
+
+  .company-detail-page-head .head-actions button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .course-detail {
+    align-items: start;
+    gap: 16px;
+  }
+
+  .course-detail > .course-profile,
+  .course-detail > .detail-stack,
+  .course-detail .company-detail-section {
+    height: auto;
+    min-height: 0;
+    align-self: start;
+  }
+
+  .course-profile {
+    padding: 18px 16px;
+  }
+
+  .course-profile > i {
+    margin-bottom: 12px;
+  }
+
+  .company-detail-list {
+    gap: 20px;
+    margin: 12px 0 20px;
+  }
+
+  .company-detail-list + h2 {
+    margin-top: 20px;
+  }
+
+  .company-detail-section {
+    padding: 16px;
+  }
+
+  .detail-stack {
+    gap: 16px;
   }
 }

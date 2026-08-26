@@ -2451,7 +2451,7 @@ function Companies({
       metadata = formatCompanyMetadata(co);
     return (
       <>
-        <div className="page-head">
+        <div className="page-head company-detail-page-head">
           <div>
             <button className="back" onClick={() => setSelected(undefined)}>
               ‹ {t.companies}
