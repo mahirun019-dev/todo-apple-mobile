@@ -1082,9 +1082,6 @@ export default function App() {
       return saved === "ja" ? "ja" : "zh";
     }),
     [settings, setSettings] = useState(false),
-    [mobileSettingsMounted, setMobileSettingsMounted] = useState(false),
-    [mobileSettingsVisible, setMobileSettingsVisible] = useState(false),
-    [mobileSettingsClosing, setMobileSettingsClosing] = useState(false),
     [mobileSettingsPage, setMobileSettingsPage] = useState<string | null>(null),
     [selectedDrawerItem, setSelectedDrawerItem] = useState<string | null>(null),
     [form, setForm] = useState<CreateType | null>(null),
@@ -1104,9 +1101,6 @@ export default function App() {
     [icon, setIcon] = useState(() => localStorage.getItem(ICON) || "");
   const json = useRef<HTMLInputElement>(null),
     iconRef = useRef<HTMLInputElement>(null);
-  const mobileSettingsRafs = useRef<number[]>([]);
-  const mobileSettingsCloseTimer = useRef<number | null>(null);
-  const mobileSettingsCloseStartedAt = useRef<number | null>(null);
   const firstDataRender = useRef(true);
   const t = tr[locale];
   const navigate = (nextView: View, nextFilter?: CompanyRouteFilter | ScheduleRouteFilter) => {
@@ -1551,55 +1545,6 @@ export default function App() {
   const open = (kind: CreateType) => {
     setForm(kind);
   };
-  const completeMobileSettingsClose = () => {
-    if (!mobileSettingsMounted || !mobileSettingsClosing) return;
-    if (mobileSettingsCloseTimer.current !== null) window.clearTimeout(mobileSettingsCloseTimer.current);
-    setMobileSettingsMounted(false);
-    setMobileSettingsClosing(false);
-    setSettings(false);
-    mobileSettingsCloseTimer.current = null;
-    if (import.meta.env.DEV) console.debug("[mobile-menu] unmounted", { at: performance.now(), duration: mobileSettingsCloseStartedAt.current === null ? undefined : performance.now() - mobileSettingsCloseStartedAt.current });
-    mobileSettingsCloseStartedAt.current = null;
-  };
-  const closeMobileSettings = () => {
-    if (!mobileSettingsMounted || mobileSettingsClosing) return;
-    mobileSettingsRafs.current.forEach((id) => cancelAnimationFrame(id));
-    mobileSettingsRafs.current = [];
-    setMobileSettingsClosing(true);
-    setMobileSettingsVisible(false);
-    setMobileSettingsPage(null);
-    const startedAt = performance.now();
-    mobileSettingsCloseStartedAt.current = startedAt;
-    if (import.meta.env.DEV) console.debug("[mobile-menu] close", { at: startedAt, reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches });
-    if (mobileSettingsCloseTimer.current !== null) window.clearTimeout(mobileSettingsCloseTimer.current);
-    mobileSettingsCloseTimer.current = window.setTimeout(completeMobileSettingsClose, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 320);
-  };
-  const toggleMobileSettings = () => {
-    if (mobileSettingsMounted) {
-      closeMobileSettings();
-      return;
-    }
-    const clickedAt = performance.now();
-    setSettings(true);
-    setMobileSettingsClosing(false);
-    setMobileSettingsVisible(false);
-    setMobileSettingsMounted(true);
-    if (import.meta.env.DEV) console.debug("[mobile-menu] click", { at: clickedAt, reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches });
-    mobileSettingsRafs.current = [];
-    const firstFrame = requestAnimationFrame(() => {
-      const secondFrame = requestAnimationFrame(() => {
-        setMobileSettingsVisible(true);
-        if (import.meta.env.DEV) console.debug("[mobile-menu] visible", { at: performance.now(), duration: performance.now() - clickedAt });
-      });
-      mobileSettingsRafs.current.push(secondFrame);
-    });
-    mobileSettingsRafs.current.push(firstFrame);
-    if (import.meta.env.DEV) console.debug("[mobile-menu] mounted", { at: performance.now(), duration: performance.now() - clickedAt });
-  };
-  useEffect(() => () => {
-    mobileSettingsRafs.current.forEach((id) => cancelAnimationFrame(id));
-    if (mobileSettingsCloseTimer.current !== null) window.clearTimeout(mobileSettingsCloseTimer.current);
-  }, []);
   return (
     <div className="app-shell" data-app-shell="true">
       <div className="student-app career-app">
@@ -1634,7 +1579,7 @@ export default function App() {
           </button>
         </aside>
         <header className="mobile-header glass-lite">
-          <button className="mobile-menu-button" onClick={toggleMobileSettings} aria-label={settings ? t.cancel : t.settings}>
+          <button className="mobile-menu-button" onClick={() => setSettings((open) => !open)} aria-label={settings ? t.cancel : t.settings}>
             {settings ? <X /> : <Menu />}
           </button>
           <strong className="mobile-header-title">CareerFlow</strong>
@@ -1722,7 +1667,7 @@ export default function App() {
             />
           )}
         </main>
-        {isMobile && mobileSettingsMounted && (
+        {isMobile && (
           <MobileSettingsDrawer
             t={t}
             setView={setView}
@@ -1731,10 +1676,8 @@ export default function App() {
             setPage={setMobileSettingsPage}
             selectedItem={selectedDrawerItem}
             setSelectedItem={setSelectedDrawerItem}
-            close={closeMobileSettings}
-            onClosed={completeMobileSettingsClose}
-            visible={mobileSettingsVisible}
-            closing={mobileSettingsClosing}
+            close={() => { setSettings(false); setMobileSettingsPage(null); }}
+            open={settings}
             theme={theme}
             setTheme={setTheme}
             locale={locale}
@@ -3545,7 +3488,7 @@ function BackupControls({ data, theme, locale, setData }: any) {
   return <section className="backup-panel"><section><div className="backup-cloud-actions"><button className="primary" onClick={exportBackup}>{labels.exportBackup}</button><button onClick={() => fileRef.current?.click()}>{labels.restoreFile}</button></div><p>{labels.exportNote}</p><p>{labels.restoreNote}</p><div className="backup-notes"><strong>{labels.notesTitle}</strong><span>{labels.notesData}</span><span>{labels.notesDevice}</span><span>{labels.format}</span></div><p>{lastExport ? `${labels.last}: ${new Date(lastExport).toLocaleDateString()}` : labels.never}</p>{error && <p className="backup-error">{error}</p>}<input hidden ref={fileRef} type="file" accept="application/json,.json" onChange={restoreFile} /></section></section>;
 }
 function MobileSettingsDrawer({
-  t, page, setPage, close, onClosed, visible, closing, setView, view, selectedItem, setSelectedItem, theme, setTheme, locale, setLocale, data, setData, json, download,
+  t, page, setPage, close, open, setView, view, selectedItem, setSelectedItem, theme, setTheme, locale, setLocale, data, setData, json, download,
 }: any) {
   const layerRef = useRef<HTMLDivElement>(null);
   const label = "CareerFlow";
@@ -3558,6 +3501,7 @@ function MobileSettingsDrawer({
     close();
   };
   useEffect(() => {
+    if (!open) return;
     const y = window.scrollY;
     const previous = {
       position: document.body.style.position,
@@ -3580,14 +3524,15 @@ function MobileSettingsDrawer({
       document.body.style.overflow = previous.overflow;
       window.scrollTo(0, y);
     };
-  }, []);
+  }, [open]);
   useEffect(() => {
+    if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") dismiss();
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [close]);
+  }, [open, close]);
   useEffect(() => {
     if (!import.meta.env.DEV) return;
     const frame = requestAnimationFrame(() => {
@@ -3596,9 +3541,20 @@ function MobileSettingsDrawer({
       const surface = getComputedStyle(layer, "::before");
       const nav = layer.querySelector<HTMLElement>(".mobile-settings-nav");
       const navStyle = nav ? getComputedStyle(nav) : null;
+      const layerStyle = getComputedStyle(layer);
       console.debug("[mobile-menu] computed", {
-        phase: closing ? "closing" : visible ? "open" : "mounted-closed",
+        open,
         reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+        mobileNav: {
+          display: layerStyle.display,
+          visibility: layerStyle.visibility,
+          opacity: layerStyle.opacity,
+          clipPath: layerStyle.clipPath,
+          position: layerStyle.position,
+          top: layerStyle.top,
+          bottom: layerStyle.bottom,
+          zIndex: layerStyle.zIndex,
+        },
         surface: {
           background: surface.background,
           backgroundColor: surface.backgroundColor,
@@ -3608,6 +3564,7 @@ function MobileSettingsDrawer({
           animationName: surface.animationName,
         },
         nav: navStyle && {
+          visibility: navStyle.visibility,
           opacity: navStyle.opacity,
           transform: navStyle.transform,
           transitionDuration: navStyle.transitionDuration,
@@ -3617,20 +3574,8 @@ function MobileSettingsDrawer({
       });
     });
     return () => cancelAnimationFrame(frame);
-  }, [visible, closing]);
-  const stateClass = closing ? "closing" : visible ? "visible" : "mounted";
-  const handleAnimationEvent = (event: React.AnimationEvent<HTMLDivElement>) => {
-    if (import.meta.env.DEV && (event.type === "animationstart" || event.type === "animationend")) {
-      console.debug("[mobile-menu] animation", {
-        event: event.type,
-        name: event.animationName,
-        elapsed: event.elapsedTime,
-        at: performance.now(),
-      });
-    }
-    if (closing && event.type === "animationend" && event.animationName === "mobile-navigation-surface-out") onClosed();
-  };
-  return <div ref={layerRef} className={`mobile-settings-layer ${stateClass}`} onAnimationStart={handleAnimationEvent} onAnimationEnd={handleAnimationEvent}>
+  }, [open]);
+  return <div ref={layerRef} className="mobile-settings-layer" data-mobile-global-nav="true" data-open={open ? "true" : "false"}>
     <button className="mobile-settings-backdrop" onClick={dismiss} aria-label={t.cancel} />
     <aside className="mobile-settings-drawer drawer-shell" role="dialog" aria-modal="true" aria-label={label}>
       <header className="mobile-navigation-header mobile-header glass-lite">

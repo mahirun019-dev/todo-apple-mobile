@@ -2433,7 +2433,7 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   body:has(.modal-layer),
   body:has(.action-sheet-layer),
   body:has(.bottom-sheet-layer),
-  body:has(.mobile-settings-layer) {
+  body:has(.mobile-settings-layer[data-open="true"]) {
     --mobile-overlay-open: 1;
   }
 
@@ -2441,7 +2441,7 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   body:has(.modal-layer) [data-testid="mobile-bottom-nav"],
   body:has(.action-sheet-layer) [data-testid="mobile-bottom-nav"],
   body:has(.bottom-sheet-layer) [data-testid="mobile-bottom-nav"],
-  body:has(.mobile-settings-layer) [data-testid="mobile-bottom-nav"],
+  body:has(.mobile-settings-layer[data-open="true"]) [data-testid="mobile-bottom-nav"],
   body[data-overlay-open="true"] [data-testid="mobile-bottom-nav"] {
     display: none !important;
     visibility: hidden !important;
@@ -4791,15 +4791,7 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     -webkit-backdrop-filter: var(--careerflow-mobile-menu-backdrop);
     opacity: 0;
     pointer-events: none;
-    animation: mobile-navigation-glass-in 210ms cubic-bezier(.22, 1, .36, 1) forwards;
-  }
-
-  .mobile-settings-layer.closing {
-    pointer-events: none;
-  }
-
-  .mobile-settings-layer.closing::before {
-    animation: mobile-navigation-glass-out 150ms cubic-bezier(.22, 1, .36, 1) 40ms forwards;
+    animation: none;
   }
 
   .mobile-settings-backdrop {
@@ -4880,11 +4872,6 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     padding: 24px 28px calc(24px + env(safe-area-inset-bottom));
     opacity: 0;
     transform: translateY(-6px);
-    animation: mobile-navigation-content-in 190ms cubic-bezier(.22, 1, .36, 1) 70ms forwards;
-  }
-
-  .mobile-settings-layer.closing .mobile-settings-nav {
-    animation: mobile-navigation-content-out 150ms cubic-bezier(.22, 1, .36, 1) forwards;
   }
 
   .mobile-settings-nav > button {
@@ -4962,39 +4949,6 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     background: rgba(255, 255, 255, .06);
   }
 
-  @keyframes mobile-navigation-glass-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  @keyframes mobile-navigation-glass-out {
-    from { opacity: 1; }
-    to { opacity: 0; }
-  }
-
-  @keyframes mobile-navigation-content-in {
-    from { opacity: 0; transform: translateY(-6px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes mobile-navigation-content-out {
-    from { opacity: 1; transform: translateY(0); }
-    to { opacity: 0; transform: translateY(-4px); }
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mobile-settings-layer::before,
-  .mobile-settings-nav,
-  .mobile-settings-layer.closing .mobile-settings-nav {
-    animation: none !important;
-    opacity: 1;
-    transform: none;
-  }
-
-  .mobile-settings-layer.closing::before {
-    opacity: 0;
-  }
 }
 
 /* Shared mobile action-sheet material. The surface stays identical to the Header glass. */
@@ -5103,118 +5057,79 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
   }
 }
 
-/* The mobile navigation reveals as a solid surface below the persistent Header. */
+/* The mobile navigation is always mounted. One data attribute controls both
+   visibility and the reversible reveal, so the surface cannot disappear while
+   the header icon is still open. */
 @media (max-width: 767px) {
+  .mobile-settings-layer {
+    visibility: hidden;
+    pointer-events: none;
+    transition: visibility 0s linear 300ms;
+  }
+
+  .mobile-settings-layer[data-open="false"] {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .mobile-settings-layer[data-open="true"] {
+    visibility: visible;
+    pointer-events: auto;
+    transition: visibility 0s linear 0s;
+  }
+
   .mobile-settings-layer::before {
     inset: calc(58px + env(safe-area-inset-top)) 0 0;
     background: var(--bg-surface) !important;
-    backdrop-filter: blur(3px) !important;
-    -webkit-backdrop-filter: blur(3px) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     opacity: 1 !important;
-    clip-path: inset(0 0 100% 0);
+    clip-path: inset(0 0 100% 0) !important;
+    animation: none !important;
+    transition: clip-path 300ms cubic-bezier(.22, 1, .36, 1) !important;
     will-change: clip-path;
-    animation: mobile-navigation-surface-in 400ms cubic-bezier(.32, .72, 0, 1) forwards !important;
   }
 
-  .mobile-settings-layer.closing::before {
-    animation: mobile-navigation-surface-out 250ms cubic-bezier(.32, .72, 0, 1) 50ms forwards !important;
-  }
-
-  .mobile-settings-nav {
-    will-change: opacity, transform;
-    animation: mobile-navigation-content-in 280ms cubic-bezier(.22, 1, .36, 1) 100ms forwards !important;
-  }
-
-  .mobile-settings-layer.closing .mobile-settings-nav {
-    animation: mobile-navigation-content-out 150ms cubic-bezier(.22, 1, .36, 1) forwards !important;
-  }
-
-  @keyframes mobile-navigation-surface-in {
-    from { clip-path: inset(0 0 100% 0); }
-    to { clip-path: inset(0); }
-  }
-
-  @keyframes mobile-navigation-surface-out {
-    from { clip-path: inset(0); }
-    to { clip-path: inset(0 0 100% 0); }
-  }
-}
-
-@media (prefers-reduced-motion: reduce) and (max-width: 767px) {
-  .mobile-settings-layer::before {
-    animation: none !important;
+  .mobile-settings-layer[data-open="true"]::before {
     clip-path: inset(0) !important;
-  }
-
-  .mobile-settings-layer.closing::before {
-    clip-path: inset(0 0 100% 0) !important;
-  }
-}
-
-/* The mobile navigation is mounted closed first, then opened on the next frame.
-   Keeping the animation selectors state-specific prevents first-mount styles from
-   skipping the closed -> open transition. */
-@media (max-width: 767px) {
-  .mobile-settings-layer.mounted {
-    pointer-events: none;
-  }
-
-  .mobile-settings-layer.visible {
-    pointer-events: auto;
-  }
-
-  .mobile-settings-layer.closing {
-    pointer-events: none;
-  }
-
-  .mobile-settings-layer::before {
-    clip-path: inset(0 0 100% 0) !important;
-    animation: none !important;
-  }
-
-  .mobile-settings-layer.visible::before {
-    animation: mobile-navigation-surface-in 400ms cubic-bezier(.32, .72, 0, 1) forwards !important;
-  }
-
-  .mobile-settings-layer.closing::before {
-    animation: mobile-navigation-surface-out 250ms cubic-bezier(.32, .72, 0, 1) 50ms forwards !important;
+    transition-duration: 400ms !important;
   }
 
   .mobile-settings-layer .mobile-settings-nav {
     opacity: 0 !important;
-    transform: translateY(-6px) !important;
+    transform: translateY(-4px) !important;
     animation: none !important;
+    transition: opacity 150ms cubic-bezier(.22, 1, .36, 1), transform 150ms cubic-bezier(.22, 1, .36, 1) !important;
   }
 
-  .mobile-settings-layer.visible .mobile-settings-nav {
-    animation: mobile-navigation-content-in 280ms cubic-bezier(.22, 1, .36, 1) 100ms forwards !important;
-  }
-
-  .mobile-settings-layer.closing .mobile-settings-nav {
-    animation: mobile-navigation-content-out 150ms cubic-bezier(.22, 1, .36, 1) forwards !important;
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    transition-delay: 100ms !important;
+    transition-duration: 260ms !important;
   }
 }
 
 @media (prefers-reduced-motion: reduce) and (max-width: 767px) {
-  .mobile-settings-layer.visible::before {
-    animation: none !important;
+  .mobile-settings-layer,
+  .mobile-settings-layer[data-open="false"] {
+    transition-delay: 0s;
+  }
+
+  .mobile-settings-layer::before,
+  .mobile-settings-layer[data-open="true"]::before {
     clip-path: inset(0) !important;
+    transition: none !important;
   }
 
-  .mobile-settings-layer.visible .mobile-settings-nav {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-  }
-
-  .mobile-settings-layer.closing::before {
-    animation: none !important;
+  .mobile-settings-layer[data-open="false"]::before {
     clip-path: inset(0 0 100% 0) !important;
   }
 
-  .mobile-settings-layer.closing .mobile-settings-nav {
-    animation: none !important;
-    opacity: 0 !important;
-    transform: translateY(-4px) !important;
+  .mobile-settings-layer .mobile-settings-nav,
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 }
