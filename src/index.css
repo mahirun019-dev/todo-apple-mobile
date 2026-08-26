@@ -5813,3 +5813,189 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     min-height: 56px;
   }
 }
+
+/* PC form and modal tokens. Mobile keeps its existing control sizes and layout. */
+@media (min-width: 981px) {
+  :root {
+    --cf-pc-field-height: 48px;
+    --cf-pc-field-radius: 10px;
+    --cf-pc-field-padding: 15px;
+    --cf-pc-field-font-size: 15px;
+    --cf-pc-form-row-gap: 22px;
+    --cf-pc-segment-height: 56px;
+    --cf-pc-modal-radius: 16px;
+    --cf-pc-modal-header-height: 60px;
+    --cf-pc-modal-header-padding: 22px;
+    --cf-pc-modal-close-size: 40px;
+    --cf-pc-modal-border: rgba(0, 0, 0, 0.07);
+    --cf-pc-modal-divider: rgba(0, 0, 0, 0.07);
+    --cf-pc-modal-close-bg: #f1f2f3;
+    --cf-pc-settings-nav-hover: #f1f2f3;
+    --cf-pc-settings-nav-active: #e7e7e9;
+  }
+
+  [data-theme="dark"] {
+    --cf-pc-modal-border: rgba(255, 255, 255, 0.09);
+    --cf-pc-modal-divider: rgba(255, 255, 255, 0.08);
+    --cf-pc-modal-close-bg: #252a31;
+    --cf-pc-settings-nav-hover: #26292e;
+    --cf-pc-settings-nav-active: #34383f;
+  }
+
+  /* The workspace is independently scrollable, so keep the sidebar in the viewport. */
+  .career-app .sidebar {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100dvh;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .modal-layer .drawer,
+  .settings-drawer-panel {
+    border: 1px solid var(--cf-pc-modal-border);
+    border-radius: var(--cf-pc-modal-radius);
+  }
+
+  .modal-layer .drawer > header,
+  .settings-drawer-panel > header {
+    height: var(--cf-pc-modal-header-height);
+    min-height: var(--cf-pc-modal-header-height);
+    align-items: center;
+    margin: 0;
+    padding: 0 var(--cf-pc-modal-header-padding);
+    border-bottom: 1px solid var(--cf-pc-modal-divider);
+  }
+
+  .modal-layer .drawer > header h2,
+  .settings-drawer-panel > header h2 {
+    font-size: 19px;
+    font-weight: 600;
+  }
+
+  .modal-layer .drawer > header .close-button,
+  .settings-drawer-panel > header .close-button {
+    width: var(--cf-pc-modal-close-size);
+    height: var(--cf-pc-modal-close-size);
+    min-width: var(--cf-pc-modal-close-size);
+    min-height: var(--cf-pc-modal-close-size);
+    border: 1px solid var(--cf-pc-modal-border);
+    border-radius: 10px;
+    color: var(--text-secondary);
+    background: var(--cf-pc-modal-close-bg);
+  }
+
+  .modal-layer .drawer > header .close-button svg,
+  .settings-drawer-panel > header .close-button svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .modal-layer .form-grid {
+    column-gap: 16px;
+    row-gap: var(--cf-pc-form-row-gap);
+  }
+
+  .modal-layer .form-grid > label,
+  .settings-drawer-panel .settings-field {
+    gap: 8px;
+  }
+
+  .modal-layer input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  .modal-layer select,
+  .settings-drawer-panel input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  .settings-drawer-panel select {
+    width: 100%;
+    height: var(--cf-pc-field-height);
+    min-height: var(--cf-pc-field-height);
+    box-sizing: border-box;
+    padding: 0 var(--cf-pc-field-padding);
+    border-radius: var(--cf-pc-field-radius);
+    font-size: var(--cf-pc-field-font-size);
+    line-height: 1.25;
+  }
+
+  .modal-layer textarea,
+  .settings-drawer-panel textarea {
+    width: 100%;
+    min-height: 112px;
+    box-sizing: border-box;
+    padding: 12px var(--cf-pc-field-padding);
+    border-radius: var(--cf-pc-field-radius);
+    font-size: var(--cf-pc-field-font-size);
+    line-height: 1.45;
+  }
+
+  /* Segmented controls have their own stable height and never resize on selection. */
+  .modal-layer .mode-options > label,
+  .modal-layer .segmented-control > label > span {
+    height: var(--cf-pc-segment-height);
+    min-height: var(--cf-pc-segment-height);
+    box-sizing: border-box;
+    border-radius: var(--cf-pc-field-radius);
+  }
+
+  .settings-drawer-panel .settings-nav-list {
+    gap: 4px;
+  }
+
+  .settings-drawer-panel .settings-nav-item,
+  .settings-drawer-panel .settings-nav-item.is-active {
+    display: flex;
+    width: 100%;
+    height: 48px;
+    min-height: 48px;
+    align-items: center;
+    gap: 12px;
+    padding: 0 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .settings-drawer-panel .settings-nav-item:hover {
+    color: var(--text-primary);
+    background: var(--cf-pc-settings-nav-hover);
+  }
+
+  .settings-drawer-panel .settings-nav-item[aria-selected="true"] {
+    color: var(--text-primary);
+    background: var(--cf-pc-settings-nav-active);
+    font-weight: 600;
+  }
+
+  /* All Settings icons are Lucide stroke icons; never fill their path nodes. */
+  .settings-drawer-panel .settings-nav-item svg {
+    display: block;
+    width: 21px;
+    height: 21px;
+    flex: 0 0 21px;
+    color: currentColor;
+    fill: none !important;
+    stroke: currentColor !important;
+    stroke-width: 1.9;
+  }
+
+  .settings-drawer-panel .settings-nav-item svg * {
+    fill: none !important;
+    stroke: currentColor !important;
+  }
+
+  .settings-drawer-panel .settings-nav-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .settings-drawer-panel .settings-section {
+    gap: 20px;
+  }
+
+  .settings-drawer-panel .settings-stats {
+    gap: 12px;
+  }
+}
