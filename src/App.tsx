@@ -3665,7 +3665,7 @@ function MobileSettingsDrawer({
 function SettingsDrawer({ close, children, title }: { close: () => void; children: ReactNode; title: string }) {
   const [closing, setClosing] = useState(false);
   const startX = useRef<number | null>(null);
-  const dismiss = () => { if (closing) return; setClosing(true); window.setTimeout(close, 260); };
+  const dismiss = () => { if (closing) return; setClosing(true); window.setTimeout(close, 160); };
   useEffect(() => { const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") dismiss(); }; document.addEventListener("keydown", onKey); document.body.classList.add("settings-drawer-open"); return () => { document.removeEventListener("keydown", onKey); document.body.classList.remove("settings-drawer-open"); }; }, []);
   return <div className={`settings-drawer-layer ${closing ? "closing" : ""}`}><button className="settings-drawer-backdrop" onClick={dismiss} aria-label="Close settings"/><aside className="settings-drawer-panel" role="dialog" aria-modal="true" aria-label={title} onTouchStart={(e) => { startX.current = e.touches[0].clientX; }} onTouchEnd={(e) => { if (startX.current !== null && e.changedTouches[0].clientX - startX.current > 70) dismiss(); startX.current = null; }}><header><h2>{title}</h2><CloseButton onClick={dismiss} label="Close settings" /></header><div className="settings-drawer-scroll">{children}</div></aside></div>;
 }

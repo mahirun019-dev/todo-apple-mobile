@@ -4604,9 +4604,9 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     align-items: center;
     justify-content: center;
     padding: 50px 60px;
-    background: rgba(20, 24, 30, 0.22);
-    backdrop-filter: blur(12px) saturate(115%);
-    -webkit-backdrop-filter: blur(12px) saturate(115%);
+    background: rgba(20, 24, 30, 0.16);
+    backdrop-filter: blur(6px) saturate(105%);
+    -webkit-backdrop-filter: blur(6px) saturate(105%);
   }
 
   .settings-drawer-backdrop {
@@ -4629,6 +4629,26 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     background: rgba(255, 255, 255, 0.97);
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.20);
     overflow: hidden;
+    opacity: 1;
+    transform: scale(1);
+    transform-origin: center;
+    animation: settings-modal-enter 180ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    will-change: opacity, transform;
+  }
+
+  .settings-drawer-layer.closing .settings-drawer-panel {
+    animation: settings-modal-exit 150ms ease-in both;
+  }
+
+  .settings-drawer-backdrop {
+    opacity: 1;
+    animation: settings-backdrop-enter 160ms ease-out both;
+    transition: none;
+  }
+
+  .settings-drawer-layer.closing .settings-drawer-backdrop {
+    opacity: 0;
+    animation: settings-backdrop-exit 150ms ease-in both;
   }
 
   .settings-drawer-panel > header {
@@ -4746,9 +4766,9 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
   }
 
   [data-theme="dark"] .settings-drawer-layer {
-    background: rgba(0, 0, 0, 0.28);
-    backdrop-filter: blur(12px) saturate(110%);
-    -webkit-backdrop-filter: blur(12px) saturate(110%);
+    background: rgba(0, 0, 0, 0.20);
+    backdrop-filter: blur(6px) saturate(105%);
+    -webkit-backdrop-filter: blur(6px) saturate(105%);
   }
 
   [data-theme="dark"] .settings-drawer-panel {
@@ -4778,5 +4798,48 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
   [data-theme="dark"] .settings-drawer-panel .settings-nav-item[aria-selected="true"] {
     color: var(--text-primary);
     background: rgba(255, 255, 255, 0.07);
+  }
+}
+
+@keyframes settings-modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes settings-modal-exit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+}
+
+@keyframes settings-backdrop-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes settings-backdrop-exit {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@media (min-width: 981px) and (prefers-reduced-motion: reduce) {
+  .settings-drawer-panel,
+  .settings-drawer-layer.closing .settings-drawer-panel,
+  .settings-drawer-backdrop,
+  .settings-drawer-layer.closing .settings-drawer-backdrop {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }
