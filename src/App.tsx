@@ -2373,7 +2373,7 @@ function PrimaryActionButton({
     </button>
   );
 }
-function Empty({ t, kind = "general", open }: { t: any; kind?: "company" | "schedule" | "materials" | "general"; open?: () => void }) {
+function Empty({ t, kind = "general", open, onPointerDown }: { t: any; kind?: "company" | "schedule" | "materials" | "general"; open?: () => void; onPointerDown?: PointerEventHandler<HTMLButtonElement> }) {
   const copy: Record<string, [string, string, string]> = t.language === "言語" ? { company: ["企業がまだ登録されていません", "応募先企業を追加して、選考状況や締切をまとめて管理できます。", t.addCompany], schedule: ["日程がまだありません", "説明会や面接の予定を登録すると、次の行動が見やすくなります。", t.addEvent], materials: ["資料・面接記録がまだありません", "ESや面接記録を登録して、就活の準備を整理しましょう。", t.addRecord], general: [t.noData, "ここから就活の記録を追加できます。", t.new] } : t.language === "Language" ? { company: ["No companies yet", "Add companies to keep applications, stages, and deadlines together.", t.addCompany], schedule: ["No schedule yet", "Add briefings and interviews to make your next action clear.", t.addEvent], materials: ["No materials or interview records yet", "Add ES, resumes, and interview notes to organize your search.", t.addRecord], general: [t.noData, "Start by adding your first career record.", t.new] } : { company: ["还没有企业", "添加应聘企业，集中管理选考进度和截止时间。", t.addCompany], schedule: ["还没有日程", "添加说明会或面试安排，让下一步更清晰。", t.addEvent], materials: ["还没有资料或面试记录", "添加 ES、履历书或面试记录，整理你的就活准备。", t.addRecord], general: [t.noData, "从这里开始添加你的就活记录。", t.new] };
   if (t.language === "言語") copy.schedule[1] = "説明会、筆記試験、面接などの予定を追加して、選考スケジュールを管理しましょう。";
   const [title, description, action] = copy[kind];
@@ -2382,7 +2382,7 @@ function Empty({ t, kind = "general", open }: { t: any; kind?: "company" | "sche
       <BriefcaseBusiness aria-hidden="true" />
       <strong>{title}</strong>
       <p>{description}</p>
-      {open && <PrimaryActionButton onClick={open} className="empty-action"><Plus />{action}</PrimaryActionButton>}
+      {open && <PrimaryActionButton onClick={open} onPointerDown={onPointerDown} className="empty-action"><Plus />{action}</PrimaryActionButton>}
     </div>
   );
 }
@@ -2447,7 +2447,7 @@ function RecordActionMenu({
       <section className="record-action-surface">
         {isMobile && <header className="record-action-header"><h2>{title}</h2><CloseButton className="record-action-close" onClick={close} label={cancelLabel} /></header>}
         <div className="record-action-items">
-          {actions.map(({ label, icon: Icon, choose }, index) => <button type="button" role="menuitem" tabIndex={open ? 0 : -1} key={label} ref={(button) => { actionRefs.current[index] = button; }} onClick={choose}><Icon aria-hidden="true" /><span>{label}</span>{!isMobile && <ChevronRight aria-hidden="true" />}</button>)}
+          {actions.map(({ label, icon: Icon, choose }, index) => <button type="button" role="menuitem" tabIndex={open ? 0 : -1} key={label} ref={(button) => { actionRefs.current[index] = button; }} onClick={choose}><Icon aria-hidden="true" /><span>{label}</span></button>)}
         </div>
         {isMobile && <button type="button" className="record-action-cancel" onClick={close}>{cancelLabel}</button>}
       </section>
@@ -3256,7 +3256,7 @@ function Materials({
   const materials = data.materials.filter((x: Material) => (filter === "all" || filter === "material" || filter === "incomplete" || filter === "completed") && (filter !== "material" || x.category === "material") && matchesStatus(!!x.completed));
   const interviews = data.interviews.filter((x: InterviewRecord) => (filter === "all" || filter === "interview" || filter === "incomplete" || filter === "completed") && (filter !== "interview" || x.category === "interview") && matchesStatus(!!x.result));
   const preps = data.preparations.filter((x: Preparation) => (filter === "all" || filter === "preparation" || filter === "incomplete" || filter === "completed") && (filter !== "preparation" || x.category === "preparation") && matchesStatus(x.completed));
-  const openCreateRecordPicker = () => setRecordPickerOpen(true);
+  const toggleCreateRecordPicker = () => setRecordPickerOpen((current: boolean) => !current);
   const chooseCreateRecord = (kind: CreateType) => {
     setRecordPickerOpen(false);
     open(kind);
@@ -3268,7 +3268,7 @@ function Materials({
           <h1>{t.materials}</h1>
           <p>{t.materialsSub}</p>
         </div>
-        {(materials.length > 0 || interviews.length > 0 || preps.length > 0) && <PrimaryActionButton onClick={openCreateRecordPicker} onPointerDown={(event) => event.stopPropagation()}><Plus />{t.addRecord}</PrimaryActionButton>}
+        {(materials.length > 0 || interviews.length > 0 || preps.length > 0) && <PrimaryActionButton onClick={toggleCreateRecordPicker} onPointerDown={(event) => event.stopPropagation()}><Plus />{t.addRecord}</PrimaryActionButton>}
       </div>
       <div className="filter-bar entity-card">
         {[
@@ -3333,7 +3333,7 @@ function Materials({
           </Swipe>
         ))}
         {!materials.length && !interviews.length && !preps.length && <>
-          <Empty t={t} kind="materials" open={openCreateRecordPicker} />
+          <Empty t={t} kind="materials" open={toggleCreateRecordPicker} onPointerDown={(event) => event.stopPropagation()} />
         </>}
       </div>
       <CreateRecordPicker open={recordPickerOpen} t={t} close={() => setRecordPickerOpen(false)} choose={chooseCreateRecord} />
