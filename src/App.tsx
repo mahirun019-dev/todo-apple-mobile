@@ -2373,7 +2373,7 @@ function PrimaryActionButton({
     </button>
   );
 }
-function Empty({ t, kind = "general", open, onPointerDown }: { t: any; kind?: "company" | "schedule" | "materials" | "general"; open?: () => void; onPointerDown?: PointerEventHandler<HTMLButtonElement> }) {
+function Empty({ t, kind = "general", open, onPointerDown, actionMenu }: { t: any; kind?: "company" | "schedule" | "materials" | "general"; open?: () => void; onPointerDown?: PointerEventHandler<HTMLButtonElement>; actionMenu?: ReactNode }) {
   const copy: Record<string, [string, string, string]> = t.language === "言語" ? { company: ["企業がまだ登録されていません", "応募先企業を追加して、選考状況や締切をまとめて管理できます。", t.addCompany], schedule: ["日程がまだありません", "説明会や面接の予定を登録すると、次の行動が見やすくなります。", t.addEvent], materials: ["資料・面接記録がまだありません", "ESや面接記録を登録して、就活の準備を整理しましょう。", t.addRecord], general: [t.noData, "ここから就活の記録を追加できます。", t.new] } : t.language === "Language" ? { company: ["No companies yet", "Add companies to keep applications, stages, and deadlines together.", t.addCompany], schedule: ["No schedule yet", "Add briefings and interviews to make your next action clear.", t.addEvent], materials: ["No materials or interview records yet", "Add ES, resumes, and interview notes to organize your search.", t.addRecord], general: [t.noData, "Start by adding your first career record.", t.new] } : { company: ["还没有企业", "添加应聘企业，集中管理选考进度和截止时间。", t.addCompany], schedule: ["还没有日程", "添加说明会或面试安排，让下一步更清晰。", t.addEvent], materials: ["还没有资料或面试记录", "添加 ES、履历书或面试记录，整理你的就活准备。", t.addRecord], general: [t.noData, "从这里开始添加你的就活记录。", t.new] };
   if (t.language === "言語") copy.schedule[1] = "説明会、筆記試験、面接などの予定を追加して、選考スケジュールを管理しましょう。";
   const [title, description, action] = copy[kind];
@@ -2382,7 +2382,10 @@ function Empty({ t, kind = "general", open, onPointerDown }: { t: any; kind?: "c
       <BriefcaseBusiness aria-hidden="true" />
       <strong>{title}</strong>
       <p>{description}</p>
-      {open && <PrimaryActionButton onClick={open} onPointerDown={onPointerDown} className="empty-action"><Plus />{action}</PrimaryActionButton>}
+      {open && actionMenu ? <div className="record-action-wrap empty-action-wrap">
+        <PrimaryActionButton onClick={open} onPointerDown={onPointerDown} className="empty-action"><Plus />{action}</PrimaryActionButton>
+        {actionMenu}
+      </div> : open && <PrimaryActionButton onClick={open} onPointerDown={onPointerDown} className="empty-action"><Plus />{action}</PrimaryActionButton>}
     </div>
   );
 }
@@ -3268,7 +3271,10 @@ function Materials({
           <h1>{t.materials}</h1>
           <p>{t.materialsSub}</p>
         </div>
-        {(materials.length > 0 || interviews.length > 0 || preps.length > 0) && <PrimaryActionButton onClick={toggleCreateRecordPicker} onPointerDown={(event) => event.stopPropagation()}><Plus />{t.addRecord}</PrimaryActionButton>}
+        {(materials.length > 0 || interviews.length > 0 || preps.length > 0) && <div className="record-action-wrap">
+          <PrimaryActionButton onClick={toggleCreateRecordPicker} onPointerDown={(event) => event.stopPropagation()}><Plus />{t.addRecord}</PrimaryActionButton>
+          <CreateRecordPicker open={recordPickerOpen} t={t} close={() => setRecordPickerOpen(false)} choose={chooseCreateRecord} />
+        </div>}
       </div>
       <div className="filter-bar entity-card">
         {[
@@ -3333,10 +3339,15 @@ function Materials({
           </Swipe>
         ))}
         {!materials.length && !interviews.length && !preps.length && <>
-          <Empty t={t} kind="materials" open={toggleCreateRecordPicker} onPointerDown={(event) => event.stopPropagation()} />
+          <Empty
+            t={t}
+            kind="materials"
+            open={toggleCreateRecordPicker}
+            onPointerDown={(event) => event.stopPropagation()}
+            actionMenu={<CreateRecordPicker open={recordPickerOpen} t={t} close={() => setRecordPickerOpen(false)} choose={chooseCreateRecord} />}
+          />
         </>}
       </div>
-      <CreateRecordPicker open={recordPickerOpen} t={t} close={() => setRecordPickerOpen(false)} choose={chooseCreateRecord} />
     </>
   );
 }

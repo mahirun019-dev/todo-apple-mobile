@@ -3824,11 +3824,7 @@ option { color: var(--text-primary); background: var(--bg-input); }
 .company-card-body span { color: #59616b; font-size: 12px; }
 .recruitment-link { display: inline-flex; width: fit-content; align-items: center; gap: 6px; color: #24262b; font-weight: 650; }
 .recruitment-link svg { width: 16px; height: 16px; }
-.record-action-wrap { position: relative; }
-.record-action-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 5; display: grid; width: 220px; overflow: hidden; border: 1px solid #d8dce1; border-radius: 10px; background: #fff; box-shadow: 0 12px 24px rgba(20,25,30,.12); }
-.record-action-menu button { min-height: 42px; padding: 0 14px; border: 0; border-top: 1px solid #eef0f2; color: #24262b; background: #fff; text-align: left; }
-.record-action-menu button:first-child { border-top: 0; }
-.record-action-menu button:hover { background: #f3f4f6; }
+.record-action-wrap { position: relative; display: inline-flex; }
 .selection-empty { display: grid; justify-items: start; gap: 8px; padding: 24px 0; }
 .selection-empty svg { width: 28px; height: 28px; color: #7b838d; }
 .selection-empty strong { color: #24262b; }
@@ -3839,9 +3835,7 @@ option { color: var(--text-primary); background: var(--bg-input); }
 .interest-stars button:focus-visible { outline: 2px solid #24262b; outline-offset: 2px; border-radius: 4px; }
 .interest-stars span { margin-left: 8px; color: #68717b; font-size: 13px; }
 [data-theme="dark"] .company-toolbar input,
-[data-theme="dark"] .company-toolbar select,
-[data-theme="dark"] .record-action-menu,
-[data-theme="dark"] .record-action-menu button { border-color: #424750; color: #f2f2f2; background: #242424; }
+[data-theme="dark"] .company-toolbar select { border-color: #424750; color: #f2f2f2; background: #242424; }
 [data-theme="dark"] .company-card-body p,
 [data-theme="dark"] .company-card-body span,
 [data-theme="dark"] .selection-empty p,
@@ -6570,6 +6564,11 @@ html[data-theme="dark"] #root {
 
 /* Shared record actions: one definition, responsive presentation. */
 .record-action-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 5;
+  display: grid;
   width: 320px;
   overflow: hidden;
   border: 1px solid var(--border-color);
