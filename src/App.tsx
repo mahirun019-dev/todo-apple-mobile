@@ -27,6 +27,7 @@ import {
   CalendarSync,
   CalendarClock,
   Check,
+  ChevronLeft,
   ChevronRight,
   ChevronDown,
   ChevronUp,
@@ -530,6 +531,7 @@ const tr = {
     deadlines: "本周截止",
     funnel: "选考进度",
     monthSchedule: "本月日程", monthNoEvents: "本月暂无日程", featuredCompanies: "重点企业", viewAllCompanies: "查看全部企业",
+    previousMonth: "上个月", nextMonth: "下个月", viewAllSchedules: "查看全部日程",
     results: "结果待办列表",
     actionRequired: "待处理", actionRequiredList: "待处理事项", viewAll: "查看全部",
     actionDeadline: "截止", actionSchedule: "日程", actionWaiting: "等待结果", actionPreparation: "准备", actionMaterial: "材料",
@@ -695,6 +697,7 @@ const tr = {
     deadlines: "今週の締切",
     funnel: "選考進捗",
     monthSchedule: "今月の予定", monthNoEvents: "今月の予定はありません", featuredCompanies: "注目企業", viewAllCompanies: "すべての企業を見る",
+    previousMonth: "前の月", nextMonth: "次の月", viewAllSchedules: "すべての日程を見る",
     results: "結果待ち一覧",
     actionRequired: "要対応", actionRequiredList: "要対応一覧", viewAll: "すべて見る",
     actionDeadline: "締切", actionSchedule: "日程", actionWaiting: "結果待ち", actionPreparation: "準備", actionMaterial: "書類",
@@ -860,6 +863,7 @@ const tr = {
     deadlines: "Due this week",
     funnel: "Application funnel",
     monthSchedule: "This month's schedule", monthNoEvents: "No events this month", featuredCompanies: "Featured companies", viewAllCompanies: "View all companies",
+    previousMonth: "Previous month", nextMonth: "Next month", viewAllSchedules: "View all schedules",
     results: "Waiting for result",
     actionRequired: "Needs attention", actionRequiredList: "Needs attention", viewAll: "View all",
     actionDeadline: "Deadline", actionSchedule: "Schedule", actionWaiting: "Waiting", actionPreparation: "Preparation", actionMaterial: "Documents",
@@ -1380,13 +1384,23 @@ export default function App() {
     [deleteEvent, setDeleteEvent] = useState<Event>(),
     [filter, setFilter] = useState("all"),
     [companyFilterOpen, setCompanyFilterOpen] = useState(false),
+    [companyRecordMenuOpen, setCompanyRecordMenuOpen] = useState(false),
     [toast, setToast] = useState<{ text: string; undo: () => void }>(),
     [icon, setIcon] = useState(() => localStorage.getItem(ICON) || "");
   const json = useRef<HTMLInputElement>(null),
-    iconRef = useRef<HTMLInputElement>(null);
+    iconRef = useRef<HTMLInputElement>(null),
+    workspaceRef = useRef<HTMLElement>(null),
+    companyListScrollTopRef = useRef(0),
+    restoreCompanyListScrollRef = useRef(false);
   const firstDataRender = useRef(true);
   const t = tr[locale];
   const navigate = (nextView: View, nextFilter?: CompanyRouteFilter | ScheduleRouteFilter, nextCompanyId?: string) => {
+    if (view === "companies" && !selected && nextView === "companies" && nextCompanyId) {
+      companyListScrollTopRef.current = Math.max(workspaceRef.current?.scrollTop || 0, window.scrollY);
+    }
+    if (view === "companies" && selected && nextView === "companies" && !nextCompanyId) {
+      restoreCompanyListScrollRef.current = true;
+    }
     const params = new URLSearchParams();
     params.set("view", nextView);
     if (nextFilter) params.set("filter", nextFilter);
@@ -1402,18 +1416,46 @@ export default function App() {
     const route = readRouteState();
     navigate("companies", route.companyFilter || undefined, companyId);
   };
+  const openCompany = (companyId: string) => selectCompany(companyId);
+  const backToCompanies = () => {
+    const route = readRouteState();
+    navigate("companies", route.companyFilter || undefined);
+  };
   useEffect(() => {
     const onPopState = () => {
       const route = readRouteState();
+      if (route.view === "companies" && route.selectedCompanyId) {
+        restoreCompanyListScrollRef.current = false;
+      } else if (route.view === "companies") {
+        restoreCompanyListScrollRef.current = true;
+      }
       setViewState(route.view);
       setCompanyFilter(route.companyFilter);
       setScheduleFilter(route.scheduleFilter);
       setSelected(route.selectedCompanyId || undefined);
+      setCompanyRecordMenuOpen(false);
+      setCompanyFilterOpen(false);
+      setRecordPickerOpen(false);
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
-  const hasOpenOverlay = Boolean(form || settings || confirm || deleteEvent || recordPickerOpen || companyFilterOpen);
+  useEffect(() => {
+    if (view !== "companies") return;
+    const frame = requestAnimationFrame(() => {
+      if (selected) {
+        workspaceRef.current?.scrollTo({ top: 0, behavior: "auto" });
+        window.scrollTo(0, 0);
+      } else if (restoreCompanyListScrollRef.current) {
+        const top = companyListScrollTopRef.current;
+        workspaceRef.current?.scrollTo({ top, behavior: "auto" });
+        window.scrollTo(0, top);
+        restoreCompanyListScrollRef.current = false;
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [view, selected]);
+  const hasOpenOverlay = Boolean(form || settings || confirm || deleteEvent || recordPickerOpen || companyFilterOpen || companyRecordMenuOpen);
   useEffect(() => {
     if (hasOpenOverlay) document.body.dataset.overlayOpen = "true";
     else delete document.body.dataset.overlayOpen;
@@ -1899,7 +1941,7 @@ export default function App() {
           <strong className="mobile-header-title">CareerFlow</strong>
           <span className="mobile-header-action-slot" aria-hidden="true" />
         </header>
-        <main className="workspace">
+        <main ref={workspaceRef} className="workspace">
           {view === "dashboard" && (
             <Dashboard
               {...{
@@ -1917,6 +1959,7 @@ export default function App() {
                 focusToggle,
                 open,
                 navigate,
+                openCompany,
                 setView,
                 setEditEvent,
                 setForm,
@@ -1931,7 +1974,6 @@ export default function App() {
                 data,
                 byId,
                 selected,
-                setSelected: selectCompany,
                 open,
                 setEditCompany,
                 setEditEvent,
@@ -1942,6 +1984,10 @@ export default function App() {
                 clearCompanyFilter: () => navigate("companies"),
                 filterSheetOpen: companyFilterOpen,
                 setFilterSheetOpen: setCompanyFilterOpen,
+                recordMenuOpen: companyRecordMenuOpen,
+                setRecordMenuOpen: setCompanyRecordMenuOpen,
+                onBack: backToCompanies,
+                onOpenCompany: openCompany,
               }}
             />
           )}
@@ -2337,6 +2383,76 @@ function Empty({ t, kind = "general", open }: { t: any; kind?: "company" | "sche
     </div>
   );
 }
+type RecordAction = {
+  label: string;
+  icon: any;
+  choose: () => void;
+};
+
+function RecordActionMenu({
+  open,
+  title,
+  actions,
+  cancelLabel,
+  close,
+}: {
+  open: boolean;
+  title: string;
+  actions: RecordAction[];
+  cancelLabel: string;
+  close: () => void;
+}) {
+  const isMobile = useMediaQuery("(max-width: 760px)");
+  const menuRef = useRef<HTMLDivElement>(null);
+  const actionRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        close();
+        return;
+      }
+      if (!menuRef.current || !["ArrowDown", "ArrowUp"].includes(event.key)) return;
+      const current = document.activeElement;
+      const index = actionRefs.current.findIndex((button) => button === current);
+      if (index < 0) return;
+      event.preventDefault();
+      const next = event.key === "ArrowDown"
+        ? (index + 1) % actionRefs.current.length
+        : (index - 1 + actionRefs.current.length) % actionRefs.current.length;
+      actionRefs.current[next]?.focus();
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) close();
+    };
+    const body = document.body;
+    const previousOverflow = body.style.overflow;
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("pointerdown", onPointerDown);
+    if (isMobile) body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("pointerdown", onPointerDown);
+      if (isMobile) body.style.overflow = previousOverflow;
+    };
+  }, [close, isMobile, open]);
+  if (!open) return null;
+  const content = (
+    <div ref={menuRef} className={`record-action-menu${isMobile ? " record-action-menu-mobile" : ""}`} role="menu" aria-label={title}>
+      {isMobile && <button type="button" className="record-action-backdrop" aria-label={cancelLabel} onClick={close} />}
+      <section className="record-action-surface">
+        <header className="record-action-header"><h2>{title}</h2>{isMobile && <CloseButton className="record-action-close" onClick={close} label={cancelLabel} />}</header>
+        <div className="record-action-items">
+          {actions.map(({ label, icon: Icon, choose }, index) => <button type="button" role="menuitem" key={label} ref={(button) => { actionRefs.current[index] = button; }} onClick={choose}><Icon aria-hidden="true" /><span>{label}</span>{!isMobile && <ChevronRight aria-hidden="true" />}</button>)}
+        </div>
+        {isMobile && <button type="button" className="record-action-cancel" onClick={close}>{cancelLabel}</button>}
+      </section>
+    </div>
+  );
+  return isMobile ? createPortal(content, document.body) : content;
+}
+
 function CreateRecordPicker({
   t,
   close,
@@ -2346,16 +2462,24 @@ function CreateRecordPicker({
   close: () => void;
   choose: (kind: CreateType) => void;
 }) {
-  return (
-    <Modal title={t.addRecord} close={close} className="record-add-sheet">
-      <div className="create-record-picker" role="menu" aria-label={t.addRecord}>
-        <button type="button" onClick={() => choose("es")} role="menuitem"><FileJson />{t.addMaterial}</button>
-        <button type="button" onClick={() => choose("interview")} role="menuitem"><BriefcaseBusiness />{t.addInterview}</button>
-        <button type="button" onClick={() => choose("preparation")} role="menuitem"><Target />{t.addPrep}</button>
-        <button type="button" className="picker-cancel" onClick={close}>{t.cancel}</button>
-      </div>
-    </Modal>
-  );
+  return <RecordActionMenu
+    open
+    title={t.addRecord}
+    cancelLabel={t.cancel}
+    close={close}
+    actions={[
+      { label: t.addMaterial, icon: FileJson, choose: () => choose("es") },
+      { label: t.addInterview, icon: BriefcaseBusiness, choose: () => choose("interview") },
+      { label: t.addPrep, icon: Target, choose: () => choose("preparation") },
+    ]}
+  />;
+}
+
+function BackNavigation({ label, onClick }: { label: string; onClick: () => void }) {
+  return <button type="button" className="back-navigation" onClick={onClick}>
+    <ArrowLeft aria-hidden="true" />
+    <span>{label}</span>
+  </button>;
 }
 function Dashboard({
   t,
@@ -2372,10 +2496,17 @@ function Dashboard({
   focusToggle,
   open,
   navigate,
+  openCompany,
   setView,
   setEditEvent,
   setForm,
 }: any) {
+  const initialMonth = new Date();
+  const [displayedMonth, setDisplayedMonth] = useState({ year: initialMonth.getFullYear(), month: initialMonth.getMonth() });
+  const shiftMonth = (offset: number) => setDisplayedMonth((current) => {
+    const next = new Date(current.year, current.month + offset, 1);
+    return { year: next.getFullYear(), month: next.getMonth() };
+  });
   const openFunnel = (stage: FunnelStage) => {
     localStorage.setItem("careerflow-company-stage-filter", stage);
     setView("companies");
@@ -2476,9 +2607,8 @@ function Dashboard({
       ))}
     </div>
   </section>;
-  const now = new Date();
-  const monthYear = now.getFullYear();
-  const monthIndex = now.getMonth();
+  const monthYear = displayedMonth.year;
+  const monthIndex = displayedMonth.month;
   const monthPrefix = `${monthYear}-${String(monthIndex + 1).padStart(2, "0")}`;
   const daysInMonth = new Date(monthYear, monthIndex + 1, 0).getDate();
   const firstWeekday = new Date(monthYear, monthIndex, 1).getDay();
@@ -2491,8 +2621,13 @@ function Dashboard({
     if (!Number.isInteger(day) || day < 1 || day > daysInMonth) return;
     monthEventDays.set(day, [...(monthEventDays.get(day) || []), event]);
   });
+  const monthLabel = new Intl.DateTimeFormat(calendarLocale, { month: "long", year: "numeric" }).format(new Date(monthYear, monthIndex, 1));
   const monthModule = <section className="entity-card home-month-module">
-    <Title action={<button type="button" className="home-module-link" onClick={() => setView("schedule")}><span>{new Intl.DateTimeFormat(calendarLocale, { month: "long" }).format(new Date(monthYear, monthIndex, 1))}</span><ChevronRight aria-hidden="true" /></button>}>{t.monthSchedule}</Title>
+    <Title action={<div className="home-month-controls">
+      <button type="button" onClick={() => shiftMonth(-1)} aria-label={t.previousMonth}><ChevronLeft aria-hidden="true" /></button>
+      <span>{monthLabel}</span>
+      <button type="button" onClick={() => shiftMonth(1)} aria-label={t.nextMonth}><ChevronRight aria-hidden="true" /></button>
+    </div>}>{t.monthSchedule}</Title>
     <div className="home-month-calendar" aria-label={t.monthSchedule}>
       <div className="home-month-weekdays">{weekdayLabels.map((label, index) => <span key={`${label}-${index}`}>{label}</span>)}</div>
       <div className="home-month-grid">
@@ -2501,11 +2636,16 @@ function Dashboard({
           const day = index + 1;
           const eventsForDay = monthEventDays.get(day) || [];
           const hasEvents = eventsForDay.length > 0;
-          return <button type="button" className={`home-month-day${hasEvents ? " has-events" : ""}`} key={day} disabled={!hasEvents} onClick={() => setView("schedule")} aria-label={`${monthYear}/${monthIndex + 1}/${day}${hasEvents ? ` ${eventsForDay.length}` : ""}`}><span>{day}</span>{hasEvents && <i style={{ background: byId[eventsForDay[0].companyId || ""]?.color || "var(--accent)" }} />}</button>;
+          const today = new Date();
+          const isToday = today.getFullYear() === monthYear && today.getMonth() === monthIndex && today.getDate() === day;
+          return <button type="button" className={`home-month-day${hasEvents ? " has-events" : ""}${isToday ? " is-today" : ""}`} key={day} disabled={!hasEvents} onClick={() => setView("schedule")} aria-label={`${monthYear}/${monthIndex + 1}/${day}${hasEvents ? ` ${eventsForDay.length}` : ""}`}><span>{day}</span>{hasEvents && <i style={{ background: byId[eventsForDay[0].companyId || ""]?.color || "var(--accent)" }} />}</button>;
         })}
       </div>
     </div>
     {!monthEvents.length && <p className="home-month-empty">{t.monthNoEvents}</p>}
+    <button type="button" className="home-month-view-all text-button" onClick={() => setView("schedule")}>
+      {t.viewAllSchedules}<ChevronRight aria-hidden="true" />
+    </button>
   </section>;
   const featuredCandidates = data.companies.map((company: Company) => ({
     company,
@@ -2519,7 +2659,7 @@ function Dashboard({
   const featuredModule = featuredCandidates.length ? <section className="entity-card home-featured-module">
     <Title>{t.featuredCompanies}</Title>
     <div className="home-featured-list">
-      {featuredCandidates.map(({ company, nextEvent }: any) => <button type="button" className="home-featured-row" key={company.id} onClick={() => navigate("companies", undefined, company.id)}>
+      {featuredCandidates.map(({ company, nextEvent }: any) => <button type="button" className="home-featured-row" key={company.id} onClick={() => openCompany(company.id)}>
         <span className="home-featured-interest">{formatInterest(company)}</span>
         <span className="home-featured-copy"><strong>{company.name}</strong><small>{stageDisplayLabel(company.stage, t)}{nextEvent ? ` · ${whenForLocale(nextEvent.startsAt, t)}` : ""}</small></span>
         <ChevronRight aria-hidden="true" />
@@ -2759,7 +2899,6 @@ function Companies({
   data,
   byId,
   selected,
-  setSelected,
   open,
   setEditCompany,
   setEditEvent,
@@ -2770,14 +2909,19 @@ function Companies({
   clearCompanyFilter,
   filterSheetOpen,
   setFilterSheetOpen,
+  recordMenuOpen,
+  setRecordMenuOpen,
+  onBack,
+  onOpenCompany,
 }: any) {
   const co = selected ? byId[selected] : undefined;
   const [query, setQuery] = useState("");
   const [stageFilter, setStageFilter] = useState(() => localStorage.getItem("careerflow-company-stage-filter") || "all");
-  const [sortBy, setSortBy] = useState<CompanySort>(() => data.preferences?.customize?.companySort || "updated");
+  const initialSort = localStorage.getItem("careerflow-company-sort");
+  const persistedSort = ["updated", "event", "interest", "name"].includes(initialSort || "") ? initialSort as CompanySort : data.preferences?.customize?.companySort || "updated";
+  const [sortBy, setSortBy] = useState<CompanySort>(persistedSort);
   const [draftStageFilter, setDraftStageFilter] = useState("all");
-  const [draftSortBy, setDraftSortBy] = useState<CompanySort>(() => data.preferences?.customize?.companySort || "updated");
-  const [recordMenu, setRecordMenu] = useState(false);
+  const [draftSortBy, setDraftSortBy] = useState<CompanySort>(persistedSort);
   useEffect(() => {
     if (!filterSheetOpen) return;
     const scrollY = window.scrollY;
@@ -2796,6 +2940,7 @@ function Companies({
     };
   }, [filterSheetOpen]);
   useEffect(() => { localStorage.setItem("careerflow-company-stage-filter", stageFilter); }, [stageFilter]);
+  useEffect(() => { localStorage.setItem("careerflow-company-sort", sortBy); }, [sortBy]);
   useEffect(() => {
     const defaultSort = data.preferences?.customize?.companySort || "updated";
     setSortBy(defaultSort);
@@ -2813,9 +2958,7 @@ function Companies({
       <>
         <div className="page-head company-detail-page-head">
           <div>
-            <button className="back" onClick={() => setSelected(undefined)}>
-              ‹ {t.companies}
-            </button>
+            <BackNavigation label={t.companies} onClick={onBack} />
             <h1>{co.name}</h1>
             <p>{metadata.length ? metadata.join(" · ") : t.notSet}</p>
           </div>
@@ -2879,14 +3022,20 @@ function Companies({
               </div> : <p className="company-detail-muted">{t.noFutureSchedules}</p>}
             </section>
             <Title action={<div className="record-action-wrap">
-              <button className="primary" onClick={() => setRecordMenu(!recordMenu)}><Plus />{t.addRecord}</button>
-              {recordMenu && <div className="record-action-menu">
-                <button onClick={() => { setRecordMenu(false); open("es"); }}>{t.addMaterial}</button>
-                <button onClick={() => { setRecordMenu(false); open("interview"); }}>{t.addInterview}</button>
-                <button onClick={() => { setRecordMenu(false); open("schedule"); }}>{t.addTest}</button>
-                <button onClick={() => { setRecordMenu(false); open("schedule"); }}>{t.addBriefing}</button>
-                <button onClick={() => { setRecordMenu(false); open("schedule"); }}>{t.addOtherRecord}</button>
-              </div>}
+              <button className="primary" onClick={() => setRecordMenuOpen(!recordMenuOpen)}><Plus />{t.addRecord}</button>
+              <RecordActionMenu
+                open={recordMenuOpen}
+                title={t.addRecord}
+                cancelLabel={t.cancel}
+                close={() => setRecordMenuOpen(false)}
+                actions={[
+                  { label: t.addMaterial, icon: FileJson, choose: () => { setRecordMenuOpen(false); open("es"); } },
+                  { label: t.addInterview, icon: BriefcaseBusiness, choose: () => { setRecordMenuOpen(false); open("interview"); } },
+                  { label: t.addTest, icon: ClipboardCheck, choose: () => { setRecordMenuOpen(false); open("schedule"); } },
+                  { label: t.addBriefing, icon: CalendarClock, choose: () => { setRecordMenuOpen(false); open("schedule"); } },
+                  { label: t.addOtherRecord, icon: FileText, choose: () => { setRecordMenuOpen(false); open("schedule"); } },
+                ]}
+              />
             </div>}>
               {t.selectionRecords}
             </Title>
@@ -2969,7 +3118,7 @@ function Companies({
       {filterSheetOpen && <div className="company-filter-sheet-layer">
         <button type="button" className="company-filter-sheet-backdrop" aria-label={t.cancel} onClick={() => setFilterSheetOpen(false)} />
         <section className="company-filter-sheet" role="dialog" aria-modal="true" aria-label={t.language === "言語" ? "絞り込みと並び替え" : "筛选与排序"}>
-          <header className="company-filter-sheet-header"><h2>{t.language === "言語" ? "絞り込みと並び替え" : "筛选与排序"}</h2><button type="button" className="company-filter-sheet-close" onClick={() => setFilterSheetOpen(false)} aria-label={t.cancel}><X aria-hidden="true" /></button></header>
+          <header className="company-filter-sheet-header"><h2>{t.language === "言語" ? "絞り込みと並び替え" : "筛选与排序"}</h2><CloseButton className="company-filter-sheet-close" onClick={() => setFilterSheetOpen(false)} label={t.cancel} /></header>
           <div className="company-filter-sheet-content"><fieldset><legend>{t.stage}</legend><div className="company-filter-options">
             {["all", ...funnelStages].map((stage) => <label key={stage} className={draftStageFilter === stage ? "selected" : ""}><input type="radio" name="company-stage" checked={draftStageFilter === stage} onChange={() => setDraftStageFilter(stage)} /><span>{stage === "all" ? t.all : t[stage]}</span><Check /></label>)}
           </div></fieldset><fieldset><legend>{t.language === "言語" ? "並び替え" : "排序方式"}</legend><div className="company-filter-options">
@@ -2983,7 +3132,7 @@ function Companies({
             const nextEvent = getUpcomingEvent(data.events, x.id);
             return <button
               className="company-card entity-card"
-              onClick={() => setSelected(x.id)}
+              onClick={() => onOpenCompany(x.id)}
               key={x.id}
             >
               <i style={{ background: x.color }} />
@@ -3275,12 +3424,14 @@ function Modal({
 function CloseButton({
   onClick,
   label = "Close",
+  className = "",
 }: {
   onClick: () => void;
   label?: string;
+  className?: string;
 }) {
   return (
-    <button type="button" className="close-button" onClick={onClick} aria-label={label}>
+    <button type="button" className={`close-button ${className}`.trim()} onClick={onClick} aria-label={label}>
       <X aria-hidden="true" />
     </button>
   );
