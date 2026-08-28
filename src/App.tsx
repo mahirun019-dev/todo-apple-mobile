@@ -1421,12 +1421,15 @@ export default function App() {
   useEffect(() => localStorage.setItem(LOCALE, locale), [locale]);
   useEffect(() => {
     const m = matchMedia("(prefers-color-scheme:dark)");
-    const f = () =>
-      document.documentElement.dataset.theme = theme === "dark" || (theme === "system" && m.matches) ? "dark" : "light";
-    f();
+    const applyTheme = () => {
+      const isDark = theme === "dark" || (theme === "system" && m.matches);
+      document.documentElement.dataset.theme = isDark ? "dark" : "light";
+      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", isDark ? "#1f2328" : "#f7f7f8");
+    };
+    applyTheme();
     localStorage.setItem(THEME, theme);
-    m.addEventListener("change", f);
-    return () => m.removeEventListener("change", f);
+    m.addEventListener("change", applyTheme);
+    return () => m.removeEventListener("change", applyTheme);
   }, [theme]);
   useEffect(() => {
     if (!toast) return;

@@ -6090,10 +6090,10 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
   }
 }
 
-/* Mobile bottom navigation: full-width translucent bar, without the old capsule shell. */
+/* Mobile bottom navigation: a full-width X-style gradient scrim. */
 @media (max-width: 767px) {
   :root {
-    --mobile-bottom-nav-height: calc(108px + env(safe-area-inset-bottom) + env(safe-area-inset-bottom));
+    --mobile-bottom-nav-height: calc(104px + env(safe-area-inset-bottom) + env(safe-area-inset-bottom));
   }
 
   [data-testid="mobile-bottom-nav"] {
@@ -6103,27 +6103,63 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     display: grid !important;
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     width: 100% !important;
-    height: calc(68px + env(safe-area-inset-bottom)) !important;
-    min-height: calc(68px + env(safe-area-inset-bottom)) !important;
+    height: calc(64px + env(safe-area-inset-bottom)) !important;
+    min-height: calc(64px + env(safe-area-inset-bottom)) !important;
     box-sizing: border-box !important;
     align-items: stretch !important;
     gap: 0 !important;
     padding: 0 0 env(safe-area-inset-bottom) !important;
     border: 0 !important;
-    border-top: 1px solid rgba(0, 0, 0, 0.05) !important;
+    border-top: 0 !important;
     border-radius: 0 !important;
-    background: rgba(255, 255, 255, 0.74) !important;
-    box-shadow: 0 -1px 0 rgba(15, 23, 42, 0.04) !important;
-    backdrop-filter: blur(16px) saturate(150%) !important;
-    -webkit-backdrop-filter: blur(16px) saturate(150%) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    isolation: isolate;
   }
 
   html[data-theme="dark"] [data-testid="mobile-bottom-nav"] {
-    border-top-color: rgba(255, 255, 255, 0.07) !important;
-    background: rgba(10, 10, 12, 0.66) !important;
-    box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.05) !important;
-    backdrop-filter: blur(16px) saturate(150%) !important;
-    -webkit-backdrop-filter: blur(16px) saturate(150%) !important;
+    border-top: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  [data-testid="mobile-bottom-nav"]::before {
+    content: "" !important;
+    position: absolute !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    z-index: 0 !important;
+    display: block !important;
+    height: 124px !important;
+    pointer-events: none !important;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.55) 45%,
+      rgba(255, 255, 255, 0.88) 100%
+    ) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+  }
+
+  html[data-theme="dark"] [data-testid="mobile-bottom-nav"]::before {
+    background: linear-gradient(
+      to bottom,
+      rgba(15, 17, 20, 0) 0%,
+      rgba(15, 17, 20, 0.55) 45%,
+      rgba(15, 17, 20, 0.9) 100%
+    ) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+  }
+
+  [data-testid="mobile-bottom-nav"]::after {
+    content: none !important;
+    display: none !important;
   }
 
   [data-testid="mobile-bottom-nav"] > button,
@@ -6132,8 +6168,8 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     display: flex !important;
     min-width: 0 !important;
     width: 100% !important;
-    height: 68px !important;
-    min-height: 68px !important;
+    height: 64px !important;
+    min-height: 64px !important;
     align-items: center !important;
     justify-content: center !important;
     flex-direction: column !important;
@@ -6146,6 +6182,9 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     color: var(--text-secondary) !important;
     font-size: 9px !important;
     font-weight: 500;
+    position: relative !important;
+    z-index: 1 !important;
+    -webkit-tap-highlight-color: transparent !important;
     transition: color 120ms ease !important;
   }
 
@@ -6163,8 +6202,8 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
   }
 
   [data-testid="mobile-bottom-nav"] > button svg {
-    width: 20px !important;
-    height: 20px !important;
+    width: 19px !important;
+    height: 19px !important;
     color: currentColor !important;
   }
 
@@ -6173,9 +6212,4 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     outline-offset: -3px !important;
   }
 
-  [data-testid="mobile-bottom-nav"]::before,
-  [data-testid="mobile-bottom-nav"]::after {
-    content: none !important;
-    display: none !important;
-  }
 }
