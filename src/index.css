@@ -3191,6 +3191,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .app-shell, .student-app, .career-app, .career-app .workspace { background: var(--page-bg); }
   .career-app .workspace { height: auto; min-height: 0; box-sizing: border-box; }
   [data-testid="mobile-bottom-nav"] {
+    --bottom-nav-scroll-progress: 0;
+    --bottom-nav-light-background: rgba(255, 255, 255, 0.96);
+    --bottom-nav-dark-background: rgba(10, 10, 12, 0.94);
     position: fixed !important;
     left: 22px !important;
     right: 22px !important;
@@ -6114,7 +6117,7 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     border: 0 !important;
     border-top: 1px solid rgba(0, 0, 0, 0.04) !important;
     border-radius: 0 !important;
-    background: rgba(255, 255, 255, 0.80) !important;
+    background: var(--bottom-nav-light-background) !important;
     box-shadow: none !important;
     overflow: visible !important;
     backdrop-filter: blur(4px) !important;
@@ -6123,7 +6126,7 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
 
   html[data-theme="dark"] [data-testid="mobile-bottom-nav"] {
     border-top-color: rgba(255, 255, 255, 0.06) !important;
-    background: rgba(10, 10, 12, 0.72) !important;
+    background: var(--bottom-nav-dark-background) !important;
     box-shadow: none !important;
     backdrop-filter: blur(4px) !important;
     -webkit-backdrop-filter: blur(4px) !important;

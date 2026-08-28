@@ -2182,6 +2182,44 @@ function MobileNav({
   setView: (v: View) => void;
   t: any;
 }) {
+  useEffect(() => {
+    const nav = document.querySelector<HTMLElement>('[data-mobile-bottom-nav="true"]');
+    if (!nav) return;
+
+    const start = 0;
+    const end = 140;
+    let frame = 0;
+
+    const updateSurface = () => {
+      frame = 0;
+      const scrollRoot = document.scrollingElement;
+      const scrollY = Math.max(
+        window.scrollY,
+        document.documentElement.scrollTop,
+        document.body.scrollTop,
+        scrollRoot?.scrollTop || 0,
+      );
+      const progress = Math.min(1, Math.max(0, (scrollY - start) / (end - start)));
+      const darkAlpha = 0.94 - progress * 0.38;
+      const lightAlpha = 0.96 - progress * 0.32;
+
+      nav.style.setProperty("--bottom-nav-scroll-progress", progress.toFixed(3));
+      nav.style.setProperty("--bottom-nav-dark-background", `rgba(10, 10, 12, ${darkAlpha.toFixed(3)})`);
+      nav.style.setProperty("--bottom-nav-light-background", `rgba(255, 255, 255, ${lightAlpha.toFixed(3)})`);
+    };
+
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateSurface);
+    };
+
+    updateSurface();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
   return (
     <nav className="mobile-nav career-mobile-nav" data-testid="mobile-bottom-nav" data-mobile-bottom-nav="true" data-bottom-nav="true">
       <button
