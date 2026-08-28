@@ -1187,7 +1187,7 @@ function normalize(x: any): Data {
   const summaryOrder = normalizePreferenceOrder(rawCustomize.homeSummaryOrder, defaultHomeSummary, defaultHomeSummary, legacyHomeModules);
   const sectionOrder = normalizePreferenceOrder(rawCustomize.homeSectionOrder, defaultHomeSections, defaultHomeSections, legacyHomeModules);
   const legacySummaryVisibility = Object.fromEntries(defaultHomeSummary.map((key) => [key, legacyHomeModules ? legacyHomeModules.includes(key) : true])) as Record<HomeSummaryModule, boolean>;
-  const legacySectionVisibility = Object.fromEntries(defaultHomeSections.map((key) => [key, legacyHomeModules ? legacyHomeModules.includes(key) : true])) as Record<HomeSection, boolean>;
+  const legacySectionVisibility = Object.fromEntries(defaultHomeSections.map((key) => [key, legacyHomeModules ? legacyHomeModules.includes(key) || !["upcoming", "action", "progress"].includes(key) : true])) as Record<HomeSection, boolean>;
   const rawSummaryVisibility = (rawCustomize.homeSummaryVisibility || {}) as Partial<Record<HomeSummaryModule, boolean>>;
   const rawSectionVisibility = (rawCustomize.homeSectionVisibility || {}) as Partial<Record<HomeSection, boolean>>;
   const preferences: AppPreferences = {
@@ -1428,7 +1428,7 @@ export default function App() {
       const isDark = theme === "dark" || (theme === "system" && m.matches);
       document.documentElement.dataset.theme = isDark ? "dark" : "light";
       document.documentElement.style.colorScheme = isDark ? "dark" : "light";
-      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", isDark ? "#1f2328" : "#f7f7f8");
+      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", isDark ? "#000000" : "#f7f7f8");
     };
     applyTheme();
     localStorage.setItem(THEME, theme);
@@ -2401,6 +2401,7 @@ function Dashboard({
     return priority[a.urgency] - priority[b.urgency] || String(a.at || "9999").localeCompare(String(b.at || "9999"));
   });
   const { homeSummaryVisibility, homeSummaryOrder, homeSectionVisibility, homeSectionOrder } = data.preferences.customize;
+  const sectionVisible = (module: HomeSection) => homeSectionVisibility[module] !== false;
   const actionTitle = t.actionRequired;
   const actionMore = t.viewAll;
   const openAction = (item: any) => {
@@ -2547,12 +2548,12 @@ function Dashboard({
                     ? <Metric key={module} n={due.length} l={t.dueWeek} i={Clock3} onClick={() => navigate("schedule", "this-week-deadline")} />
                     : <Metric key={module} n={waiting.length} l={t.waiting} i={Timer} onClick={() => navigate("companies", "waiting-result")} />)}
               </div>
-              {homeSectionOrder.filter((module: HomeSection) => module === "upcoming" && homeSectionVisibility[module] && homeSections[module] !== null).map((module: HomeSection) => <div key={module}>{homeSections[module]}</div>)}
+              {homeSectionOrder.filter((module: HomeSection) => module === "upcoming" && sectionVisible(module) && homeSections[module] !== null).map((module: HomeSection) => <div key={module}>{homeSections[module]}</div>)}
             </div>
             <div className="dashboard-full-width-sections">
               {homeSummaryVisibility.deadlines && deadlinesModule}
               <div className="dashboard-customizable-modules">
-                {homeSectionOrder.filter((module: HomeSection) => module !== "upcoming" && homeSectionVisibility[module] && homeSections[module] !== null).map((module: HomeSection) => <div key={module}>{homeSections[module]}</div>)}
+                {homeSectionOrder.filter((module: HomeSection) => module !== "upcoming" && sectionVisible(module) && homeSections[module] !== null).map((module: HomeSection) => <div key={module}>{homeSections[module]}</div>)}
               </div>
             </div>
           </div>
@@ -4016,7 +4017,7 @@ function CustomizeSettings({ t, data, updatePreferences }: any) {
   const sectionLabels: Record<HomeSection, string> = { upcoming: t.next, action: t.actionRequired, progress: t.funnel, month: t.monthSchedule, featured: t.featuredCompanies };
   const update = (patch: Partial<AppPreferences["customize"]>) => updatePreferences((current: AppPreferences) => ({ ...current, customize: { ...current.customize, ...patch } }));
   const toggleSummary = (module: HomeSummaryModule) => update({ homeSummaryVisibility: { ...settings.homeSummaryVisibility, [module]: !settings.homeSummaryVisibility[module] } });
-  const toggleSection = (module: HomeSection) => update({ homeSectionVisibility: { ...settings.homeSectionVisibility, [module]: !settings.homeSectionVisibility[module] } });
+  const toggleSection = (module: HomeSection) => update({ homeSectionVisibility: { ...settings.homeSectionVisibility, [module]: settings.homeSectionVisibility[module] === false } });
   const moveSummary = (index: number, amount: -1 | 1) => { const next = [...settings.homeSummaryOrder]; const target = index + amount; if (target < 0 || target >= next.length) return; [next[index], next[target]] = [next[target], next[index]]; update({ homeSummaryOrder: next }); };
   const moveSection = (index: number, amount: -1 | 1) => { const next = [...settings.homeSectionOrder]; const target = index + amount; if (target < 0 || target >= next.length) return; [next[index], next[target]] = [next[target], next[index]]; update({ homeSectionOrder: next }); };
   const updateCard = (key: keyof AppPreferences["customize"]["companyCard"]) => update({ companyCard: { ...settings.companyCard, [key]: !settings.companyCard[key] } });
@@ -4024,7 +4025,7 @@ function CustomizeSettings({ t, data, updatePreferences }: any) {
   return <section className="settings-section settings-form-section"><h3>{t.customize}</h3>
     <fieldset className="settings-choice-group"><legend>{t.homeSummary}</legend>{defaultHomeSummary.map((module) => <label key={module}><input type="checkbox" checked={settings.homeSummaryVisibility[module]} onChange={() => toggleSummary(module)} />{summaryLabels[module]}</label>)}</fieldset>
     <div className="settings-order-list"><strong>{t.homeSummaryOrder}</strong>{settings.homeSummaryOrder.map((module: HomeSummaryModule, index: number) => <div key={module}><span>{index + 1}. {summaryLabels[module]}</span><div><button type="button" onClick={() => moveSummary(index, -1)} disabled={index === 0} aria-label={t.moveUp}><ChevronUp /></button><button type="button" onClick={() => moveSummary(index, 1)} disabled={index === settings.homeSummaryOrder.length - 1} aria-label={t.moveDown}><ChevronDown /></button></div></div>)}</div>
-    <fieldset className="settings-choice-group"><legend>{t.homeSections}</legend>{defaultHomeSections.map((module) => <label key={module}><input type="checkbox" checked={settings.homeSectionVisibility[module]} onChange={() => toggleSection(module)} />{sectionLabels[module]}</label>)}</fieldset>
+    <fieldset className="settings-choice-group"><legend>{t.homeSections}</legend>{defaultHomeSections.map((module) => <label key={module}><input type="checkbox" checked={settings.homeSectionVisibility[module] !== false} onChange={() => toggleSection(module)} />{sectionLabels[module]}</label>)}</fieldset>
     <div className="settings-order-list"><strong>{t.homeSectionsOrder}</strong>{settings.homeSectionOrder.map((module: HomeSection, index: number) => <div key={module}><span>{index + 1}. {sectionLabels[module]}</span><div><button type="button" onClick={() => moveSection(index, -1)} disabled={index === 0} aria-label={t.moveUp}><ChevronUp /></button><button type="button" onClick={() => moveSection(index, 1)} disabled={index === settings.homeSectionOrder.length - 1} aria-label={t.moveDown}><ChevronDown /></button></div></div>)}</div>
     <fieldset className="settings-choice-group"><legend>{t.companyCard}</legend>{(["industry", "position", "stage", "interest", "nextEvent"] as const).map((key) => <label key={key}><input type="checkbox" checked={settings.companyCard[key]} onChange={() => updateCard(key)} />{t[key === "industry" ? "showIndustry" : key === "position" ? "showPosition" : key === "stage" ? "showStage" : key === "interest" ? "showInterest" : "showNextEvent"]}</label>)}</fieldset>
     <label className="settings-field"><span>{t.defaultCompanySort}</span><select value={settings.companySort} onChange={(event) => update({ companySort: event.target.value as CompanySort })}>{(Object.keys(sortLabels) as CompanySort[]).map((key) => <option key={key} value={key}>{sortLabels[key]}</option>)}</select></label>
