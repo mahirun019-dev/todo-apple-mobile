@@ -90,7 +90,7 @@ type ItemType =
 type Priority = "low" | "medium" | "high";
 type CreateType = "company" | "schedule" | "es" | "interview" | "preparation";
 type HomeSummaryModule = "active" | "deadlines" | "waiting";
-type HomeSection = "upcoming" | "action" | "progress";
+type HomeSection = "upcoming" | "action" | "progress" | "month" | "featured";
 type HomeModule = HomeSummaryModule | HomeSection;
 type CompanySort = "updated" | "event" | "interest" | "name";
 type TemplateCategory = "selfPr" | "gakuchika" | "motivation" | "interviewQuestion" | "reverseQuestion" | "preparation";
@@ -271,7 +271,7 @@ type Data = {
 };
 
 const defaultHomeSummary: HomeSummaryModule[] = ["active", "deadlines", "waiting"];
-const defaultHomeSections: HomeSection[] = ["upcoming", "action", "progress"];
+const defaultHomeSections: HomeSection[] = ["upcoming", "action", "progress", "month", "featured"];
 const defaultHomeModules: HomeModule[] = [...defaultHomeSummary, ...defaultHomeSections];
 function defaultPreferences(): AppPreferences {
   const savedRegion = typeof localStorage !== "undefined" ? localStorage.getItem("careerflow-home-region") || "" : "";
@@ -289,7 +289,7 @@ function defaultPreferences(): AppPreferences {
     customize: {
       homeSummaryVisibility: { active: true, deadlines: true, waiting: true },
       homeSummaryOrder: [...defaultHomeSummary],
-      homeSectionVisibility: { upcoming: true, action: true, progress: true },
+      homeSectionVisibility: { upcoming: true, action: true, progress: true, month: true, featured: true },
       homeSectionOrder: [...defaultHomeSections],
       companyCard: { industry: true, position: true, stage: true, interest: true, nextEvent: true },
       companySort: "updated",
@@ -527,6 +527,7 @@ const tr = {
     next: "近期日程",
     deadlines: "本周截止",
     funnel: "选考进度",
+    monthSchedule: "本月日程", monthNoEvents: "本月暂无日程", featuredCompanies: "重点企业", viewAllCompanies: "查看全部企业",
     results: "结果待办列表",
     actionRequired: "待处理", actionRequiredList: "待处理事项", viewAll: "查看全部",
     actionDeadline: "截止", actionSchedule: "日程", actionWaiting: "等待结果", actionPreparation: "准备", actionMaterial: "材料",
@@ -691,6 +692,7 @@ const tr = {
     next: "今後の予定",
     deadlines: "今週の締切",
     funnel: "選考進捗",
+    monthSchedule: "今月の予定", monthNoEvents: "今月の予定はありません", featuredCompanies: "注目企業", viewAllCompanies: "すべての企業を見る",
     results: "結果待ち一覧",
     actionRequired: "要対応", actionRequiredList: "要対応一覧", viewAll: "すべて見る",
     actionDeadline: "締切", actionSchedule: "日程", actionWaiting: "結果待ち", actionPreparation: "準備", actionMaterial: "書類",
@@ -855,6 +857,7 @@ const tr = {
     next: "Next key event",
     deadlines: "Due this week",
     funnel: "Application funnel",
+    monthSchedule: "This month's schedule", monthNoEvents: "No events this month", featuredCompanies: "Featured companies", viewAllCompanies: "View all companies",
     results: "Waiting for result",
     actionRequired: "Needs attention", actionRequiredList: "Needs attention", viewAll: "View all",
     actionDeadline: "Deadline", actionSchedule: "Schedule", actionWaiting: "Waiting", actionPreparation: "Preparation", actionMaterial: "Documents",
@@ -2464,7 +2467,58 @@ function Dashboard({
       ))}
     </div>
   </section>;
-  const homeSections: Record<HomeSection, ReactNode> = { upcoming: upcomingModule, action: actionModule, progress: progressModule };
+  const now = new Date();
+  const monthYear = now.getFullYear();
+  const monthIndex = now.getMonth();
+  const monthPrefix = `${monthYear}-${String(monthIndex + 1).padStart(2, "0")}`;
+  const daysInMonth = new Date(monthYear, monthIndex + 1, 0).getDate();
+  const firstWeekday = new Date(monthYear, monthIndex, 1).getDay();
+  const calendarLocale = t.language === "言語" ? "ja-JP" : t.language === "Language" ? "en-US" : "zh-CN";
+  const weekdayLabels = Array.from({ length: 7 }, (_, index) => new Intl.DateTimeFormat(calendarLocale, { weekday: "short" }).format(new Date(2021, 7, 1 + index)));
+  const monthEvents = data.events.filter((event: Event) => event.startsAt.slice(0, 7) === monthPrefix && !(event as Event & { deletedAt?: boolean }).deletedAt);
+  const monthEventDays = new Map<number, Event[]>();
+  monthEvents.forEach((event: Event) => {
+    const day = Number(event.startsAt.slice(8, 10));
+    if (!Number.isInteger(day) || day < 1 || day > daysInMonth) return;
+    monthEventDays.set(day, [...(monthEventDays.get(day) || []), event]);
+  });
+  const monthModule = <section className="entity-card home-month-module">
+    <Title action={<button type="button" className="home-module-link" onClick={() => setView("schedule")}><span>{new Intl.DateTimeFormat(calendarLocale, { month: "long" }).format(new Date(monthYear, monthIndex, 1))}</span><ChevronRight aria-hidden="true" /></button>}>{t.monthSchedule}</Title>
+    <div className="home-month-calendar" aria-label={t.monthSchedule}>
+      <div className="home-month-weekdays">{weekdayLabels.map((label, index) => <span key={`${label}-${index}`}>{label}</span>)}</div>
+      <div className="home-month-grid">
+        {Array.from({ length: firstWeekday }, (_, index) => <span className="home-month-day is-empty" key={`empty-${index}`} aria-hidden="true" />)}
+        {Array.from({ length: daysInMonth }, (_, index) => {
+          const day = index + 1;
+          const eventsForDay = monthEventDays.get(day) || [];
+          const hasEvents = eventsForDay.length > 0;
+          return <button type="button" className={`home-month-day${hasEvents ? " has-events" : ""}`} key={day} disabled={!hasEvents} onClick={() => setView("schedule")} aria-label={`${monthYear}/${monthIndex + 1}/${day}${hasEvents ? ` ${eventsForDay.length}` : ""}`}><span>{day}</span>{hasEvents && <i style={{ background: byId[eventsForDay[0].companyId || ""]?.color || "var(--accent)" }} />}</button>;
+        })}
+      </div>
+    </div>
+    {!monthEvents.length && <p className="home-month-empty">{t.monthNoEvents}</p>}
+  </section>;
+  const featuredCandidates = data.companies.map((company: Company) => ({
+    company,
+    nextEvent: getUpcomingEvent(data.events, company.id),
+    active: isActiveCompany(company),
+  })).sort((a: any, b: any) => b.company.interestLevel - a.company.interestLevel
+    || Number(Boolean(b.nextEvent)) - Number(Boolean(a.nextEvent))
+    || Number(b.active) - Number(a.active)
+    || b.company.updatedAt - a.company.updatedAt
+    || a.company.name.localeCompare(b.company.name)).slice(0, 3);
+  const featuredModule = featuredCandidates.length ? <section className="entity-card home-featured-module">
+    <Title>{t.featuredCompanies}</Title>
+    <div className="home-featured-list">
+      {featuredCandidates.map(({ company, nextEvent }: any) => <button type="button" className="home-featured-row" key={company.id} onClick={() => navigate("companies", undefined, company.id)}>
+        <span className="home-featured-interest">{formatInterest(company)}</span>
+        <span className="home-featured-copy"><strong>{company.name}</strong><small>{stageDisplayLabel(company.stage, t)}{nextEvent ? ` · ${whenForLocale(nextEvent.startsAt, t)}` : ""}</small></span>
+        <ChevronRight aria-hidden="true" />
+      </button>)}
+    </div>
+    {data.companies.length > 3 && <button type="button" className="text-button home-featured-more" onClick={() => setView("companies")}>{t.viewAllCompanies} <ChevronRight aria-hidden="true" /></button>}
+  </section> : null;
+  const homeSections: Record<HomeSection, ReactNode> = { upcoming: upcomingModule, action: actionModule, progress: progressModule, month: monthModule, featured: featuredModule };
   return (
     <>
       <div className="page-head">
@@ -3958,7 +4012,7 @@ function JobHuntSettings({ t, data, updatePreferences }: any) {
 function CustomizeSettings({ t, data, updatePreferences }: any) {
   const settings = data.preferences.customize;
   const summaryLabels: Record<HomeSummaryModule, string> = { active: t.inProgress, deadlines: t.dueWeek, waiting: t.waiting };
-  const sectionLabels: Record<HomeSection, string> = { upcoming: t.next, action: t.actionRequired, progress: t.funnel };
+  const sectionLabels: Record<HomeSection, string> = { upcoming: t.next, action: t.actionRequired, progress: t.funnel, month: t.monthSchedule, featured: t.featuredCompanies };
   const update = (patch: Partial<AppPreferences["customize"]>) => updatePreferences((current: AppPreferences) => ({ ...current, customize: { ...current.customize, ...patch } }));
   const toggleSummary = (module: HomeSummaryModule) => update({ homeSummaryVisibility: { ...settings.homeSummaryVisibility, [module]: !settings.homeSummaryVisibility[module] } });
   const toggleSection = (module: HomeSection) => update({ homeSectionVisibility: { ...settings.homeSectionVisibility, [module]: !settings.homeSectionVisibility[module] } });

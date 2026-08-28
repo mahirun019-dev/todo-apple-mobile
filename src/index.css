@@ -5287,11 +5287,14 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     transform: translateY(0) !important;
   }
 
-  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(1) { transition-delay: 130ms !important; }
-  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(2) { transition-delay: 145ms !important; }
-  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(3) { transition-delay: 160ms !important; }
-  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(4) { transition-delay: 175ms !important; }
-  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(5) { transition-delay: 190ms !important; }
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(1) { transition-delay: 170ms !important; }
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(2) { transition-delay: 190ms !important; }
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(3) { transition-delay: 210ms !important; }
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(4) { transition-delay: 230ms !important; }
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(5) { transition-delay: 250ms !important; }
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(6) { transition-delay: 270ms !important; }
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(7) { transition-delay: 290ms !important; }
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(8) { transition-delay: 310ms !important; }
 
   .app-shell > .student-app > .mobile-header .mobile-menu-button svg {
     transform-origin: center;
@@ -6205,4 +6208,236 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     outline-offset: -3px !important;
   }
 
+}
+
+/* Mobile refinement: keep the hamburger understated without changing its size or layout. */
+@media (max-width: 767px) {
+  .app-shell > .student-app > .mobile-header .mobile-menu-button {
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: none;
+  }
+
+  html[data-theme="dark"] .app-shell > .student-app > .mobile-header .mobile-menu-button {
+    border-color: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.07) !important;
+    box-shadow: none !important;
+  }
+
+  html,
+  body,
+  #root,
+  .app-shell,
+  .student-app,
+  .career-app,
+  .career-app .workspace,
+  .main-dashboard-layout,
+  .dashboard-main,
+  .dashboard-sidebar {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    overflow-x: clip;
+  }
+
+  @supports not (overflow: clip) {
+    html,
+    body,
+    #root {
+      overflow-x: hidden;
+    }
+  }
+}
+
+/* Home overview modules use the same compact card language as the existing dashboard. */
+.home-month-module,
+.home-featured-module {
+  min-width: 0;
+  padding: 22px 20px;
+  border-radius: 16px;
+}
+
+.home-module-link {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  border: 0;
+  color: var(--text-secondary);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.home-module-link svg {
+  width: 16px;
+  height: 16px;
+}
+
+.home-month-calendar {
+  display: grid;
+  gap: 8px;
+}
+
+.home-month-weekdays,
+.home-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.home-month-weekdays {
+  color: var(--text-muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.home-month-day {
+  display: grid;
+  min-width: 0;
+  min-height: 34px;
+  aspect-ratio: 1;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  padding: 3px;
+  border: 0;
+  border-radius: 9px;
+  color: var(--text-secondary);
+  background: transparent;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.home-month-day.has-events {
+  color: var(--text-primary);
+  background: var(--bg-muted);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.home-month-day.has-events:hover,
+.home-month-day.has-events:active {
+  background: var(--bg-selected);
+}
+
+.home-month-day:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.home-month-day.is-empty {
+  pointer-events: none;
+}
+
+.home-month-day i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+}
+
+.home-month-empty {
+  margin: 10px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.home-featured-list {
+  display: grid;
+  gap: 0;
+}
+
+.home-featured-row {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  min-height: 60px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  background: transparent;
+  text-align: left;
+}
+
+.home-featured-row:last-child {
+  border-bottom: 0;
+}
+
+.home-featured-row:hover,
+.home-featured-row:active {
+  background: var(--bg-muted);
+}
+
+.home-featured-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
+.home-featured-interest {
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.home-featured-copy {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.home-featured-copy strong,
+.home-featured-copy small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-featured-copy strong {
+  font-size: 14px;
+}
+
+.home-featured-copy small {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.home-featured-row > svg {
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+}
+
+.home-featured-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: 10px;
+}
+
+.home-featured-more svg {
+  width: 15px;
+  height: 15px;
+}
+
+@media (max-width: 767px) {
+  .home-month-module,
+  .home-featured-module {
+    padding: 22px 20px;
+    border-radius: 16px;
+  }
+
+  .home-month-day {
+    min-height: 32px;
+  }
 }
