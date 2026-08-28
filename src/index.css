@@ -7003,3 +7003,75 @@ html[data-theme="dark"] #root {
   width: 18px;
   height: 18px;
 }
+
+/* Desktop action popovers stay compact and never turn a mouse click into a
+   persistent selected-looking row. Keyboard users still get a visible ring. */
+@media (min-width: 761px) {
+  .record-action-menu {
+    width: min(320px, calc(100vw - 32px));
+    padding: 6px 0;
+    border-radius: 13px;
+    box-shadow: 0 14px 32px rgba(20, 25, 30, 0.14);
+    visibility: visible;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-4px);
+    transition:
+      opacity 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .record-action-menu[data-open="true"] {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .record-action-items button {
+    min-height: 44px;
+    padding: 0 14px;
+    color: var(--text-primary);
+    background: transparent;
+  }
+
+  .record-action-items button:hover {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  .record-action-items button:active {
+    background: rgba(0, 0, 0, 0.08);
+  }
+
+  .record-action-items button:focus:not(:focus-visible) {
+    outline: none;
+    background: transparent;
+  }
+
+  .record-action-items button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+    background: transparent;
+  }
+
+  [data-theme="dark"] .career-app .record-action-menu,
+  [data-theme="dark"] .career-app .record-action-menu .record-action-items button {
+    border-color: #2f3336;
+  }
+
+  [data-theme="dark"] .career-app .record-action-menu {
+    background: #16181c;
+  }
+
+  [data-theme="dark"] .career-app .record-action-menu .record-action-items button {
+    background: transparent;
+  }
+
+  [data-theme="dark"] .record-action-items button:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  [data-theme="dark"] .record-action-items button:active {
+    background: rgba(255, 255, 255, 0.08);
+  }
+}

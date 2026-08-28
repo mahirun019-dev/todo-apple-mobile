@@ -7,6 +7,7 @@ import {
   useState,
   type ChangeEvent,
   type FormEvent,
+  type PointerEventHandler,
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
@@ -2358,14 +2359,16 @@ function Title({
 function PrimaryActionButton({
   children,
   onClick,
+  onPointerDown,
   className = "",
 }: {
   children: ReactNode;
   onClick: () => void;
+  onPointerDown?: PointerEventHandler<HTMLButtonElement>;
   className?: string;
 }) {
   return (
-    <button type="button" className={`primary-action ${className}`} onClick={onClick}>
+    <button type="button" className={`primary-action ${className}`} onClick={onClick} onPointerDown={onPointerDown}>
       {children}
     </button>
   );
@@ -2437,14 +2440,14 @@ function RecordActionMenu({
       if (isMobile) body.style.overflow = previousOverflow;
     };
   }, [close, isMobile, open]);
-  if (!open) return null;
+  if (isMobile && !open) return null;
   const content = (
-    <div ref={menuRef} className={`record-action-menu${isMobile ? " record-action-menu-mobile" : ""}`} role="menu" aria-label={title}>
+    <div ref={menuRef} className={`record-action-menu${isMobile ? " record-action-menu-mobile" : ""}`} data-open={open ? "true" : "false"} role="menu" aria-label={title} aria-hidden={!open}>
       {isMobile && <button type="button" className="record-action-backdrop" aria-label={cancelLabel} onClick={close} />}
       <section className="record-action-surface">
-        <header className="record-action-header"><h2>{title}</h2>{isMobile && <CloseButton className="record-action-close" onClick={close} label={cancelLabel} />}</header>
+        {isMobile && <header className="record-action-header"><h2>{title}</h2><CloseButton className="record-action-close" onClick={close} label={cancelLabel} /></header>}
         <div className="record-action-items">
-          {actions.map(({ label, icon: Icon, choose }, index) => <button type="button" role="menuitem" key={label} ref={(button) => { actionRefs.current[index] = button; }} onClick={choose}><Icon aria-hidden="true" /><span>{label}</span>{!isMobile && <ChevronRight aria-hidden="true" />}</button>)}
+          {actions.map(({ label, icon: Icon, choose }, index) => <button type="button" role="menuitem" tabIndex={open ? 0 : -1} key={label} ref={(button) => { actionRefs.current[index] = button; }} onClick={choose}><Icon aria-hidden="true" /><span>{label}</span>{!isMobile && <ChevronRight aria-hidden="true" />}</button>)}
         </div>
         {isMobile && <button type="button" className="record-action-cancel" onClick={close}>{cancelLabel}</button>}
       </section>
@@ -2454,16 +2457,18 @@ function RecordActionMenu({
 }
 
 function CreateRecordPicker({
+  open,
   t,
   close,
   choose,
 }: {
+  open: boolean;
   t: any;
   close: () => void;
   choose: (kind: CreateType) => void;
 }) {
   return <RecordActionMenu
-    open
+    open={open}
     title={t.addRecord}
     cancelLabel={t.cancel}
     close={close}
@@ -3022,7 +3027,7 @@ function Companies({
               </div> : <p className="company-detail-muted">{t.noFutureSchedules}</p>}
             </section>
             <Title action={<div className="record-action-wrap">
-              <button className="primary" onClick={() => setRecordMenuOpen(!recordMenuOpen)}><Plus />{t.addRecord}</button>
+              <button type="button" className="primary" onPointerDown={(event) => event.stopPropagation()} onClick={() => setRecordMenuOpen(!recordMenuOpen)}><Plus />{t.addRecord}</button>
               <RecordActionMenu
                 open={recordMenuOpen}
                 title={t.addRecord}
@@ -3263,7 +3268,7 @@ function Materials({
           <h1>{t.materials}</h1>
           <p>{t.materialsSub}</p>
         </div>
-        {(materials.length > 0 || interviews.length > 0 || preps.length > 0) && <PrimaryActionButton onClick={openCreateRecordPicker}><Plus />{t.addRecord}</PrimaryActionButton>}
+        {(materials.length > 0 || interviews.length > 0 || preps.length > 0) && <PrimaryActionButton onClick={openCreateRecordPicker} onPointerDown={(event) => event.stopPropagation()}><Plus />{t.addRecord}</PrimaryActionButton>}
       </div>
       <div className="filter-bar entity-card">
         {[
@@ -3331,7 +3336,7 @@ function Materials({
           <Empty t={t} kind="materials" open={openCreateRecordPicker} />
         </>}
       </div>
-      {recordPickerOpen && <CreateRecordPicker t={t} close={() => setRecordPickerOpen(false)} choose={chooseCreateRecord} />}
+      <CreateRecordPicker open={recordPickerOpen} t={t} close={() => setRecordPickerOpen(false)} choose={chooseCreateRecord} />
     </>
   );
 }
