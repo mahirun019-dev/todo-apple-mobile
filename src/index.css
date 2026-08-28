@@ -3148,13 +3148,15 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     border-radius: 16px;
   }
   .career-mobile-nav > button.active {
-    border: 1px solid rgba(255,255,255,.22) !important;
-    background: rgba(255,255,255,.12) !important;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.24) !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
     color: var(--text-primary) !important;
   }
   [data-theme="dark"] .career-mobile-nav > button.active {
-    background: rgba(255,255,255,.075) !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
     color: var(--text-primary) !important;
   }
 }
@@ -6112,19 +6114,19 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     border: 0 !important;
     border-top: 1px solid rgba(0, 0, 0, 0.04) !important;
     border-radius: 0 !important;
-    background: rgba(255, 255, 255, 0.82) !important;
+    background: rgba(255, 255, 255, 0.80) !important;
     box-shadow: none !important;
     overflow: visible !important;
-    backdrop-filter: blur(6px) !important;
-    -webkit-backdrop-filter: blur(6px) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
   }
 
   html[data-theme="dark"] [data-testid="mobile-bottom-nav"] {
     border-top-color: rgba(255, 255, 255, 0.06) !important;
-    background: rgba(10, 10, 12, 0.78) !important;
+    background: rgba(10, 10, 12, 0.72) !important;
     box-shadow: none !important;
-    backdrop-filter: blur(6px) !important;
-    -webkit-backdrop-filter: blur(6px) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
   }
 
   [data-testid="mobile-bottom-nav"]::before,
@@ -6165,6 +6167,20 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
   [data-testid="mobile-bottom-nav"] > button.active {
     color: var(--text-primary) !important;
     font-weight: 600;
+  }
+
+  [data-testid="mobile-bottom-nav"] > button[aria-current="page"],
+  [data-testid="mobile-bottom-nav"] > button[data-active="true"],
+  [data-testid="mobile-bottom-nav"] > button.selected,
+  [data-testid="mobile-bottom-nav"] > button.active,
+  [data-testid="mobile-bottom-nav"] > button[data-pressed="true"],
+  [data-testid="mobile-bottom-nav"] > button:hover,
+  [data-testid="mobile-bottom-nav"] > button:active,
+  [data-testid="mobile-bottom-nav"] > button:focus:not(:focus-visible) {
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
   }
 
   html[data-theme="dark"] [data-testid="mobile-bottom-nav"] > button:not(.active) {
