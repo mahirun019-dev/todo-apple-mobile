@@ -4263,7 +4263,7 @@ option { color: var(--text-primary); background: var(--bg-input); }
 [data-theme="dark"] .settings-segmented button.active { color: #60a5fa !important; background: var(--accent-soft) !important; border-color: var(--accent) !important; }
 [data-theme="dark"] .settings-segmented button { color: var(--text-primary); background: transparent; border-color: var(--border-default); }
 
-[data-theme="dark"] .career-app .mobile-header { color: var(--text-primary); background: rgba(24, 27, 31, 0.72); border-color: rgba(255, 255, 255, 0.08); }
+[data-theme="dark"] .career-app .mobile-header { color: var(--text-primary); background: var(--careerflow-mobile-header-background); border-color: rgba(255, 255, 255, 0.08); }
 [data-theme="dark"] .career-app .mobile-header-title { color: var(--text-primary); }
 [data-theme="dark"] .career-app .mobile-menu-button { color: var(--text-secondary); background: rgba(255, 255, 255, 0.05); }
 [data-theme="dark"] .mobile-settings-drawer { background: var(--bg-sidebar) !important; }
@@ -4730,6 +4730,7 @@ html[data-theme="dark"] { --app-page-bg: var(--bg-app); }
 /* Shared glass material: mobile header, create sheet, and desktop create popover. */
 :root {
   --careerflow-glass-background: rgba(248, 250, 252, 0.72);
+  --careerflow-mobile-header-background: var(--careerflow-glass-background);
   --careerflow-glass-border: rgba(0, 0, 0, 0.06);
   --careerflow-glass-backdrop: saturate(180%) blur(20px);
   --careerflow-glass-shadow: none;
@@ -4737,6 +4738,7 @@ html[data-theme="dark"] { --app-page-bg: var(--bg-app); }
 
 [data-theme="dark"] {
   --careerflow-glass-background: rgba(24, 27, 31, 0.72);
+  --careerflow-mobile-header-background: rgba(0, 0, 0, 0.72);
   --careerflow-glass-border: rgba(255, 255, 255, 0.08);
   --careerflow-glass-backdrop: saturate(160%) blur(20px);
   --careerflow-glass-shadow: none;
@@ -4753,7 +4755,7 @@ html[data-theme="dark"] { --app-page-bg: var(--bg-app); }
 @media (max-width: 767px) {
   .app-shell > .student-app > .mobile-header {
     border-bottom-color: var(--careerflow-glass-border);
-    background: var(--careerflow-glass-background) !important;
+    background: var(--careerflow-mobile-header-background) !important;
     box-shadow: var(--careerflow-glass-shadow);
     backdrop-filter: var(--careerflow-glass-backdrop) !important;
     -webkit-backdrop-filter: var(--careerflow-glass-backdrop) !important;
@@ -4857,7 +4859,7 @@ html[data-theme="dark"] { --app-page-bg: var(--bg-app); }
     border-width: 0 0 1px;
     border-color: var(--careerflow-glass-border) !important;
     border-radius: 0;
-    background: var(--careerflow-glass-background) !important;
+    background: var(--careerflow-mobile-header-background) !important;
     box-shadow: var(--careerflow-glass-shadow) !important;
     backdrop-filter: var(--careerflow-glass-backdrop) !important;
     -webkit-backdrop-filter: var(--careerflow-glass-backdrop) !important;
@@ -6482,6 +6484,86 @@ html[data-theme="dark"] #root {
   html[data-theme="dark"],
   html[data-theme="dark"] body,
   html[data-theme="dark"] #root {
-    background-color: #1f2328;
+    background-color: var(--bg-app, #000000);
+  }
+}
+
+/* Keep PC Settings on the same OLED-black surface hierarchy as the app. */
+@media (min-width: 981px) {
+  [data-theme="dark"] .settings-drawer-panel,
+  [data-theme="dark"] .settings-drawer-panel > header,
+  [data-theme="dark"] .settings-drawer-panel .desktop-settings-content {
+    color: var(--text-primary);
+    background: var(--bg-app) !important;
+    border-color: var(--border-default);
+  }
+
+  [data-theme="dark"] .settings-drawer-panel .settings-sidebar {
+    background: var(--bg-sidebar) !important;
+    border-color: var(--border-default);
+  }
+
+  [data-theme="dark"] .settings-drawer-panel .settings-nav-item:hover,
+  [data-theme="dark"] .settings-drawer-panel .settings-nav-item:active,
+  [data-theme="dark"] .settings-drawer-panel .settings-nav-item:focus:not(:focus-visible) {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05) !important;
+  }
+
+  [data-theme="dark"] .settings-drawer-panel .settings-nav-item[aria-selected="true"] {
+    color: var(--text-primary) !important;
+    background: rgba(255, 255, 255, 0.07) !important;
+  }
+
+  [data-theme="dark"] .settings-drawer-panel .settings-stats > div,
+  [data-theme="dark"] .settings-drawer-panel .settings-order-list > div,
+  [data-theme="dark"] .settings-drawer-panel .template-editor,
+  [data-theme="dark"] .settings-drawer-panel .template-list-item,
+  [data-theme="dark"] .settings-drawer-panel .backup-panel,
+  [data-theme="dark"] .settings-drawer-panel .document-question,
+  [data-theme="dark"] .settings-drawer-panel .calendar-important {
+    color: var(--text-primary);
+    background: var(--bg-surface) !important;
+    border-color: var(--border-default);
+  }
+
+  [data-theme="dark"] .settings-drawer-panel .settings-field select,
+  [data-theme="dark"] .settings-drawer-panel .settings-field input,
+  [data-theme="dark"] .settings-drawer-panel .settings-field textarea,
+  [data-theme="dark"] .settings-drawer-panel .template-editor select,
+  [data-theme="dark"] .settings-drawer-panel .template-editor input,
+  [data-theme="dark"] .settings-drawer-panel .template-editor textarea,
+  [data-theme="dark"] .settings-drawer-panel .template-insert select,
+  [data-theme="dark"] .settings-drawer-panel .settings-order-list button,
+  [data-theme="dark"] .settings-drawer-panel .settings-secondary-button,
+  [data-theme="dark"] .settings-drawer-panel .template-insert button {
+    color: var(--text-primary);
+    background: var(--bg-surface) !important;
+    border-color: var(--border-default);
+  }
+
+  [data-theme="dark"] .settings-drawer-panel .settings-field small,
+  [data-theme="dark"] .settings-drawer-panel .settings-muted,
+  [data-theme="dark"] .settings-drawer-panel .settings-section-heading p,
+  [data-theme="dark"] .settings-drawer-panel .settings-choice-group label,
+  [data-theme="dark"] .settings-drawer-panel .settings-toggle-group label {
+    color: var(--text-secondary);
+  }
+
+  [data-theme="dark"] .settings-drawer-panel > header .close-button {
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  [data-theme="dark"] .settings-drawer-panel > header .close-button:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  [data-theme="dark"] .settings-drawer-panel input:focus,
+  [data-theme="dark"] .settings-drawer-panel select:focus,
+  [data-theme="dark"] .settings-drawer-panel textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
   }
 }

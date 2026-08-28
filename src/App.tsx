@@ -116,6 +116,7 @@ type AppPreferences = {
     homeSummaryVisibility: Record<HomeSummaryModule, boolean>;
     homeSummaryOrder: HomeSummaryModule[];
     homeSectionVisibility: Record<HomeSection, boolean>;
+    homeSectionVisibilityVersion?: number;
     homeSectionOrder: HomeSection[];
     companyCard: {
       industry: boolean;
@@ -290,6 +291,7 @@ function defaultPreferences(): AppPreferences {
       homeSummaryVisibility: { active: true, deadlines: true, waiting: true },
       homeSummaryOrder: [...defaultHomeSummary],
       homeSectionVisibility: { upcoming: true, action: true, progress: true, month: true, featured: true },
+      homeSectionVisibilityVersion: 1,
       homeSectionOrder: [...defaultHomeSections],
       companyCard: { industry: true, position: true, stage: true, interest: true, nextEvent: true },
       companySort: "updated",
@@ -1190,6 +1192,10 @@ function normalize(x: any): Data {
   const legacySectionVisibility = Object.fromEntries(defaultHomeSections.map((key) => [key, legacyHomeModules ? legacyHomeModules.includes(key) || !["upcoming", "action", "progress"].includes(key) : true])) as Record<HomeSection, boolean>;
   const rawSummaryVisibility = (rawCustomize.homeSummaryVisibility || {}) as Partial<Record<HomeSummaryModule, boolean>>;
   const rawSectionVisibility = (rawCustomize.homeSectionVisibility || {}) as Partial<Record<HomeSection, boolean>>;
+  const homeSectionVisibilityVersion = Number(rawCustomize.homeSectionVisibilityVersion) || 0;
+  const migratedSectionVisibility = homeSectionVisibilityVersion < 1
+    ? { ...rawSectionVisibility, month: true, featured: true }
+    : rawSectionVisibility;
   const preferences: AppPreferences = {
     jobHunt: {
       ...defaults.jobHunt,
@@ -1206,7 +1212,8 @@ function normalize(x: any): Data {
       ...rawCustomize,
       homeSummaryVisibility: { ...legacySummaryVisibility, ...rawSummaryVisibility },
       homeSummaryOrder: summaryOrder,
-      homeSectionVisibility: { ...legacySectionVisibility, ...rawSectionVisibility },
+      homeSectionVisibility: { ...legacySectionVisibility, ...migratedSectionVisibility },
+      homeSectionVisibilityVersion: 1,
       homeSectionOrder: sectionOrder,
       companyCard: { ...defaults.customize.companyCard, ...rawCard },
       companySort: ["updated", "event", "interest", "name"].includes(String(rawCustomize.companySort)) ? rawCustomize.companySort as CompanySort : defaults.customize.companySort,
