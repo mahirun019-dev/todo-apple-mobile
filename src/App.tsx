@@ -2401,12 +2401,14 @@ function RecordActionMenu({
   actions,
   cancelLabel,
   close,
+  placement = "bottom-end",
 }: {
   open: boolean;
   title: string;
   actions: RecordAction[];
   cancelLabel: string;
   close: () => void;
+  placement?: "bottom-center" | "bottom-end";
 }) {
   const isMobile = useMediaQuery("(max-width: 760px)");
   const menuRef = useRef<HTMLDivElement>(null);
@@ -2445,7 +2447,7 @@ function RecordActionMenu({
   }, [close, isMobile, open]);
   if (isMobile && !open) return null;
   const content = (
-    <div ref={menuRef} className={`record-action-menu${isMobile ? " record-action-menu-mobile" : ""}`} data-open={open ? "true" : "false"} role="menu" aria-label={title} aria-hidden={!open}>
+    <div ref={menuRef} className={`record-action-menu record-action-menu--${placement}${isMobile ? " record-action-menu-mobile" : ""}`} data-open={open ? "true" : "false"} role="menu" aria-label={title} aria-hidden={!open}>
       {isMobile && <button type="button" className="record-action-backdrop" aria-label={cancelLabel} onClick={close} />}
       <section className="record-action-surface">
         {isMobile && <header className="record-action-header"><h2>{title}</h2><CloseButton className="record-action-close" onClick={close} label={cancelLabel} /></header>}
@@ -2475,6 +2477,7 @@ function CreateRecordPicker({
     title={t.addRecord}
     cancelLabel={t.cancel}
     close={close}
+    placement="bottom-center"
     actions={[
       { label: t.addMaterial, icon: FileJson, choose: () => choose("es") },
       { label: t.addInterview, icon: BriefcaseBusiness, choose: () => choose("interview") },
