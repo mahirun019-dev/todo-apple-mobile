@@ -6120,16 +6120,16 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     background: var(--bottom-nav-light-background) !important;
     box-shadow: none !important;
     overflow: visible !important;
-    backdrop-filter: blur(4px) !important;
-    -webkit-backdrop-filter: blur(4px) !important;
+    backdrop-filter: blur(2px) !important;
+    -webkit-backdrop-filter: blur(2px) !important;
   }
 
   html[data-theme="dark"] [data-testid="mobile-bottom-nav"] {
     border-top-color: rgba(255, 255, 255, 0.06) !important;
     background: var(--bottom-nav-dark-background) !important;
     box-shadow: none !important;
-    backdrop-filter: blur(4px) !important;
-    -webkit-backdrop-filter: blur(4px) !important;
+    backdrop-filter: blur(2px) !important;
+    -webkit-backdrop-filter: blur(2px) !important;
   }
 
   [data-testid="mobile-bottom-nav"]::before,

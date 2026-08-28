@@ -2187,21 +2187,28 @@ function MobileNav({
     if (!nav) return;
 
     const start = 0;
-    const end = 140;
+    const preferredEnd = 120;
     let frame = 0;
 
     const updateSurface = () => {
       frame = 0;
       const scrollRoot = document.scrollingElement;
+      const maxScroll = Math.max(
+        0,
+        (scrollRoot?.scrollHeight || document.documentElement.scrollHeight) - window.innerHeight,
+      );
+      const effectiveEnd = Math.min(preferredEnd, maxScroll);
       const scrollY = Math.max(
         window.scrollY,
         document.documentElement.scrollTop,
         document.body.scrollTop,
         scrollRoot?.scrollTop || 0,
       );
-      const progress = Math.min(1, Math.max(0, (scrollY - start) / (end - start)));
-      const darkAlpha = 0.94 - progress * 0.38;
-      const lightAlpha = 0.96 - progress * 0.32;
+      const progress = effectiveEnd > 0
+        ? Math.min(1, Math.max(0, (scrollY - start) / effectiveEnd))
+        : 0;
+      const darkAlpha = 0.94 - progress * 0.5;
+      const lightAlpha = 0.96 - progress * 0.38;
 
       nav.style.setProperty("--bottom-nav-scroll-progress", progress.toFixed(3));
       nav.style.setProperty("--bottom-nav-dark-background", `rgba(10, 10, 12, ${darkAlpha.toFixed(3)})`);
@@ -2214,11 +2221,17 @@ function MobileNav({
 
     updateSurface();
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    const resizeObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(onScroll);
+    resizeObserver?.observe(document.documentElement);
+    resizeObserver?.observe(document.body);
     return () => {
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      resizeObserver?.disconnect();
       if (frame) window.cancelAnimationFrame(frame);
     };
-  }, []);
+  }, [view]);
 
   return (
     <nav className="mobile-nav career-mobile-nav" data-testid="mobile-bottom-nav" data-mobile-bottom-nav="true" data-bottom-nav="true">
