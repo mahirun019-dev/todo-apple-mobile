@@ -6,6 +6,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#f7f7f8" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="CareerFlow" />
@@ -15,9 +16,32 @@
     <link rel="icon" href="%BASE_URL%favicon-v4.svg" type="image/svg+xml" />
     <link rel="shortcut icon" href="%BASE_URL%favicon-v4.ico" type="image/png" />
     <title>CareerFlow</title>
+    <style>
+      html, body, #root { background-color: #f7f7f8; }
+      html[data-theme="dark"],
+      html[data-theme="dark"] body,
+      html[data-theme="dark"] #root { background-color: #1f2328; }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      (() => {
+        try {
+          const savedTheme = localStorage.getItem("careerflow-theme");
+          const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          const isDark = savedTheme === "dark" || (savedTheme !== "light" && prefersDark);
+          const root = document.documentElement;
+          const themeColor = isDark ? "#1f2328" : "#f7f7f8";
+          root.dataset.theme = isDark ? "dark" : "light";
+          root.style.colorScheme = isDark ? "dark" : "light";
+          document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColor);
+        } catch {
+          document.documentElement.dataset.theme = "light";
+          document.documentElement.style.colorScheme = "light";
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

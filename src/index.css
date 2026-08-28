@@ -6123,16 +6123,16 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     background: var(--bottom-nav-light-background) !important;
     box-shadow: none !important;
     overflow: visible !important;
-    backdrop-filter: blur(2px) !important;
-    -webkit-backdrop-filter: blur(2px) !important;
+    backdrop-filter: blur(1px) !important;
+    -webkit-backdrop-filter: blur(1px) !important;
   }
 
   html[data-theme="dark"] [data-testid="mobile-bottom-nav"] {
     border-top-color: rgba(255, 255, 255, 0.06) !important;
     background: var(--bottom-nav-dark-background) !important;
     box-shadow: none !important;
-    backdrop-filter: blur(2px) !important;
-    -webkit-backdrop-filter: blur(2px) !important;
+    backdrop-filter: blur(1px) !important;
+    -webkit-backdrop-filter: blur(1px) !important;
   }
 
   [data-testid="mobile-bottom-nav"]::before,
@@ -6439,5 +6439,37 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
 
   .home-month-day {
     min-height: 32px;
+  }
+}
+
+/* Keep Safari's overscroll and first paint on the same surface as the active theme. */
+html,
+body,
+#root {
+  color-scheme: light;
+  background-color: var(--bg-app, #eef2f7);
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+html[data-theme="dark"],
+html[data-theme="dark"] body,
+html[data-theme="dark"] #root {
+  background-color: var(--bg-app, #111315);
+}
+
+@media (max-width: 767px) {
+  html[data-theme="light"],
+  html[data-theme="light"] body,
+  html[data-theme="light"] #root {
+    background-color: #f7f7f8;
+  }
+
+  html[data-theme="dark"],
+  html[data-theme="dark"] body,
+  html[data-theme="dark"] #root {
+    background-color: #1f2328;
   }
 }

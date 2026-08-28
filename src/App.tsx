@@ -1427,6 +1427,7 @@ export default function App() {
     const applyTheme = () => {
       const isDark = theme === "dark" || (theme === "system" && m.matches);
       document.documentElement.dataset.theme = isDark ? "dark" : "light";
+      document.documentElement.style.colorScheme = isDark ? "dark" : "light";
       document.querySelector('meta[name="theme-color"]')?.setAttribute("content", isDark ? "#1f2328" : "#f7f7f8");
     };
     applyTheme();
@@ -2210,8 +2211,8 @@ function MobileNav({
       const progress = effectiveEnd > 0
         ? Math.min(1, Math.max(0, (scrollY - start) / effectiveEnd))
         : 0;
-      const darkAlpha = 0.94 - progress * 0.5;
-      const lightAlpha = 0.96 - progress * 0.38;
+      const darkAlpha = 0.94 - progress * 0.60;
+      const lightAlpha = 0.96 - progress * 0.40;
 
       nav.style.setProperty("--bottom-nav-scroll-progress", progress.toFixed(3));
       nav.style.setProperty("--bottom-nav-dark-background", `rgba(10, 10, 12, ${darkAlpha.toFixed(3)})`);
