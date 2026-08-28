@@ -6697,8 +6697,15 @@ html[data-theme="dark"] #root {
   }
 
   .record-action-menu-mobile .record-action-header {
+    height: 52px;
     min-height: 52px;
-    padding: 4px 0 8px;
+    box-sizing: border-box;
+    align-items: center;
+    padding: 0;
+  }
+
+  .record-action-menu-mobile .record-action-header h2 {
+    line-height: 1.25;
   }
 
   .record-action-menu-mobile .record-action-items button {
@@ -7083,10 +7090,10 @@ html[data-theme="dark"] #root {
   }
 
   [data-theme="dark"] .record-action-items button:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.06);
   }
 
   [data-theme="dark"] .record-action-items button:active {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.09);
   }
 }

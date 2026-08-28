@@ -89,6 +89,8 @@ type ItemType =
   | "briefing"
   | "research"
   | "general";
+type RecordActionId = "document" | "interview" | "aptitude" | "briefing" | "other" | "preparation";
+type EventFormPreset = Pick<Event, "type" | "stage">;
 type Priority = "low" | "medium" | "high";
 type CreateType = "company" | "schedule" | "es" | "interview" | "preparation";
 type HomeSummaryModule = "active" | "deadlines" | "waiting";
@@ -1373,6 +1375,7 @@ export default function App() {
     [settings, setSettings] = useState(false),
     [mobileSettingsPage, setMobileSettingsPage] = useState<string | null>(null),
     [form, setForm] = useState<CreateType | null>(null),
+    [eventFormPreset, setEventFormPreset] = useState<EventFormPreset>(),
     [recordPickerOpen, setRecordPickerOpen] = useState(false),
     [editCompany, setEditCompany] = useState<Company>(),
     [editEvent, setEditEvent] = useState<Event>(),
@@ -1745,6 +1748,7 @@ export default function App() {
         ? d.events.map((x) => (x.id === v.id ? v : x))
         : [v, ...d.events],
     }));
+    setEventFormPreset(undefined);
   };
   const saveInterview = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -1901,7 +1905,14 @@ export default function App() {
     setData((current) => ({ ...current, preferences: change(current.preferences) }));
   };
   const open = (kind: CreateType) => {
+    setEventFormPreset(undefined);
     setForm(kind);
+  };
+  const openRecordEvent = (preset: EventFormPreset, companyId?: string) => {
+    setEditEvent(undefined);
+    setScheduleCompanyId(companyId);
+    setEventFormPreset(preset);
+    setForm("schedule");
   };
   return (
     <div className="app-shell" data-app-shell="true">
@@ -1980,6 +1991,7 @@ export default function App() {
                 setEditEvent,
                 setScheduleCompanyId,
                 setForm,
+                openRecordEvent,
                 setConfirm,
                 companyFilter,
                 clearCompanyFilter: () => navigate("companies"),
@@ -2110,10 +2122,13 @@ export default function App() {
             companies={data.companies}
             initial={editEvent}
             defaultCompanyId={scheduleCompanyId}
+            defaultType={eventFormPreset?.type}
+            defaultStage={eventFormPreset?.stage}
             close={() => {
               setForm(null);
               setEditEvent(undefined);
               setScheduleCompanyId(undefined);
+              setEventFormPreset(undefined);
             }}
             save={saveEvent}
             remove={setDeleteEvent}
@@ -2240,7 +2255,7 @@ function MobileNav({
   setView: (v: View) => void;
   t: any;
 }) {
-  useEffect(() => {
+  useLayoutEffect(() => {
     const nav = document.querySelector<HTMLElement>('[data-mobile-bottom-nav="true"]');
     if (!nav) return;
 
@@ -2251,9 +2266,14 @@ function MobileNav({
     const updateSurface = () => {
       frame = 0;
       const scrollRoot = document.scrollingElement;
+      const scrollHeight = Math.max(
+        document.documentElement.scrollHeight,
+        document.body.scrollHeight,
+        scrollRoot?.scrollHeight || 0,
+      );
       const maxScroll = Math.max(
         0,
-        (scrollRoot?.scrollHeight || document.documentElement.scrollHeight) - window.innerHeight,
+        scrollHeight - window.innerHeight,
       );
       const effectiveEnd = Math.min(preferredEnd, maxScroll);
       const scrollY = Math.max(
@@ -2278,6 +2298,7 @@ function MobileNav({
     };
 
     updateSurface();
+    const afterRouteLayout = window.requestAnimationFrame(updateSurface);
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
     const resizeObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(onScroll);
@@ -2288,6 +2309,7 @@ function MobileNav({
       window.removeEventListener("resize", onScroll);
       resizeObserver?.disconnect();
       if (frame) window.cancelAnimationFrame(frame);
+      window.cancelAnimationFrame(afterRouteLayout);
     };
   }, [view]);
 
@@ -2390,6 +2412,7 @@ function Empty({ t, kind = "general", open, onPointerDown, actionMenu }: { t: an
   );
 }
 type RecordAction = {
+  id: RecordActionId;
   label: string;
   icon: any;
   choose: () => void;
@@ -2452,7 +2475,7 @@ function RecordActionMenu({
       <section className="record-action-surface">
         {isMobile && <header className="record-action-header"><h2>{title}</h2><CloseButton className="record-action-close" onClick={close} label={cancelLabel} /></header>}
         <div className="record-action-items">
-          {actions.map(({ label, icon: Icon, choose }, index) => <button type="button" role="menuitem" tabIndex={open ? 0 : -1} key={label} ref={(button) => { actionRefs.current[index] = button; }} onClick={choose}><Icon aria-hidden="true" /><span>{label}</span></button>)}
+          {actions.map(({ id, label, icon: Icon, choose }, index) => <button type="button" role="menuitem" tabIndex={open ? 0 : -1} key={id} ref={(button) => { actionRefs.current[index] = button; }} onClick={choose}><Icon aria-hidden="true" /><span>{label}</span></button>)}
         </div>
         {isMobile && <button type="button" className="record-action-cancel" onClick={close}>{cancelLabel}</button>}
       </section>
@@ -2479,9 +2502,9 @@ function CreateRecordPicker({
     close={close}
     placement="bottom-center"
     actions={[
-      { label: t.addMaterial, icon: FileJson, choose: () => choose("es") },
-      { label: t.addInterview, icon: BriefcaseBusiness, choose: () => choose("interview") },
-      { label: t.addPrep, icon: Target, choose: () => choose("preparation") },
+      { id: "document", label: t.addMaterial, icon: FileJson, choose: () => choose("es") },
+      { id: "interview", label: t.addInterview, icon: BriefcaseBusiness, choose: () => choose("interview") },
+      { id: "preparation", label: t.addPrep, icon: Target, choose: () => choose("preparation") },
     ]}
   />;
 }
@@ -2915,6 +2938,7 @@ function Companies({
   setEditEvent,
   setScheduleCompanyId,
   setForm,
+  openRecordEvent,
   setConfirm,
   companyFilter,
   clearCompanyFilter,
@@ -3040,11 +3064,11 @@ function Companies({
                 cancelLabel={t.cancel}
                 close={() => setRecordMenuOpen(false)}
                 actions={[
-                  { label: t.addMaterial, icon: FileJson, choose: () => { setRecordMenuOpen(false); open("es"); } },
-                  { label: t.addInterview, icon: BriefcaseBusiness, choose: () => { setRecordMenuOpen(false); open("interview"); } },
-                  { label: t.addTest, icon: ClipboardCheck, choose: () => { setRecordMenuOpen(false); open("schedule"); } },
-                  { label: t.addBriefing, icon: CalendarClock, choose: () => { setRecordMenuOpen(false); open("schedule"); } },
-                  { label: t.addOtherRecord, icon: FileText, choose: () => { setRecordMenuOpen(false); open("schedule"); } },
+                  { id: "document", label: t.addMaterial, icon: FileJson, choose: () => { setRecordMenuOpen(false); open("es"); } },
+                  { id: "interview", label: t.addInterview, icon: BriefcaseBusiness, choose: () => { setRecordMenuOpen(false); open("interview"); } },
+                  { id: "aptitude", label: t.addTest, icon: ClipboardCheck, choose: () => { setRecordMenuOpen(false); openRecordEvent({ type: "web_test", stage: "web_test" }, co.id); } },
+                  { id: "briefing", label: t.addBriefing, icon: CalendarClock, choose: () => { setRecordMenuOpen(false); openRecordEvent({ type: "briefing", stage: "briefing" }, co.id); } },
+                  { id: "other", label: t.addOtherRecord, icon: FileText, choose: () => { setRecordMenuOpen(false); openRecordEvent({ type: "general", stage: "saved" }, co.id); } },
                 ]}
               />
             </div>}>
@@ -3763,6 +3787,8 @@ function EventForm({
   companies,
   initial,
   defaultCompanyId,
+  defaultType,
+  defaultStage,
   close,
   save,
   remove,
@@ -3771,6 +3797,8 @@ function EventForm({
   companies: Company[];
   initial?: Event;
   defaultCompanyId?: string;
+  defaultType?: ItemType;
+  defaultStage?: Stage;
   close: () => void;
   save: any;
   remove: (event: Event) => void;
@@ -3810,7 +3838,7 @@ function EventForm({
         </label>
         <label>
           <span>{t.language === "言語" ? "種類" : t.language === "Language" ? "Type" : "类型"}</span>
-          <select name="type" defaultValue={initial?.type || "interview"}>
+          <select name="type" defaultValue={initial?.type || defaultType || "interview"}>
             {types.map((x) => (
               <option key={x} value={x}>
                 {t[x]}
@@ -3820,7 +3848,7 @@ function EventForm({
         </label>
         <label>
           <span>{t.stage}</span>
-          <select name="stage" defaultValue={initial?.stage || "briefing"}>
+          <select name="stage" defaultValue={initial?.stage || defaultStage || "briefing"}>
             {stages.map((x) => (
               <option key={x} value={x}>
                 {t[x]}
