@@ -6090,7 +6090,7 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
   }
 }
 
-/* Mobile bottom navigation: a full-width X-style gradient scrim. */
+/* Mobile bottom navigation: a flat translucent overlay, like X mobile web. */
 @media (max-width: 767px) {
   :root {
     --mobile-bottom-nav-height: calc(104px + env(safe-area-inset-bottom) + env(safe-area-inset-bottom));
@@ -6110,53 +6110,24 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
     gap: 0 !important;
     padding: 0 0 env(safe-area-inset-bottom) !important;
     border: 0 !important;
-    border-top: 0 !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.04) !important;
     border-radius: 0 !important;
-    background: transparent !important;
+    background: rgba(255, 255, 255, 0.82) !important;
     box-shadow: none !important;
     overflow: visible !important;
-    isolation: isolate;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
   }
 
   html[data-theme="dark"] [data-testid="mobile-bottom-nav"] {
-    border-top: 0 !important;
-    background: transparent !important;
+    border-top-color: rgba(255, 255, 255, 0.06) !important;
+    background: rgba(10, 10, 12, 0.78) !important;
     box-shadow: none !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
   }
 
-  [data-testid="mobile-bottom-nav"]::before {
-    content: "" !important;
-    position: absolute !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    z-index: 0 !important;
-    display: block !important;
-    height: 124px !important;
-    pointer-events: none !important;
-    background: linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.55) 45%,
-      rgba(255, 255, 255, 0.88) 100%
-    ) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
-  }
-
-  html[data-theme="dark"] [data-testid="mobile-bottom-nav"]::before {
-    background: linear-gradient(
-      to bottom,
-      rgba(15, 17, 20, 0) 0%,
-      rgba(15, 17, 20, 0.55) 45%,
-      rgba(15, 17, 20, 0.9) 100%
-    ) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
-  }
-
+  [data-testid="mobile-bottom-nav"]::before,
   [data-testid="mobile-bottom-nav"]::after {
     content: none !important;
     display: none !important;
@@ -6164,7 +6135,10 @@ html[data-theme="dark"] { --app-page-bg: #1f2328; }
 
   [data-testid="mobile-bottom-nav"] > button,
   [data-testid="mobile-bottom-nav"] > button.active,
-  [data-testid="mobile-bottom-nav"] > button[data-pressed="true"] {
+  [data-testid="mobile-bottom-nav"] > button[data-pressed="true"],
+  [data-testid="mobile-bottom-nav"] > button:hover,
+  [data-testid="mobile-bottom-nav"] > button:active,
+  [data-testid="mobile-bottom-nav"] > button:focus:not(:focus-visible) {
     display: flex !important;
     min-width: 0 !important;
     width: 100% !important;
