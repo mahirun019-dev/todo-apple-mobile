@@ -2285,12 +2285,18 @@ function MobileNav({
       const progress = effectiveEnd > 0
         ? Math.min(1, Math.max(0, (scrollY - start) / effectiveEnd))
         : 0;
-      const darkAlpha = 0.94 - progress * 0.72;
-      const lightAlpha = 0.96 - progress * 0.54;
+      const darkAlpha = 1 - progress * 0.78;
+      const lightAlpha = 1 - progress * 0.58;
 
       nav.style.setProperty("--bottom-nav-scroll-progress", progress.toFixed(3));
-      nav.style.setProperty("--bottom-nav-dark-background", `rgba(10, 10, 12, ${darkAlpha.toFixed(3)})`);
-      nav.style.setProperty("--bottom-nav-light-background", `rgba(255, 255, 255, ${lightAlpha.toFixed(3)})`);
+      nav.style.setProperty(
+        "--bottom-nav-dark-background",
+        progress === 0 ? "rgb(0, 0, 0)" : `rgba(10, 10, 12, ${darkAlpha.toFixed(3)})`,
+      );
+      nav.style.setProperty(
+        "--bottom-nav-light-background",
+        progress === 0 ? "rgb(255, 255, 255)" : `rgba(255, 255, 255, ${lightAlpha.toFixed(3)})`,
+      );
     };
 
     const onScroll = () => {
