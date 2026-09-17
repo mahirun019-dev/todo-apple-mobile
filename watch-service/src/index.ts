@@ -13,7 +13,10 @@ async function authenticate(request: Request, env: Env) {
 
 async function createSession(request: Request, env: Env, origin: string) {
   const { code } = await request.json<{ code?: string }>();
-  if (!code || (await sha256(code)) !== (await sha256(env.WATCH_ACCESS_CODE))) return json({ error: 'AUTH_FAILED' }, 401, origin);
+  const requestCode = typeof code === 'string' ? code.trim() : '';
+  const configuredCode = typeof env.WATCH_ACCESS_CODE === 'string' ? env.WATCH_ACCESS_CODE.trim() : '';
+  const matches = Boolean(requestCode && configuredCode && (await sha256(requestCode)) === (await sha256(configuredCode)));
+  if (!matches) return json({ error: 'AUTH_FAILED' }, 401, origin);
   const token = crypto.randomUUID() + crypto.randomUUID();
   const now = new Date();
   const expires = new Date(now.getTime() + 30 * 864e5).toISOString();

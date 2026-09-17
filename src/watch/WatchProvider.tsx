@@ -23,10 +23,22 @@ export function WatchProvider({ children }: { children: ReactNode }) {
     if (!response.ok) { setError((await response.json().catch(() => ({}))).error || 'LOAD_FAILED'); return; }
     const body = await response.json(); setTargets(body.targets || []); setEvents(body.events || []); setError('');
   }, [request, token]);
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    const syncWhenVisible = () => {
+      if (document.visibilityState === 'visible') void refresh();
+    };
+
+    void refresh();
+    document.addEventListener('visibilitychange', syncWhenVisible);
+    window.addEventListener('pageshow', syncWhenVisible);
+    return () => {
+      document.removeEventListener('visibilitychange', syncWhenVisible);
+      window.removeEventListener('pageshow', syncWhenVisible);
+    };
+  }, [refresh]);
   const connect = async (code: string) => {
     if (!API) throw new Error('NOT_CONFIGURED');
-    const response = await fetch(`${API}/api/session`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code }) });
+    const response = await fetch(`${API}/api/session`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: code.trim() }) });
     if (!response.ok) throw new Error('AUTH_FAILED');
     const body = await response.json(); sessionStorage.setItem(TOKEN_KEY, body.token); setToken(body.token);
   };
