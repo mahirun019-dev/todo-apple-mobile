@@ -15,8 +15,8 @@ import { createBackup, type BackupSnapshot } from "./backups";
 import { geocodeCoordinates, getWeather, getWeatherByCoordinates, type WeatherResult } from "./weather";
 import prefectureData from "./data/japan-prefectures.json";
 import municipalityData from "./data/japan-municipalities.json";
-import { WatchProvider } from "./watch/WatchProvider";
-import { CompanyUpdatesSection, CompanyWatchSection, CompanyWatchStatus } from "./watch/WatchUI";
+import { companyWatchKey, WatchProvider } from "./watch/WatchProvider";
+import { CompanyWatchSection, CompanyWatchStatus, NotificationBell } from "./watch/WatchUI";
 
 import {
   Database,
@@ -1423,6 +1423,10 @@ export default function App() {
     navigate("companies", route.companyFilter || undefined, companyId);
   };
   const openCompany = (companyId: string) => selectCompany(companyId);
+  const openWatchedCompany = (companyId: string, companyName?: string) => {
+    const matchingCompany = data.companies.find((company) => company.id === companyId || (companyName && companyWatchKey(company.name) === companyWatchKey(companyName)));
+    if (matchingCompany) selectCompany(matchingCompany.id);
+  };
   const backToCompanies = () => {
     const route = readRouteState();
     navigate("companies", route.companyFilter || undefined);
@@ -1953,7 +1957,7 @@ export default function App() {
             {settings ? <X /> : <Menu />}
           </button>
           <strong className="mobile-header-title">CareerFlow</strong>
-          <span className="mobile-header-action-slot" aria-hidden="true" />
+          <NotificationBell locale={t.language === "言語" ? "ja" : "zh"} openCompany={openWatchedCompany} />
         </header>
         <main ref={workspaceRef} className="workspace">
           {view === "dashboard" && (
@@ -2544,6 +2548,10 @@ function Dashboard({
   setForm,
 }: any) {
   const initialMonth = new Date();
+  const openWatchedCompany = (companyId: string, companyName?: string) => {
+    const matchingCompany = data.companies.find((company: Company) => company.id === companyId || (companyName && companyWatchKey(company.name) === companyWatchKey(companyName)));
+    if (matchingCompany) openCompany(matchingCompany.id);
+  };
   const [displayedMonth, setDisplayedMonth] = useState({ year: initialMonth.getFullYear(), month: initialMonth.getMonth() });
   const shiftMonth = (offset: number) => setDisplayedMonth((current) => {
     const next = new Date(current.year, current.month + offset, 1);
@@ -2594,11 +2602,10 @@ function Dashboard({
       setView("materials");
     }
   };
-  const upcomingModule = <section className="entity-card next-class">
+  const upcomingModule = upcoming.length ? <section className="entity-card next-class">
     <Title>{t.next}</Title>
-    {upcoming.length ? (
-      <div className="dashboard-upcoming-list">
-        {upcoming.slice(0, 3).map((item: any) => <button type="button" className="dashboard-upcoming-item" key={item.id} onClick={() => { setEditEvent(item.event); setForm("schedule"); }}>
+    <div className="dashboard-upcoming-list">
+      {upcoming.slice(0, 3).map((item: any) => <button type="button" className="dashboard-upcoming-item" key={item.id} onClick={() => { setEditEvent(item.event); setForm("schedule"); }}>
           <i style={{ background: item.company?.color || "#555555" }} />
           <div>
             <h3>{item.title || item.company?.name || t.untitledSchedule}</h3>
@@ -2607,10 +2614,9 @@ function Dashboard({
             <WeatherLine location={item.event?.eventMode === "offline" ? formatScheduleLocation(item.event) : undefined} prefecture={item.event?.prefecture} municipality={item.event?.municipality || item.event?.city} latitude={item.event?.latitude} longitude={item.event?.longitude} date={item.at} locale={t.language === "言語" ? "ja" : "zh"} />
           </div>
         </button>)}
-        {upcoming.length > 3 && <button type="button" className="text-button" onClick={() => setView("schedule")}>{t.language === "言語" ? "すべての予定を見る" : "查看全部日程"}</button>}
-      </div>
-    ) : <Empty t={t} kind="schedule" open={() => open("schedule")} />}
-  </section>;
+      {upcoming.length > 3 && <button type="button" className="text-button" onClick={() => setView("schedule")}>{t.language === "言語" ? "すべての予定を見る" : "查看全部日程"}</button>}
+    </div>
+  </section> : null;
   const actionModule = actionItems.length > 0 ? <section className="entity-card mobile-action-required">
     <Title action={<span className="action-required-count">{actionItems.length}</span>}>{actionTitle}</Title>
     <div className="mobile-action-list">
@@ -2625,7 +2631,7 @@ function Dashboard({
     <Title className="deadline-title" action={<button className="text-button" onClick={() => open("es")}><Plus />{t.addMaterial}</button>}>{t.deadlines}</Title>
     <div className="deadline-list">{due.map((x: any) => <MaterialRow key={x.id} x={x} company={byId[x.companyId]} t={t} toggle={toggle} focus={focusToggle} />)}</div>
   </section> : null;
-  const progressModule = <section className="entity-card dashboard-progress-module">
+  const progressModule = <section className="dashboard-section dashboard-progress-module">
     <Title>{t.funnel}</Title>
     <div className="funnel">
       {([
@@ -2664,7 +2670,7 @@ function Dashboard({
     monthEventDays.set(day, [...(monthEventDays.get(day) || []), event]);
   });
   const monthLabel = new Intl.DateTimeFormat(calendarLocale, { month: "long", year: "numeric" }).format(new Date(monthYear, monthIndex, 1));
-  const monthModule = <section className="entity-card home-month-module">
+  const monthModule = <section className="dashboard-section home-month-module">
     <Title action={<div className="home-month-controls">
       <button type="button" onClick={() => shiftMonth(-1)} aria-label={t.previousMonth}><ChevronLeft aria-hidden="true" /></button>
       <span>{monthLabel}</span>
@@ -2698,7 +2704,7 @@ function Dashboard({
     || Number(b.active) - Number(a.active)
     || b.company.updatedAt - a.company.updatedAt
     || a.company.name.localeCompare(b.company.name)).slice(0, 3);
-  const featuredModule = featuredCandidates.length ? <section className="entity-card home-featured-module">
+  const featuredModule = featuredCandidates.length ? <section className="dashboard-section home-featured-module">
     <Title>{t.featuredCompanies}</Title>
     <div className="home-featured-list">
       {featuredCandidates.map(({ company, nextEvent }: any) => <button type="button" className="home-featured-row" key={company.id} onClick={() => openCompany(company.id)}>
@@ -2722,12 +2728,14 @@ function Dashboard({
             }).format(new Date())}
           </h1>
         </div>
-        <PrimaryActionButton className="dashboard-company-action" onClick={() => open("company")}>
-          <Plus />
-          {t.addCompany}
-        </PrimaryActionButton>
+        <div className="dashboard-head-actions">
+          <NotificationBell locale={t.language === "言語" ? "ja" : "zh"} openCompany={openWatchedCompany} />
+          <PrimaryActionButton className="dashboard-company-action" onClick={() => open("company")}>
+            <Plus />
+            {t.addCompany}
+          </PrimaryActionButton>
         </div>
-        <CompanyUpdatesSection locale={t.language === "言語" ? "ja" : "zh"} openCompany={openCompany} />
+        </div>
         <div className="main-dashboard-layout">
           <div className="dashboard-main">
             <div className="dashboard-top-grid">
@@ -2748,7 +2756,7 @@ function Dashboard({
             </div>
           </div>
         <aside className="dashboard-sidebar">
-          {homeSummaryVisibility.waiting && <section className="entity-card">
+          {homeSummaryVisibility.waiting && waiting.length > 0 && <section className="entity-card">
             <Title>{t.results}</Title>
             {waiting.length ? (
               waiting.map((x: any) => (
@@ -3021,7 +3029,7 @@ function Companies({
           </div>
         </div>
         <div className="course-detail">
-          <section className="entity-card course-profile">
+          <section className="course-profile detail-section">
             <i style={{ background: co.color }} />
             <h2>{t.selectionOverview}</h2>
             <dl className="company-detail-list">
@@ -3056,16 +3064,16 @@ function Companies({
           </section>
           <section className="detail-stack">
             <CompanyWatchSection company={co} locale={t.language === "言語" ? "ja" : "zh"} />
-            <section className="entity-card company-detail-section">
+            {futureEvents.length > 0 && <section className="company-detail-section detail-section">
               <Title>{t.futureSchedule}</Title>
-              {futureEvents.length ? <div className="company-future-list">
+              <div className="company-future-list">
                 {futureEvents.map((event) => <button type="button" className="company-future-item" key={event.id} onClick={() => { setEditEvent(event); setScheduleCompanyId(co.id); setForm("schedule"); }}>
                   <CalendarClock aria-hidden="true" />
                   <span><strong>{whenForLocale(event.startsAt, t)}</strong><small>{event.type === "general" ? (event.title || t.general) : t[event.type] || event.title || t.general}</small><small>{eventModeText(event, t)}</small></span>
                   <ChevronRight aria-hidden="true" />
                 </button>)}
-              </div> : <p className="company-detail-muted">{t.noFutureSchedules}</p>}
-            </section>
+              </div>
+            </section>}
             <Title action={<div className="record-action-wrap">
               <button type="button" className="primary" onPointerDown={(event) => event.stopPropagation()} onClick={() => setRecordMenuOpen(!recordMenuOpen)}><Plus />{t.addRecord}</button>
               <RecordActionMenu
@@ -3186,7 +3194,7 @@ function Companies({
                 {(data.preferences.customize.companyCard.industry || data.preferences.customize.companyCard.position) && <p>{[data.preferences.customize.companyCard.industry ? x.industry : "", data.preferences.customize.companyCard.position ? companyJobCategory(x) : ""].filter(Boolean).join(" / ") || t.notSet}</p>}
                 {(data.preferences.customize.companyCard.stage || data.preferences.customize.companyCard.interest) && <span>{data.preferences.customize.companyCard.stage ? stageDisplayLabel(x.stage, t) : ""}{data.preferences.customize.companyCard.stage && data.preferences.customize.companyCard.interest ? ` · ${t.interest} ` : data.preferences.customize.companyCard.interest ? `${t.interest} ` : ""}{data.preferences.customize.companyCard.interest ? formatInterest(x) : ""}</span>}
                 {data.preferences.customize.companyCard.nextEvent && <span>{nextEvent ? `${t.nextSchedule} · ${whenForLocale(nextEvent.startsAt, t)} · ${daysUntilLabel(nextEvent.startsAt, t)}` : t.noSchedule}</span>}
-                <CompanyWatchStatus companyId={x.id} locale={t.language === "言語" ? "ja" : "zh"} />
+                <CompanyWatchStatus companyId={x.id} companyName={x.name} locale={t.language === "言語" ? "ja" : "zh"} />
               </div>
               <ChevronRight />
             </button>;

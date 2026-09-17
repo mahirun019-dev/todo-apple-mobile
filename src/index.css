@@ -6967,6 +6967,79 @@ html[data-theme="dark"] #root {
   }
 }
 
+/* Watch notifications are a compact global inbox, not a dashboard module. */
+.dashboard-head-actions { display: flex; align-items: center; justify-self: end; gap: 8px; }
+.watch-notification-trigger { position: relative; display: grid; width: 44px; height: 44px; place-items: center; padding: 0; border: 0; border-radius: 10px; color: var(--text-secondary); background: transparent; }
+.watch-notification-trigger:hover { color: var(--text-primary); background: var(--bg-muted); }
+.watch-notification-trigger:active { background: var(--bg-selected); }
+.watch-notification-trigger svg { width: 20px; height: 20px; }
+.watch-notification-trigger > span { position: absolute; top: 4px; right: 3px; display: grid; min-width: 17px; height: 17px; place-items: center; padding: 0 4px; border: 2px solid var(--bg-app); border-radius: 999px; color: #fff; background: var(--danger, #b44743); font-size: 10px; font-weight: 750; line-height: 1; }
+.watch-notification-backdrop { display: none; }
+.watch-notification-panel { position: fixed; z-index: 1100; top: var(--notification-top); right: var(--notification-right); width: min(368px, calc(100vw - 32px)); max-height: min(560px, calc(100dvh - var(--notification-top) - 24px)); overflow: auto; border: 1px solid var(--border-color); border-radius: 14px; color: var(--text-primary); background: var(--bg-surface); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14); }
+.watch-notification-panel > header { display: flex; align-items: center; justify-content: space-between; min-height: 54px; padding: 0 10px 0 16px; border-bottom: 1px solid var(--border-color); }
+.watch-notification-panel h2 { margin: 0; font-size: 16px; }
+.watch-notification-close { display: grid; width: 36px; height: 36px; place-items: center; padding: 0; border: 0; border-radius: 9px; color: var(--text-secondary); background: transparent; }
+.watch-notification-close:hover { color: var(--text-primary); background: var(--bg-muted); }
+.watch-notification-close svg { width: 18px; height: 18px; }
+.watch-notification-list { display: grid; padding: 6px; }
+.watch-notification-item { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; width: 100%; min-height: 72px; align-items: start; gap: 9px; padding: 11px 10px; border: 0; border-radius: 9px; color: var(--text-primary); background: transparent; text-align: left; }
+.watch-notification-item:hover { background: var(--bg-muted); }
+.watch-notification-item:active { background: var(--bg-selected); }
+.watch-notification-item > span:nth-child(2) { display: grid; min-width: 0; gap: 3px; }
+.watch-notification-item strong, .watch-notification-item small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.watch-notification-item strong { font-size: 13px; }
+.watch-notification-item small, .watch-notification-item time { color: var(--text-secondary); font-size: 11px; line-height: 1.35; }
+.watch-notification-item time { padding-top: 2px; white-space: nowrap; }
+.watch-notification-dot { width: 7px; height: 7px; margin-top: 5px; border-radius: 999px; background: var(--accent); }
+.watch-notification-item.is-read { opacity: 0.58; }
+.watch-notification-item.is-read .watch-notification-dot { visibility: hidden; }
+.watch-notification-empty { margin: 0; padding: 24px 16px; color: var(--text-secondary); font-size: 13px; text-align: center; }
+
+/* Main information groups use whitespace and dividers instead of nested surfaces. */
+.dashboard-section,
+.detail-section { min-width: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.dashboard-section > .section-title { margin: 0 0 14px; }
+.dashboard-progress-module .funnel { border-top: 1px solid var(--border-color); }
+.home-month-module,
+.home-featured-module { padding: 0; border-radius: 0; }
+.home-month-module .home-month-calendar { padding-top: 2px; }
+.course-profile { padding: 0; }
+.course-profile > i { margin-bottom: 14px; }
+.course-profile h2 { margin-top: 0; }
+.course-profile h2 + .company-detail-list { margin-top: 14px; }
+.course-profile .company-detail-list + h2 { margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--border-color); }
+.company-watch-section { padding: 0; }
+.company-watch-section .company-watch-heading { min-height: 38px; }
+.company-detail-section { padding: 0; }
+.detail-stack { gap: 28px; }
+.selection-empty { grid-template-columns: auto 1fr; justify-items: start; align-items: center; column-gap: 9px; row-gap: 3px; padding: 12px 0; }
+.selection-empty svg { grid-row: 1 / span 2; width: 20px; height: 20px; }
+.selection-empty p { grid-column: 2; }
+
+/* The header stays legible: only its own 56px surface has a very light blur. */
+:root { --careerflow-mobile-header-backdrop: saturate(105%) blur(2px); }
+@media (max-width: 767px) {
+  .app-shell > .student-app > .mobile-header {
+    background: rgba(255, 255, 255, 0.92) !important;
+    backdrop-filter: var(--careerflow-mobile-header-backdrop) !important;
+    -webkit-backdrop-filter: var(--careerflow-mobile-header-backdrop) !important;
+  }
+  html[data-theme="dark"] .app-shell > .student-app > .mobile-header { background: rgba(0, 0, 0, 0.9) !important; }
+  .app-shell > .student-app > .mobile-header > .watch-notification-trigger { position: absolute; right: 12px; width: 40px; height: 40px; color: var(--text-primary); background: rgba(255, 255, 255, 0.28); }
+  html[data-theme="dark"] .app-shell > .student-app > .mobile-header > .watch-notification-trigger { background: rgba(255, 255, 255, 0.05); }
+  .watch-notification-backdrop { position: fixed; z-index: 1090; inset: 0; display: block; border: 0; background: rgba(0, 0, 0, 0.22); }
+  .watch-notification-panel { z-index: 1100; top: auto; right: 0; bottom: 0; width: 100%; max-height: min(72dvh, 620px); border-width: 1px 0 0; border-radius: 20px 20px 0 0; box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.14); }
+  .watch-notification-panel > header { min-height: 58px; padding-left: 20px; }
+  .watch-notification-list { padding: 8px 12px calc(12px + env(safe-area-inset-bottom)); }
+  .watch-notification-item { min-height: 78px; padding: 12px 8px; }
+  body:has(.watch-notification-panel) [data-testid="mobile-bottom-nav"] { display: none !important; }
+  .dashboard-section > .section-title { margin-bottom: 12px; }
+  .dashboard-progress-module,
+  .home-month-module,
+  .home-featured-module { margin-inline: 0; }
+  .detail-stack { gap: 24px; }
+}
+
 /* Mobile filter sheets use the same neutral OLED surfaces as the rest of the app. */
 @media (max-width: 767px) {
   .company-filter-sheet .company-filter-sheet-close {

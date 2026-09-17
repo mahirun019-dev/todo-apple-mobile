@@ -1,7 +1,8 @@
-import { useMemo, useState, type FormEvent } from 'react';
-import { ExternalLink, Eye, Pause, Pencil, Play, Plus, RefreshCw, Trash2, X } from 'lucide-react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react';
+import { createPortal } from 'react-dom';
+import { Bell, ExternalLink, Eye, Pause, Pencil, Play, Plus, RefreshCw, Trash2, X } from 'lucide-react';
 import { watchText } from './i18n';
-import { useWatch } from './WatchProvider';
+import { companyWatchKey, useWatch } from './WatchProvider';
 import type { WatchEvent, WatchSource } from './types';
 
 type Locale = 'ja' | 'zh';
@@ -10,7 +11,8 @@ const formatDate = (value: string | null, locale: Locale) => value ? new Intl.Da
 export function CompanyWatchSection({ company, locale }: { company: { id: string; name: string }; locale: Locale }) {
   const text = watchText[locale], watch = useWatch();
   const [formOpen, setFormOpen] = useState(false), [editingId, setEditingId] = useState<string | null>(null), [sourceType, setSourceType] = useState<WatchSource>('official'), [url, setUrl] = useState(''), [label, setLabel] = useState(''), [message, setMessage] = useState('');
-  const targets = watch.targets.filter((target) => target.company_id === company.id);
+  const companyKey = companyWatchKey(company.name);
+  const targets = watch.targets.filter((target) => target.company_id === company.id || companyWatchKey(target.company_name) === companyKey);
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setMessage('');
     try {
@@ -19,7 +21,7 @@ export function CompanyWatchSection({ company, locale }: { company: { id: string
       setFormOpen(false); setEditingId(null); setUrl(''); setLabel(''); await watch.refresh();
     } catch { setMessage(text.unavailable); }
   };
-  return <section className="entity-card company-watch-section">
+  return <section className="company-watch-section detail-section">
     <div className="company-watch-heading"><h2>{text.title}</h2>{watch.authenticated && <button type="button" className="text-button" onClick={() => { setEditingId(null); setSourceType('official'); setUrl(''); setLabel(''); setFormOpen(true); }}><Plus />{text.add}</button>}</div>
     {!watch.configured ? <p className="company-watch-muted">{text.unavailable}</p> : !watch.authenticated ? <WatchLogin locale={locale} /> : targets.length ? <div className="watch-target-list">{targets.map((target) => <article className="watch-target-item" key={target.id}>
       <div className="watch-target-copy"><strong>{target.label || text[target.source_type]}</strong><a href={target.url} target="_blank" rel="noreferrer" title={target.url}>{new URL(target.url).host}{new URL(target.url).pathname}<ExternalLink /></a><small className={`watch-status ${target.status}`}>{text[target.status]} · {text.lastCheck} {formatDate(target.last_checked_at, locale)}</small>{target.last_error && <small title={target.last_error}>{target.last_error}</small>}</div>
@@ -36,19 +38,71 @@ export function CompanyWatchSection({ company, locale }: { company: { id: string
 
 function WatchLogin({ locale }: { locale: Locale }) { const text = watchText[locale], watch = useWatch(), [code, setCode] = useState(''), [error, setError] = useState(''); return <form className="watch-login" onSubmit={async (event) => { event.preventDefault(); try { await watch.connect(code); } catch { setError('AUTH_FAILED'); } }}><label>{text.code}<input type="password" autoComplete="current-password" value={code} onChange={(e) => setCode(e.target.value)} /></label><button className="primary">{text.connect}</button>{error && <small>{error}</small>}</form>; }
 
-export function CompanyUpdatesSection({ locale, openCompany }: { locale: Locale; openCompany(id: string): void }) {
-  const text = watchText[locale], watch = useWatch(), [selected, setSelected] = useState<WatchEvent | null>(null);
+export function NotificationBell({ locale, openCompany }: { locale: Locale; openCompany(id: string, name?: string): void }) {
+  const text = watchText[locale], watch = useWatch();
+  const [open, setOpen] = useState(false), [selected, setSelected] = useState<WatchEvent | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null), panelRef = useRef<HTMLElement>(null);
+  const [position, setPosition] = useState({ top: 76, right: 24 });
   const unread = useMemo(() => watch.events.filter((event) => !event.read), [watch.events]);
-  if (!watch.authenticated || !unread.length) return null;
-  const open = async (event: WatchEvent) => { setSelected(event); await watch.markRead(event.id); };
-  return <><section className="entity-card company-updates-section"><div className="company-watch-heading"><h2>{text.updates}</h2><span>{unread.length}</span></div>{unread.slice(0, 3).map((event) => <button key={event.id} className="company-update-row" onClick={() => void open(event)}><span><strong>{event.company_name}</strong><small>{event.title}</small></span><time>{formatDate(event.detected_at, locale)}</time></button>)}</section>{selected && <div className="modal-layer watch-dialog-layer"><button className="modal-backdrop" onClick={() => setSelected(null)} /><section className="drawer entity-card watch-dialog watch-event-detail" role="dialog" aria-modal="true"><header><div><small>{text.updates}</small><h2>{selected.company_name}</h2></div><button className="close-button" onClick={() => setSelected(null)}><X /></button></header><h3>{selected.title}</h3><p>{selected.summary}</p>{selected.before_excerpt && <div><strong>{text.before}</strong><pre>{selected.before_excerpt}</pre></div>}{selected.after_excerpt && <div><strong>{text.after}</strong><pre>{selected.after_excerpt}</pre></div>}<p><small>{text.detected}: {formatDate(selected.detected_at, locale)}</small></p><div className="watch-event-actions"><button onClick={() => { setSelected(null); openCompany(selected.company_id); }}>{selected.company_name}</button><a className="primary" href={selected.source_url} target="_blank" rel="noreferrer">{text.open}<ExternalLink /></a></div></section></div>}</>;
+
+  useLayoutEffect(() => {
+    if (!open || !triggerRef.current) return;
+    const updatePosition = () => {
+      const rect = triggerRef.current?.getBoundingClientRect();
+      if (rect) setPosition({ top: Math.round(rect.bottom + 8), right: Math.round(window.innerWidth - rect.right) });
+    };
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    return () => window.removeEventListener('resize', updatePosition);
+  }, [open]);
+  useEffect(() => {
+    if (!open) return;
+    const closeFromOutside = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!triggerRef.current?.contains(target) && !panelRef.current?.contains(target)) setOpen(false);
+    };
+    const closeFromEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false); };
+    document.addEventListener('pointerdown', closeFromOutside);
+    document.addEventListener('keydown', closeFromEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeFromOutside);
+      document.removeEventListener('keydown', closeFromEscape);
+    };
+  }, [open]);
+  const choose = async (event: WatchEvent) => {
+    setSelected(event);
+    if (!event.read) await watch.markRead(event.id);
+  };
+  if (!watch.configured || !watch.authenticated) return null;
+  const panel = open ? createPortal(<>
+    <button className="watch-notification-backdrop" aria-label={text.cancel} onClick={() => setOpen(false)} />
+    <section ref={panelRef} className="watch-notification-panel" style={{ '--notification-top': `${position.top}px`, '--notification-right': `${position.right}px` } as CSSProperties} role="dialog" aria-label={text.updates}>
+      <header><h2>{text.updates}</h2><button type="button" className="watch-notification-close" onClick={() => setOpen(false)} aria-label={text.cancel}><X /></button></header>
+      <div className="watch-notification-list">
+        {watch.events.length ? watch.events.slice(0, 20).map((event) => <button key={event.id} className={`watch-notification-item${event.read ? ' is-read' : ''}`} onClick={() => void choose(event)}>
+          <span className="watch-notification-dot" aria-hidden="true" />
+          <span><strong>{event.company_name}</strong><small>{event.title}</small><small>{event.summary}</small></span><time>{formatDate(event.detected_at, locale)}</time>
+        </button>) : <p className="watch-notification-empty">{locale === 'ja' ? '新しい企業アップデートはありません' : '暂无新的企业更新'}</p>}
+      </div>
+    </section>
+  </>, document.body) : null;
+  return <><button ref={triggerRef} type="button" className="watch-notification-trigger" onClick={() => setOpen((current) => !current)} aria-label={`${text.updates}${unread.length ? ` ${unread.length}` : ''}`} aria-expanded={open}>
+    <Bell aria-hidden="true" />{unread.length > 0 && <span>{unread.length > 99 ? '99+' : unread.length}</span>}
+  </button>{panel}{selected && <WatchEventDetail locale={locale} event={selected} close={() => setSelected(null)} openCompany={openCompany} />}</>;
 }
 
-export function CompanyWatchStatus({ companyId, locale }: { companyId: string; locale: Locale }) {
+function WatchEventDetail({ locale, event, close, openCompany }: { locale: Locale; event: WatchEvent; close(): void; openCompany(id: string, name?: string): void }) {
+  const text = watchText[locale];
+  return createPortal(<div className="modal-layer watch-dialog-layer"><button className="modal-backdrop" onClick={close} aria-label={text.cancel} /><section className="drawer entity-card watch-dialog watch-event-detail" role="dialog" aria-modal="true"><header><div><small>{text.updates}</small><h2>{event.company_name}</h2></div><button className="close-button" onClick={close} aria-label={text.cancel}><X /></button></header><h3>{event.title}</h3><p>{event.summary}</p>{event.before_excerpt && <div><strong>{text.before}</strong><pre>{event.before_excerpt}</pre></div>}{event.after_excerpt && <div><strong>{text.after}</strong><pre>{event.after_excerpt}</pre></div>}<p><small>{text.detected}: {formatDate(event.detected_at, locale)}</small></p><div className="watch-event-actions"><button onClick={() => { close(); openCompany(event.company_id, event.company_name); }}>{event.company_name}</button><a className="primary" href={event.source_url} target="_blank" rel="noreferrer">{text.open}<ExternalLink /></a></div></section></div>, document.body);
+}
+
+export function CompanyWatchStatus({ companyId, companyName, locale }: { companyId: string; companyName: string; locale: Locale }) {
   const text = watchText[locale], watch = useWatch();
   if (!watch.authenticated) return null;
-  const enabled = watch.targets.some((target) => target.company_id === companyId && Boolean(target.enabled));
-  const unread = watch.events.filter((event) => event.company_id === companyId && !event.read).length;
+  const key = companyWatchKey(companyName);
+  const matchesCompany = (item: { company_id: string; company_name: string }) => item.company_id === companyId || companyWatchKey(item.company_name) === key;
+  const enabled = watch.targets.some((target) => matchesCompany(target) && Boolean(target.enabled));
+  const unread = watch.events.filter((event) => matchesCompany(event) && !event.read).length;
   if (!enabled && !unread) return null;
   return <span className={`company-watch-card-status${unread ? ' has-updates' : ''}`}>{unread ? `● ${unread}${locale === 'ja' ? '件の更新' : ' 条更新'}` : text.active}</span>;
 }
