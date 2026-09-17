@@ -27,6 +27,8 @@ jobs:
           node-version: 20
       - run: npm install
       - run: npm run build
+        env:
+          VITE_WATCH_API_URL: ${{ vars.VITE_WATCH_API_URL }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

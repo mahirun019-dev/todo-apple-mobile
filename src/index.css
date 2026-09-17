@@ -6,6 +6,67 @@
   --mobile-bottom-nav-height: 58px;
 }
 
+/* Company Watch uses the existing surface tokens; monitoring state comes only from the server. */
+.company-watch-section,
+.company-updates-section { padding: 20px; }
+.company-watch-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.company-watch-heading h2 { margin: 0; font-size: 17px; }
+.company-watch-heading .text-button { display: inline-flex; align-items: center; gap: 6px; }
+.company-watch-heading svg { width: 16px; height: 16px; }
+.company-watch-muted { margin: 16px 0 0; color: var(--text-secondary); line-height: 1.6; }
+.company-watch-empty { display: grid; justify-items: start; gap: 12px; padding-top: 18px; color: var(--text-secondary); }
+.company-watch-empty > svg { width: 24px; height: 24px; }
+.company-watch-empty p { margin: 0; line-height: 1.6; }
+.company-watch-empty button { display: inline-flex; align-items: center; gap: 6px; }
+.watch-target-list { margin-top: 12px; }
+.watch-target-item { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-width: 0; padding: 14px 0; border-top: 1px solid var(--border-color); }
+.watch-target-copy { display: grid; min-width: 0; gap: 5px; }
+.watch-target-copy a { display: flex; align-items: center; min-width: 0; gap: 5px; overflow: hidden; color: var(--text-secondary); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.watch-target-copy a svg { width: 13px; height: 13px; flex: 0 0 auto; }
+.watch-target-copy small { color: var(--text-secondary); }
+.watch-status.active { color: var(--success, #2e7d52); }
+.watch-status.error { color: var(--danger, #b44743); }
+.company-watch-card-status { color: var(--text-secondary); font-size: 12px; }
+.company-watch-card-status.has-updates { color: var(--danger, #b44743); }
+.watch-target-actions { display: flex; flex: 0 0 auto; gap: 4px; }
+.watch-target-actions button { display: grid; width: 34px; height: 34px; place-items: center; padding: 0; border: 0; color: var(--text-secondary); background: transparent; border-radius: 8px; }
+.watch-target-actions button:hover { background: var(--bg-muted); color: var(--text-primary); }
+.watch-target-actions svg { width: 17px; height: 17px; }
+.watch-target-actions .danger-icon:hover { color: var(--danger, #b44743); }
+.company-updates-section { margin-bottom: 18px; }
+.company-watch-heading > span { min-width: 28px; padding: 4px 8px; border-radius: 999px; background: var(--bg-muted); text-align: center; font-weight: 700; }
+.company-update-row { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border: 0; border-top: 1px solid var(--border-color); color: var(--text-primary); background: transparent; text-align: left; }
+.company-update-row:first-of-type { margin-top: 10px; }
+.company-update-row span { display: grid; min-width: 0; gap: 4px; }
+.company-update-row strong,
+.company-update-row small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.company-update-row small,
+.company-update-row time { color: var(--text-secondary); font-size: 12px; }
+.company-update-row:hover { background: var(--bg-muted); }
+.watch-dialog { width: min(520px, calc(100vw - 32px)); }
+.watch-dialog form { display: grid; gap: 16px; }
+.watch-dialog-layer { z-index: 1010; }
+.watch-login { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; padding-top: 16px; }
+.watch-login label { display: grid; gap: 6px; color: var(--text-secondary); font-size: 13px; }
+.watch-login small { grid-column: 1 / -1; color: var(--danger, #b44743); }
+.watch-event-detail h3 { margin: 8px 0; }
+.watch-event-detail pre { overflow: auto; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-secondary); background: var(--bg-muted); font: inherit; white-space: pre-wrap; }
+.watch-event-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.watch-event-actions a { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+.watch-event-actions svg { width: 16px; height: 16px; }
+
+@media (max-width: 760px) {
+  .company-watch-section,
+  .company-updates-section { padding: 18px 16px; }
+  .company-watch-heading { align-items: flex-start; }
+  .company-watch-heading .text-button { max-width: 48%; text-align: right; }
+  .watch-target-item { align-items: flex-start; }
+  .watch-target-copy a { max-width: calc(100vw - 150px); }
+  .watch-login { grid-template-columns: 1fr; }
+  .watch-login small { grid-column: auto; }
+  .watch-dialog-layer .watch-dialog { height: auto; max-height: calc(100dvh - 24px); overflow-y: auto; }
+}
+
 :root {
   font-family:
     Inter,

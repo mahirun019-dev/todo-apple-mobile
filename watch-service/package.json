@@ -1,0 +1,22 @@
+{
+  "name": "careerflow-watch-service",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "tsx --test test/*.test.ts",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "cheerio": "^1.1.2",
+    "robots-parser": "^3.0.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "latest",
+    "@types/node": "latest",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "wrangler": "^4.37.1"
+  }
+}

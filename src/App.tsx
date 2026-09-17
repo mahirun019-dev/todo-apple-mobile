@@ -15,6 +15,8 @@ import { createBackup, type BackupSnapshot } from "./backups";
 import { geocodeCoordinates, getWeather, getWeatherByCoordinates, type WeatherResult } from "./weather";
 import prefectureData from "./data/japan-prefectures.json";
 import municipalityData from "./data/japan-municipalities.json";
+import { WatchProvider } from "./watch/WatchProvider";
+import { CompanyUpdatesSection, CompanyWatchSection, CompanyWatchStatus } from "./watch/WatchUI";
 
 import {
   Database,
@@ -1915,7 +1917,7 @@ export default function App() {
     setForm("schedule");
   };
   return (
-    <div className="app-shell" data-app-shell="true">
+    <WatchProvider><div className="app-shell" data-app-shell="true">
       <div className="student-app career-app">
         <aside className="sidebar panel">
           <Brand icon={icon} showIcon={false} />
@@ -2187,7 +2189,7 @@ export default function App() {
         />,
         document.body,
       )}
-    </div>
+    </div></WatchProvider>
   );
 }
 
@@ -2725,6 +2727,7 @@ function Dashboard({
           {t.addCompany}
         </PrimaryActionButton>
         </div>
+        <CompanyUpdatesSection locale={t.language === "言語" ? "ja" : "zh"} openCompany={openCompany} />
         <div className="main-dashboard-layout">
           <div className="dashboard-main">
             <div className="dashboard-top-grid">
@@ -3052,6 +3055,7 @@ function Companies({
             </dl>
           </section>
           <section className="detail-stack">
+            <CompanyWatchSection company={co} locale={t.language === "言語" ? "ja" : "zh"} />
             <section className="entity-card company-detail-section">
               <Title>{t.futureSchedule}</Title>
               {futureEvents.length ? <div className="company-future-list">
@@ -3182,6 +3186,7 @@ function Companies({
                 {(data.preferences.customize.companyCard.industry || data.preferences.customize.companyCard.position) && <p>{[data.preferences.customize.companyCard.industry ? x.industry : "", data.preferences.customize.companyCard.position ? companyJobCategory(x) : ""].filter(Boolean).join(" / ") || t.notSet}</p>}
                 {(data.preferences.customize.companyCard.stage || data.preferences.customize.companyCard.interest) && <span>{data.preferences.customize.companyCard.stage ? stageDisplayLabel(x.stage, t) : ""}{data.preferences.customize.companyCard.stage && data.preferences.customize.companyCard.interest ? ` · ${t.interest} ` : data.preferences.customize.companyCard.interest ? `${t.interest} ` : ""}{data.preferences.customize.companyCard.interest ? formatInterest(x) : ""}</span>}
                 {data.preferences.customize.companyCard.nextEvent && <span>{nextEvent ? `${t.nextSchedule} · ${whenForLocale(nextEvent.startsAt, t)} · ${daysUntilLabel(nextEvent.startsAt, t)}` : t.noSchedule}</span>}
+                <CompanyWatchStatus companyId={x.id} locale={t.language === "言語" ? "ja" : "zh"} />
               </div>
               <ChevronRight />
             </button>;

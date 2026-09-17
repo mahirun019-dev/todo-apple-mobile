@@ -1,0 +1,4 @@
+export type WatchSource = "mynavi" | "official" | "other";
+export type WatchStatus = "active" | "checking" | "error" | "paused";
+export interface WatchTarget { id: string; company_id: string; company_name: string; source_type: WatchSource; label: string; url: string; enabled: number; status: WatchStatus; last_checked_at: string | null; last_success_at: string | null; last_http_status: number | null; last_error: string | null; }
+export interface WatchEvent { id: string; company_id: string; company_name: string; watch_target_id: string; event_type: string; title: string; summary: string; before_excerpt?: string; after_excerpt?: string; detected_at: string; source_url: string; source_type: WatchSource; read: number; }
