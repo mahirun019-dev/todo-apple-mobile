@@ -7086,12 +7086,12 @@ html[data-theme="dark"] .app-shell > .student-app > .mobile-header { background:
 .dashboard-next-deadline-row.deadline time { color: #a66910; }
 .dashboard-next-deadline-row.warning time { color: #b35d0d; font-weight: 700; }
 .dashboard-next-deadline-row.urgent time { color: #bc4644; font-weight: 700; }
-.metric.is-deadline .metric-icon,
-.metric.is-deadline strong { color: #a66910; }
-.metric.is-warning .metric-icon,
-.metric.is-warning strong { color: #b35d0d; }
-.metric.is-urgent .metric-icon,
-.metric.is-urgent strong { color: #bc4644; }
+.metric .kpi-number { color: var(--text-primary); }
+.metric.is-deadline .metric-icon { color: #a66910; }
+.metric.is-warning .metric-icon { color: #b35d0d; }
+.metric.is-urgent .metric-icon { color: #bc4644; }
+.metric.is-warning .kpi-number { color: #b35d0d; }
+.metric.is-urgent .kpi-number { color: #bc4644; }
 
 .funnel-mobile { display: none; }
 .dashboard-progress-module .funnel-desktop { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--border-color); }
@@ -7182,12 +7182,11 @@ html[data-theme="dark"] .app-shell > .student-app > .mobile-header { background:
 [data-theme="dark"] .dashboard-next-deadline-row.deadline time { color: #e0a24d; }
 [data-theme="dark"] .dashboard-next-deadline-row.warning time { color: #ef9134; }
 [data-theme="dark"] .dashboard-next-deadline-row.urgent time { color: #ee7975; }
-[data-theme="dark"] .metric.is-deadline .metric-icon,
-[data-theme="dark"] .metric.is-deadline strong { color: #e0a24d; }
-[data-theme="dark"] .metric.is-warning .metric-icon,
-[data-theme="dark"] .metric.is-warning strong { color: #ef9134; }
-[data-theme="dark"] .metric.is-urgent .metric-icon,
-[data-theme="dark"] .metric.is-urgent strong { color: #ee7975; }
+[data-theme="dark"] .metric.is-deadline .metric-icon { color: #e0a24d; }
+[data-theme="dark"] .metric.is-warning .metric-icon { color: #ef9134; }
+[data-theme="dark"] .metric.is-urgent .metric-icon { color: #ee7975; }
+[data-theme="dark"] .metric.is-warning .kpi-number { color: #ef9134; }
+[data-theme="dark"] .metric.is-urgent .kpi-number { color: #ee7975; }
 [data-theme="dark"] .calendar-event-dot.deadline,
 [data-theme="dark"] .calendar-item-dot.deadline { background: #e0a24d; }
 [data-theme="dark"] .calendar-event-dot.warning,

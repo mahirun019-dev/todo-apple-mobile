@@ -68,6 +68,7 @@ import {
   X,
   Star,
 } from "lucide-react";
+import { getUpcomingDeadlines, parseTokyoCalendarDate, selectWeeklyDeadlines } from "./deadline-selector";
 
 type View = "dashboard" | "companies" | "notifications" | "schedule" | "materials";
 type CompanyRouteFilter = "active" | "waiting-result";
@@ -281,57 +282,13 @@ type Data = {
   preferences: AppPreferences;
   templates: CareerTemplate[];
 };
-type UpcomingDeadline = {
-  id: string;
-  key: string;
-  kind: "event" | "material" | "preparation";
-  companyId?: string;
-  type: string;
-  title: string;
-  at: string;
-  event?: Event;
-  material?: Material;
-  preparation?: Preparation;
-};
-
 const defaultHomeSummary: HomeSummaryModule[] = ["active", "deadlines", "waiting"];
 const defaultHomeSections: HomeSection[] = ["upcoming", "action", "progress", "month", "featured"];
 const defaultHomeModules: HomeModule[] = [...defaultHomeSummary, ...defaultHomeSections];
-const deadlineEventTypes = new Set<ItemType>(["es", "resume", "web_test"]);
 const interviewStageOptions = ["first_interview", "second_interview", "final_interview", "other"] as const;
-function deadlineKey(item: Pick<UpcomingDeadline, "kind" | "id">) {
-  return `${item.kind}:${item.id}`;
-}
 function isDeadlineEvent(event: Event) {
-  return deadlineEventTypes.has(event.type) && !(event as Event & { deletedAt?: boolean }).deletedAt;
-}
-function tokyoDateKey(value: string | number | Date) {
-  const { year, month, day } = tokyoCalendarParts(new Date(value));
-  return `${year}-${month}-${day}`;
-}
-function addTokyoDays(dateKey: string, amount: number) {
-  const [year, month, day] = dateKey.split("-").map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day + amount));
-  return date.toISOString().slice(0, 10);
-}
-function isDeadlineInCurrentTokyoWeek(item: Pick<UpcomingDeadline, "at">, now = Date.now()) {
-  const today = tokyoDateKey(now);
-  const day = new Date(`${today}T12:00:00+09:00`).getDay();
-  const weekStart = addTokyoDays(today, day === 0 ? -6 : 1 - day);
-  const weekEnd = addTokyoDays(weekStart, 6);
-  const target = tokyoDateKey(parseTokyoCalendarDate(item.at));
-  return target >= weekStart && target <= weekEnd;
-}
-function getUpcomingDeadlines(data: Data, now = Date.now()): UpcomingDeadline[] {
-  const future = (at: string) => {
-    const time = parseTokyoCalendarDate(at).getTime();
-    return Number.isFinite(time) && time >= now;
-  };
-  return [
-    ...data.events.filter((event) => isDeadlineEvent(event) && future(event.startsAt)).map((event) => ({ id: event.id, key: `event:${event.id}`, kind: "event" as const, companyId: event.companyId, type: event.type, title: event.title, at: event.startsAt, event })),
-    ...data.materials.filter((item) => !item.completed && !!item.dueAt && future(item.dueAt!)).map((item) => ({ id: item.id, key: `material:${item.id}`, kind: "material" as const, companyId: item.companyId, type: item.type, title: item.title, at: item.dueAt!, material: item })),
-    ...data.preparations.filter((item) => !item.completed && !!item.dueAt && future(item.dueAt!)).map((item) => ({ id: item.id, key: `preparation:${item.id}`, kind: "preparation" as const, companyId: item.companyId, type: item.type, title: item.title, at: item.dueAt!, preparation: item })),
-  ].sort((a, b) => parseTokyoCalendarDate(a.at).getTime() - parseTokyoCalendarDate(b.at).getTime());
+  return !(event as Event & { deletedAt?: boolean }).deletedAt
+    && Number.isFinite(parseTokyoCalendarDate(event.startsAt).getTime());
 }
 function defaultPreferences(): AppPreferences {
   const savedRegion = typeof localStorage !== "undefined" ? localStorage.getItem("careerflow-home-region") || "" : "";
@@ -1145,15 +1102,6 @@ function tokyoCalendarParts(date: Date) {
   }).formatToParts(date);
   return Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value])) as { year: string; month: string; day: string; hour: string; minute: string };
 }
-function calendarParts(value: string) {
-  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::\d{2})?$/);
-  if (match) return { year: match[1], month: match[2], day: match[3], hour: match[4], minute: match[5] };
-  return tokyoCalendarParts(new Date(value));
-}
-function parseTokyoCalendarDate(value: string) {
-  const parts = calendarParts(value);
-  return new Date(`${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:00+09:00`);
-}
 function calendarTimestamp(value: string, addMinutes = 0) {
   const base = parseTokyoCalendarDate(value);
   base.setMinutes(base.getMinutes() + addMinutes);
@@ -1575,8 +1523,8 @@ export default function App() {
   );
   const now = Date.now(),
     allUpcomingDeadlines = getUpcomingDeadlines(data, now),
-    due = allUpcomingDeadlines.filter((item) => isDeadlineInCurrentTokyoWeek(item, now)),
-    actionDue = allUpcomingDeadlines.filter((item) => parseTokyoCalendarDate(item.at).getTime() < now + data.preferences.jobHunt.actionWindowDays * 864e5),
+    due = selectWeeklyDeadlines(data, now),
+    actionDue = allUpcomingDeadlines.filter((item) => item.kind === "material" && parseTokyoCalendarDate(item.at).getTime() < now + data.preferences.jobHunt.actionWindowDays * 864e5),
     active = data.companies.filter(isActiveCompany),
     waiting = data.companies.filter((x) => isWaitingResultCompany(x, data.events)),
     focus = data.materials.filter((x) => x.isWeeklyFocus).slice(0, 3);
@@ -2773,10 +2721,8 @@ function Dashboard({
   const selectedMonthItems = selectedMonthDay ? monthEventDays.get(selectedMonthDay) || [] : [];
   const selectedMonthLabel = selectedMonthDay ? new Intl.DateTimeFormat(calendarLocale, { month: "long", day: "numeric" }).format(new Date(monthYear, monthIndex, selectedMonthDay)) : "";
   const deadlineToneFor = (at: string) => {
-    const today = parseTokyoCalendarDate(`${tokyoDateKey(Date.now())}T00:00`).getTime();
-    const targetDay = parseTokyoCalendarDate(`${tokyoDateKey(parseTokyoCalendarDate(at))}T00:00`).getTime();
-    const days = Math.round((targetDay - today) / 864e5);
-    return days <= 0 ? "urgent" : days <= 2 ? "warning" : "deadline";
+    const hours = (parseTokyoCalendarDate(at).getTime() - Date.now()) / 36e5;
+    return hours <= 24 ? "urgent" : hours <= 48 ? "warning" : "deadline";
   };
   const monthModule = <section className="dashboard-section home-month-module">
     <Title action={<div className="home-month-controls">
@@ -2832,7 +2778,7 @@ function Dashboard({
     </div>
     {data.companies.length > 3 && <button type="button" className="text-button home-featured-more" onClick={() => setView("companies")}>{t.viewAllCompanies} <ChevronRight aria-hidden="true" /></button>}
   </section> : null;
-  const deadlineKeys = new Set(due.map((item: UpcomingDeadline) => deadlineKey(item)));
+  const deadlineKeys = new Set(due.map((item: any) => item.key));
   const visibleUpcoming = sectionVisible("upcoming") ? upcoming.filter((item: any) => !deadlineKeys.has(`event:${item.id}`)) : [];
   const visibleDeadlines = homeSummaryVisibility.deadlines ? due : [];
   const nextAndDeadlineModule = (visibleUpcoming.length || visibleDeadlines.length) ? <section className="dashboard-section dashboard-next-deadline-module">
@@ -2919,7 +2865,7 @@ function Metric({ n, l, i: I, onClick, tone }: { n: number; l: string; i: any; o
     <button type="button" className={`metric metric-link entity-card${tone ? ` is-${tone}` : ""}`} onClick={onClick} aria-label={`${l}: ${n}`}>
       <I className="metric-icon" aria-hidden="true" />
       <div>
-        <strong>{n}</strong>
+        <strong className="kpi-number">{n}</strong>
         <span>{l}</span>
       </div>
       <ChevronRight className="metric-chevron" aria-hidden="true" />
