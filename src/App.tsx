@@ -2688,7 +2688,10 @@ function Dashboard({
   const selectedMonthItems = selectedMonthDay ? monthEventDays.get(selectedMonthDay) || [] : [];
   const selectedMonthLabel = selectedMonthDay ? new Intl.DateTimeFormat(calendarLocale, { month: "long", day: "numeric" }).format(new Date(monthYear, monthIndex, selectedMonthDay)) : "";
   const deadlineToneFor = (at: string) => {
-    const days = daysUntil(at);
+    const now = new Date(), target = new Date(at);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const targetDay = new Date(target.getFullYear(), target.getMonth(), target.getDate()).getTime();
+    const days = Math.round((targetDay - today) / 864e5);
     return days <= 0 ? "urgent" : days <= 2 ? "warning" : "deadline";
   };
   const monthModule = <section className="dashboard-section home-month-module">
