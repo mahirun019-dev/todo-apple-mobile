@@ -1376,6 +1376,7 @@ export default function App() {
       return saved === "ja" ? "ja" : "zh";
     }),
     [settings, setSettings] = useState(false),
+    [notificationOpen, setNotificationOpen] = useState(false),
     [mobileSettingsPage, setMobileSettingsPage] = useState<string | null>(null),
     [form, setForm] = useState<CreateType | null>(null),
     [eventFormPreset, setEventFormPreset] = useState<EventFormPreset>(),
@@ -1958,7 +1959,7 @@ export default function App() {
             {settings ? <X /> : <Menu />}
           </button>
           <strong className="mobile-header-title">CareerFlow</strong>
-          <NotificationBell locale={t.language === "言語" ? "ja" : "zh"} openCompany={openWatchedCompany} />
+          <NotificationBell locale={t.language === "言語" ? "ja" : "zh"} openCompany={openWatchedCompany} open={notificationOpen} onOpenChange={setNotificationOpen} />
         </header>
         <main ref={workspaceRef} className="workspace">
           {view === "dashboard" && (
@@ -1984,6 +1985,8 @@ export default function App() {
                 setEditEvent,
                 setForm,
                 onExportCalendar: (event: Event) => exportCalendar([event]),
+                notificationOpen,
+                setNotificationOpen,
               }}
             />
           )}
@@ -2549,6 +2552,8 @@ function Dashboard({
   setView,
   setEditEvent,
   setForm,
+  notificationOpen,
+  setNotificationOpen,
 }: any) {
   const initialMonth = new Date();
   const openWatchedCompany = (companyId: string, companyName?: string) => {
@@ -2762,6 +2767,7 @@ function Dashboard({
     </div>
   </section> : null;
   const homeSections: Record<HomeSection, ReactNode> = { upcoming: upcomingModule, action: actionModule, progress: progressModule, month: monthModule, featured: featuredModule };
+  const remainingHomeModules = homeSectionOrder.filter((module: HomeSection) => module !== "upcoming" && module !== "progress" && sectionVisible(module) && homeSections[module] !== null);
   return (
     <>
       <div className="page-head">
@@ -2775,7 +2781,7 @@ function Dashboard({
           </h1>
         </div>
         <div className="dashboard-head-actions">
-          <NotificationBell locale={t.language === "言語" ? "ja" : "zh"} openCompany={openWatchedCompany} />
+          <NotificationBell locale={t.language === "言語" ? "ja" : "zh"} openCompany={openWatchedCompany} open={notificationOpen} onOpenChange={setNotificationOpen} />
           <PrimaryActionButton className="dashboard-company-action" onClick={() => open("company")}>
             <Plus />
             {t.addCompany}
@@ -2791,18 +2797,18 @@ function Dashboard({
                     ? <Metric key={module} n={due.length} l={t.dueWeek} i={Clock3} tone={due.length ? deadlineToneFor(due[0].dueAt!) : undefined} onClick={() => navigate("schedule", "this-week-deadline")} />
                     : <Metric key={module} n={waiting.length} l={t.waiting} i={Timer} onClick={() => navigate("companies", "waiting-result")} />)}
             </div>
-            <div className={`dashboard-local-grid${nextAndDeadlineModule ? " has-supporting" : ""}`}>
+            {(sectionVisible("progress") || nextAndDeadlineModule) && <div className={`dashboard-local-grid${nextAndDeadlineModule ? " has-supporting" : ""}`}>
               {sectionVisible("progress") && progressModule}
               {nextAndDeadlineModule}
-            </div>
-            <div className="dashboard-full-width-sections">
+            </div>}
+            {remainingHomeModules.length > 0 && <div className="dashboard-full-width-sections">
               <div className="dashboard-customizable-modules">
-                {homeSectionOrder.filter((module: HomeSection) => module !== "upcoming" && module !== "progress" && sectionVisible(module) && homeSections[module] !== null).map((module: HomeSection) => <div key={module}>{homeSections[module]}</div>)}
+                {remainingHomeModules.map((module: HomeSection) => <div key={module}>{homeSections[module]}</div>)}
               </div>
-            </div>
+            </div>}
           </div>
-        <aside className="dashboard-sidebar">
-          {homeSummaryVisibility.waiting && waiting.length > 0 && <section className="entity-card">
+        {homeSummaryVisibility.waiting && waiting.length > 0 && <aside className="dashboard-sidebar">
+          <section className="entity-card">
             <Title>{t.results}</Title>
             {waiting.length ? (
               waiting.map((x: any) => (
@@ -2823,8 +2829,8 @@ function Dashboard({
             ) : (
               <Empty t={t} />
             )}
-          </section>}
-        </aside>
+          </section>
+        </aside>}
       </div>
     </>
   );

@@ -38,9 +38,21 @@ export function CompanyWatchSection({ company, locale }: { company: { id: string
 
 function WatchLogin({ locale }: { locale: Locale }) { const text = watchText[locale], watch = useWatch(), [code, setCode] = useState(''), [error, setError] = useState(''); return <form className="watch-login" onSubmit={async (event) => { event.preventDefault(); try { await watch.connect(code); } catch { setError('AUTH_FAILED'); } }}><label>{text.code}<input type="password" autoComplete="current-password" value={code} onChange={(e) => setCode(e.target.value)} /></label><button className="primary">{text.connect}</button>{error && <small>{error}</small>}</form>; }
 
-export function NotificationBell({ locale, openCompany }: { locale: Locale; openCompany(id: string, name?: string): void }) {
+type NotificationBellProps = {
+  locale: Locale;
+  openCompany(id: string, name?: string): void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+};
+
+export function NotificationBell({ locale, openCompany, open: controlledOpen, onOpenChange }: NotificationBellProps) {
   const text = watchText[locale], watch = useWatch();
-  const [open, setOpen] = useState(false), [selected, setSelected] = useState<WatchEvent | null>(null);
+  const [localOpen, setLocalOpen] = useState(false), [selected, setSelected] = useState<WatchEvent | null>(null);
+  const open = controlledOpen ?? localOpen;
+  const setOpen = (value: boolean) => {
+    onOpenChange?.(value);
+    if (!onOpenChange) setLocalOpen(value);
+  };
   const triggerRef = useRef<HTMLButtonElement>(null), panelRef = useRef<HTMLElement>(null);
   const [position, setPosition] = useState({ top: 76, right: 24 });
   const unread = useMemo(() => watch.events.filter((event) => !event.read), [watch.events]);
@@ -86,7 +98,7 @@ export function NotificationBell({ locale, openCompany }: { locale: Locale; open
       </div>
     </section>
   </>, document.body) : null;
-  return <><button ref={triggerRef} type="button" className="watch-notification-trigger" onClick={() => setOpen((current) => !current)} aria-label={`${text.updates}${unread.length ? ` ${unread.length}` : ''}`} aria-expanded={open}>
+  return <><button ref={triggerRef} type="button" className="watch-notification-trigger" onClick={() => setOpen(!open)} aria-label={`${text.updates}${unread.length ? ` ${unread.length}` : ''}`} aria-expanded={open}>
     <Bell aria-hidden="true" />{unread.length > 0 && <span>{unread.length > 99 ? '99+' : unread.length}</span>}
   </button>{panel}{selected && <WatchEventDetail locale={locale} event={selected} close={() => setSelected(null)} openCompany={openCompany} />}</>;
 }

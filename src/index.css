@@ -7170,6 +7170,81 @@ html[data-theme="dark"] .app-shell > .student-app > .mobile-header { background:
 [data-theme="dark"] .calendar-event-dot.urgent,
 [data-theme="dark"] .calendar-item-dot.urgent { background: #ee7975; }
 
+/* Home heading and section rhythm stay consistent when optional modules appear or disappear. */
+.dashboard-main .dashboard-section > .section-title h2,
+.dashboard-sidebar .section-title h2 {
+  color: var(--text-primary);
+  font-size: 19px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+.dashboard-main .overview-grid + .dashboard-local-grid {
+  margin-top: 40px;
+}
+.dashboard-full-width-sections {
+  margin-top: 40px;
+}
+.dashboard-customizable-modules {
+  gap: 40px;
+}
+.dashboard-full-width-sections .dashboard-customizable-modules {
+  gap: 40px;
+}
+.dashboard-section > .section-title {
+  margin-bottom: 16px;
+}
+
+/* The mobile collapsed stage group must remain a single full-width list even when
+   legacy desktop funnel rules match its nested div. */
+@media (max-width: 767px) {
+  .dashboard-main .overview-grid + .dashboard-local-grid {
+    margin-top: 36px;
+  }
+  .dashboard-full-width-sections {
+    margin-top: 32px;
+  }
+  .dashboard-customizable-modules {
+    gap: 32px;
+  }
+  .dashboard-full-width-sections .dashboard-customizable-modules {
+    gap: 32px;
+  }
+  .dashboard-main .dashboard-section > .section-title h2,
+  .dashboard-sidebar .section-title h2 {
+    font-size: 19px;
+    font-weight: 650;
+  }
+  .dashboard-progress-module .funnel-mobile,
+  .dashboard-progress-module .funnel-mobile .funnel-collapsed-rows,
+  .dashboard-progress-module .funnel-mobile .funnel-collapsed-rows > div,
+  .dashboard-progress-module .funnel-mobile .funnel-collapsed-rows .funnel-row {
+    width: 100%;
+    min-width: 0;
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
+  .dashboard-progress-module .funnel-mobile .funnel-collapsed-rows > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-flow: row;
+  }
+  .dashboard-progress-module .funnel-mobile .funnel-collapsed-rows .funnel-row {
+    display: flex;
+  }
+  .funnel-expand {
+    min-height: 50px;
+    color: var(--text-secondary);
+    font-size: 16px;
+  }
+}
+
+/* Mobile has one notification presentation: the header trigger. */
+@media (max-width: 767px) {
+  .dashboard-head-actions > .watch-notification-trigger {
+    display: none;
+  }
+}
+
 /* Mobile filter sheets use the same neutral OLED surfaces as the rest of the app. */
 @media (max-width: 767px) {
   .company-filter-sheet .company-filter-sheet-close {
