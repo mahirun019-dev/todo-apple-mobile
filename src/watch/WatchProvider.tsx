@@ -3,7 +3,7 @@ import type { WatchEvent, WatchTarget } from './types';
 
 const API = (import.meta.env.VITE_WATCH_API_URL as string | undefined)?.replace(/\/$/, '');
 const TOKEN_KEY = 'careerflow-watch-session';
-type ContextValue = { configured: boolean; authenticated: boolean; targets: WatchTarget[]; events: WatchEvent[]; error: string; connect(code: string): Promise<void>; refresh(): Promise<void>; request(path: string, init?: RequestInit): Promise<Response>; markRead(id: string): Promise<void>; };
+type ContextValue = { configured: boolean; authenticated: boolean; targets: WatchTarget[]; events: WatchEvent[]; error: string; connect(code: string): Promise<void>; disconnect(): void; refresh(): Promise<void>; request(path: string, init?: RequestInit): Promise<Response>; markRead(id: string): Promise<void>; };
 const Context = createContext<ContextValue | null>(null);
 
 // Company data remains local in CareerFlow. This key lets authenticated devices
@@ -61,8 +61,15 @@ export function WatchProvider({ children }: { children: ReactNode }) {
     if (!response.ok) throw new Error('AUTH_FAILED');
     const body = await response.json(); localStorage.setItem(TOKEN_KEY, body.token); sessionStorage.removeItem(TOKEN_KEY); setToken(body.token);
   };
+  const disconnect = () => {
+    localStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
+    setToken('');
+    setTargets([]);
+    setEvents([]);
+  };
   const markRead = async (id: string) => { await request(`/api/events/${id}/read`, { method: 'POST' }); setEvents((current) => current.map((event) => event.id === id ? { ...event, read: 1 } : event)); };
-  const value = useMemo(() => ({ configured: Boolean(API), authenticated: Boolean(token), targets, events, error, connect, refresh, request, markRead }), [token, targets, events, error, request, refresh]);
+  const value = useMemo(() => ({ configured: Boolean(API), authenticated: Boolean(token), targets, events, error, connect, disconnect, refresh, request, markRead }), [token, targets, events, error, request, refresh]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useWatch() { const value = useContext(Context); if (!value) throw new Error('WatchProvider missing'); return value; }

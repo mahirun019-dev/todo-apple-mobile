@@ -16,7 +16,7 @@ import { geocodeCoordinates, getWeather, getWeatherByCoordinates, type WeatherRe
 import prefectureData from "./data/japan-prefectures.json";
 import municipalityData from "./data/japan-municipalities.json";
 import { companyWatchKey, WatchProvider } from "./watch/WatchProvider";
-import { CompanyWatchSection, CompanyWatchStatus, NotificationBell } from "./watch/WatchUI";
+import { CompanyWatchSection, CompanyWatchStatus, NotificationBell, WatchConnectionSettings } from "./watch/WatchUI";
 
 import {
   Database,
@@ -40,6 +40,7 @@ import {
   CloudSnow,
   CloudSun,
   ExternalLink,
+  Eye,
   FileJson,
   FileText,
   Globe,
@@ -1429,6 +1430,13 @@ export default function App() {
     const matchingCompany = data.companies.find((company) => company.id === companyId || (companyName && companyWatchKey(company.name) === companyWatchKey(companyName)));
     if (matchingCompany) selectCompany(matchingCompany.id);
   };
+  const openWatchSettings = () => {
+    setNotificationOpen(false);
+    if (isMobile) {
+      setMobileSettingsPage("watch");
+    }
+    setSettings(true);
+  };
   const backToCompanies = () => {
     const route = readRouteState();
     navigate("companies", route.companyFilter || undefined);
@@ -1959,7 +1967,7 @@ export default function App() {
             {settings ? <X /> : <Menu />}
           </button>
           <strong className="mobile-header-title">CareerFlow</strong>
-          <NotificationBell locale={t.language === "言語" ? "ja" : "zh"} openCompany={openWatchedCompany} open={notificationOpen} onOpenChange={setNotificationOpen} />
+          {isMobile && <NotificationBell locale={t.language === "言語" ? "ja" : "zh"} openCompany={openWatchedCompany} openSettings={openWatchSettings} open={notificationOpen} onOpenChange={setNotificationOpen} />}
         </header>
         <main ref={workspaceRef} className="workspace">
           {view === "dashboard" && (
@@ -1979,6 +1987,8 @@ export default function App() {
                 toggle,
                 focusToggle,
                 open,
+                isMobile,
+                openWatchSettings,
                 navigate,
                 openCompany,
                 setView,
@@ -2012,6 +2022,7 @@ export default function App() {
                 setRecordMenuOpen: setCompanyRecordMenuOpen,
                 onBack: backToCompanies,
                 onOpenCompany: openCompany,
+                openWatchSettings,
               }}
             />
           )}
@@ -2554,6 +2565,8 @@ function Dashboard({
   setForm,
   notificationOpen,
   setNotificationOpen,
+  isMobile,
+  openWatchSettings,
 }: any) {
   const initialMonth = new Date();
   const openWatchedCompany = (companyId: string, companyName?: string) => {
@@ -2562,7 +2575,6 @@ function Dashboard({
   };
   const [displayedMonth, setDisplayedMonth] = useState({ year: initialMonth.getFullYear(), month: initialMonth.getMonth() });
   const [selectedMonthDay, setSelectedMonthDay] = useState<number | null>(null);
-  const [progressExpanded, setProgressExpanded] = useState(false);
   const shiftMonth = (offset: number) => setDisplayedMonth((current) => {
     const next = new Date(current.year, current.month + offset, 1);
     return { year: next.getFullYear(), month: next.getMonth() };
@@ -2649,10 +2661,6 @@ function Dashboard({
     stage,
     count: data.companies.filter((company: Company) => funnelStageFor(company.stage) === stage).length,
   }));
-  const mobileVisibleStages = stageRows.some(({ count }) => count > 0)
-    ? stageRows.filter(({ count }) => count > 0)
-    : [stageRows[0]];
-  const mobileHiddenStages = stageRows.filter(({ stage }) => !mobileVisibleStages.some((item) => item.stage === stage));
   const StageRow = ({ stage, count }: { stage: FunnelStage; count: number }) => (
     <button type="button" className={`funnel-row${count > 0 ? " has-count" : ""}`} key={stage} onClick={() => openFunnel(stage)} aria-label={`${t[stage]}: ${count}`}>
       <span className="funnel-row-label">{t[stage]}</span>
@@ -2663,16 +2671,7 @@ function Dashboard({
     <Title>{t.funnel}</Title>
     <div className="funnel funnel-desktop">{stageRows.map(({ stage, count }) => <StageRow key={stage} stage={stage} count={count} />)}</div>
     <div className="funnel funnel-mobile">
-      {mobileVisibleStages.map(({ stage, count }) => <StageRow key={stage} stage={stage} count={count} />)}
-      {mobileHiddenStages.length > 0 && <>
-        <button type="button" className="funnel-expand" aria-expanded={progressExpanded} onClick={() => setProgressExpanded((value) => !value)}>
-          <span>{stageRows.some(({ count }) => count > 0)
-            ? (t.language === "言語" ? `その他の選考段階 ${mobileHiddenStages.length}` : `其他选考阶段 ${mobileHiddenStages.length}`)
-            : (t.language === "言語" ? "すべての選考段階を見る" : "查看全部选考阶段")}</span>
-          {progressExpanded ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
-        </button>
-        <div className={`funnel-collapsed-rows${progressExpanded ? " is-expanded" : ""}`}><div>{mobileHiddenStages.map(({ stage, count }) => <StageRow key={stage} stage={stage} count={count} />)}</div></div>
-      </>}
+      {stageRows.map(({ stage, count }) => <StageRow key={stage} stage={stage} count={count} />)}
     </div>
   </section>;
   const monthYear = displayedMonth.year;
@@ -2781,7 +2780,7 @@ function Dashboard({
           </h1>
         </div>
         <div className="dashboard-head-actions">
-          <NotificationBell locale={t.language === "言語" ? "ja" : "zh"} openCompany={openWatchedCompany} open={notificationOpen} onOpenChange={setNotificationOpen} />
+          {!isMobile && <NotificationBell locale={t.language === "言語" ? "ja" : "zh"} openCompany={openWatchedCompany} openSettings={openWatchSettings} open={notificationOpen} onOpenChange={setNotificationOpen} />}
           <PrimaryActionButton className="dashboard-company-action" onClick={() => open("company")}>
             <Plus />
             {t.addCompany}
@@ -2930,6 +2929,10 @@ function StarRating({ value, className = "" }: { value: number; className?: stri
 function formatCompanyMetadata(company: Company) {
   return [company.industry, companyJobCategory(company)].filter((value) => Boolean(value && value.trim()));
 }
+function recruitmentLabel(url: string) {
+  try { return new URL(url).hostname.replace(/^www\./, ""); }
+  catch { return "公式採用サイト"; }
+}
 function companyFutureEvents(events: Event[], companyId: string | undefined) {
   if (!companyId) return [];
   return events
@@ -3020,6 +3023,7 @@ function Companies({
   setRecordMenuOpen,
   onBack,
   onOpenCompany,
+  openWatchSettings,
 }: any) {
   const co = selected ? byId[selected] : undefined;
   const [query, setQuery] = useState("");
@@ -3086,49 +3090,36 @@ function Companies({
         <div className="course-detail">
           <section className="course-profile detail-section">
             <i style={{ background: co.color }} />
-            <h2>{t.selectionOverview}</h2>
+            <h2>{t.language === "言語" ? "概要" : "概览"}</h2>
             <dl className="company-detail-list">
               <div>
                 <dt>{t.currentStage}</dt>
                 <dd>{stageDisplayLabel(co.stage, t)}</dd>
               </div>
-              <div>
+              {nextEvent && <div>
                 <dt>{t.nextSchedule}</dt>
                 <dd className="company-next-summary">
-                  {nextEvent ? <>
-                    <strong>{whenForLocale(nextEvent.startsAt, t)}</strong>
-                    <span>{nextEvent.type === "general" ? (nextEvent.title || t.general) : t[nextEvent.type] || nextEvent.title || t.general}</span>
-                    <span>{daysUntilLabel(nextEvent.startsAt, t)}</span>
-                  </> : t.noNextSchedule}
+                  <strong>{whenForLocale(nextEvent.startsAt, t)}</strong>
+                  <span>{nextEvent.type === "general" ? (nextEvent.title || t.general) : t[nextEvent.type] || nextEvent.title || t.general}</span>
+                  <span>{daysUntilLabel(nextEvent.startsAt, t)}</span>
                 </dd>
-              </div>
+              </div>}
               <div>
                 <dt>{t.interest}</dt>
                 <dd><StarRating value={co.interestLevel} /></dd>
               </div>
             </dl>
-            <h2>{t.companyInfo}</h2>
             <dl className="company-detail-list company-info-list">
               {co.industry && <div><dt>{t.industry}</dt><dd>{co.industry}</dd></div>}
               {companyJobCategory(co) && <div><dt>{t.position}</dt><dd>{companyJobCategory(co)}</dd></div>}
               {co.jobTitle && <div><dt>{t.jobTitle}</dt><dd>{co.jobTitle}</dd></div>}
-              {co.careersUrl && <div><dt>{t.recruitmentPage}</dt><dd><a className="recruitment-link" href={co.careersUrl} target="_blank" rel="noopener noreferrer" title={co.careersUrl}>{t.recruitmentPage} <ExternalLink aria-hidden="true" /></a></dd></div>}
+              {co.careersUrl && <div><dt>{t.recruitmentPage}</dt><dd><a className="recruitment-link" href={co.careersUrl} target="_blank" rel="noopener noreferrer" title={co.careersUrl}>{recruitmentLabel(co.careersUrl)} <ExternalLink aria-hidden="true" /></a></dd></div>}
               {co.notes && <div><dt>{t.notes}</dt><dd>{co.notes}</dd></div>}
               {!co.industry && !companyJobCategory(co) && !co.jobTitle && !co.careersUrl && !co.notes && <div><dd className="company-detail-muted">{t.notSet}</dd></div>}
             </dl>
           </section>
           <section className="detail-stack">
-            <CompanyWatchSection company={co} locale={t.language === "言語" ? "ja" : "zh"} />
-            {futureEvents.length > 0 && <section className="company-detail-section detail-section">
-              <Title>{t.futureSchedule}</Title>
-              <div className="company-future-list">
-                {futureEvents.map((event) => <button type="button" className="company-future-item" key={event.id} onClick={() => { setEditEvent(event); setScheduleCompanyId(co.id); setForm("schedule"); }}>
-                  <CalendarClock aria-hidden="true" />
-                  <span><strong>{whenForLocale(event.startsAt, t)}</strong><small>{event.type === "general" ? (event.title || t.general) : t[event.type] || event.title || t.general}</small><small>{eventModeText(event, t)}</small></span>
-                  <ChevronRight aria-hidden="true" />
-                </button>)}
-              </div>
-            </section>}
+            <CompanyWatchSection company={co} locale={t.language === "言語" ? "ja" : "zh"} openSettings={openWatchSettings} />
             <Title action={<div className="record-action-wrap">
               <button type="button" className="primary" onPointerDown={(event) => event.stopPropagation()} onClick={() => setRecordMenuOpen(!recordMenuOpen)}><Plus />{t.addRecord}</button>
               <RecordActionMenu
@@ -4485,16 +4476,18 @@ function MobileSettingsDrawer({
       <button type="button" onClick={() => changePage("customize")}><PanelsTopLeft aria-hidden="true" /><span>{t.customize}</span><ChevronRight aria-hidden="true" /></button>
       <button type="button" onClick={() => changePage("templates")}><FileText aria-hidden="true" /><span>{t.templates}</span><ChevronRight aria-hidden="true" /></button>
       <button type="button" onClick={() => changePage("calendar")}><CalendarSync aria-hidden="true" /><span>{t.calendarIntegration}</span><ChevronRight aria-hidden="true" /></button>
+      <button type="button" onClick={() => changePage("watch")}><Eye aria-hidden="true" /><span>{locale === "ja" ? "企業ウォッチ接続" : "企业监控连接"}</span><ChevronRight aria-hidden="true" /></button>
       <button type="button" onClick={() => changePage("appearance")}><Palette aria-hidden="true" /><span>{t.appearance}</span><ChevronRight aria-hidden="true" /></button>
       <button type="button" onClick={() => changePage("language")}><Globe aria-hidden="true" /><span>{t.language}</span><ChevronRight aria-hidden="true" /></button>
       <button type="button" onClick={() => changePage("about")}><Info aria-hidden="true" /><span>{about.title}</span><ChevronRight aria-hidden="true" /></button>
     </nav>;
-    const subpageTitle = pageValue === "data" ? t.data : pageValue === "job-settings" ? t.jobSettings : pageValue === "customize" ? t.customize : pageValue === "templates" ? t.templates : pageValue === "calendar" ? t.calendarIntegration : pageValue === "appearance" ? t.appearance : pageValue === "language" ? t.language : about.title;
+    const subpageTitle = pageValue === "data" ? t.data : pageValue === "job-settings" ? t.jobSettings : pageValue === "customize" ? t.customize : pageValue === "templates" ? t.templates : pageValue === "calendar" ? t.calendarIntegration : pageValue === "watch" ? (locale === "ja" ? "企業ウォッチ接続" : "企业监控连接") : pageValue === "appearance" ? t.appearance : pageValue === "language" ? t.language : about.title;
     if (pageValue === "data") return <section className="mobile-settings-subpage" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><div className="mobile-settings-subpage-list mobile-data-actions"><button type="button" onClick={() => download("careerflow-backup.json", JSON.stringify(makeBackupSnapshot(data, theme, locale), null, 2), "application/json")}><DatabaseArrowUp aria-hidden="true" /><span>{t.backup}</span></button><button type="button" onClick={() => json.current?.click()}><DatabaseArrowDown aria-hidden="true" /><span>{t.restore}</span></button></div></section>;
     if (pageValue === "job-settings") return <JobHuntSettings t={t} data={data} updatePreferences={updatePreferences} />;
     if (pageValue === "customize") return <CustomizeSettings t={t} data={data} updatePreferences={updatePreferences} />;
     if (pageValue === "templates") return <section className="mobile-settings-subpage"><TemplateManager t={t} data={data} setData={setData} /></section>;
     if (pageValue === "calendar") return <CalendarSettings t={t} data={data} updatePreferences={updatePreferences} exportCalendar={exportCalendar} />;
+    if (pageValue === "watch") return <section className="mobile-settings-subpage"><WatchConnectionSettings locale={locale} /></section>;
     if (pageValue === "appearance") return <section className="mobile-settings-subpage" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><div className="mobile-settings-subpage-list">{(["light", "dark", "system"] as Theme[]).map((x) => { const Icon = x === "light" ? Sun : x === "dark" ? Moon : Monitor; return <button type="button" className={theme === x ? "selected" : ""} onClick={() => setTheme(x)} key={x}><Icon aria-hidden="true" /><span>{t[x]}</span>{theme === x && <Check aria-hidden="true" />}</button>; })}</div></section>;
     if (pageValue === "language") return <section className="mobile-settings-subpage" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><div className="mobile-settings-subpage-list">{(["zh", "ja"] as Locale[]).map((x) => <button type="button" className={locale === x ? "selected" : ""} onClick={() => setLocale(x)} key={x}><span>{x === "zh" ? "中文" : "日本語"}</span>{locale === x && <Check aria-hidden="true" />}</button>)}</div></section>;
     return <section className="mobile-settings-subpage mobile-about" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><p>{about.version}</p><p>{about.db}</p><p>{about.privacy}</p><p>{about.license}</p></section>;
@@ -4530,13 +4523,14 @@ function SettingsPanel({ t, theme, setTheme, locale, setLocale, close, data, set
   const ui = locale === "ja"
     ? { general: "一般", appearance: t.appearance, language: t.language, data: "データとバックアップ", about: "CareerFlowについて", storage: "このデバイスの保存状況", backup: "バックアップ", aboutTitle: "CareerFlowについて", version: "CareerFlow バージョン 1.0", db: "データベースバージョン", pwa: "PWA ステータス: standalone 対応", icon: "アイコン: CareerFlow ブランドアイコン", privacy: "プライバシー: データは主にこのデバイスに保存されます。", license: "オープンソースライセンス: MIT License" }
     : { general: "常规", appearance: t.appearance, language: t.language, data: "数据与备份", about: "关于 CareerFlow", storage: "当前设备存储", backup: "备份", aboutTitle: "关于 CareerFlow", version: "CareerFlow 版本 1.0", db: "数据库版本", pwa: "PWA 状态：支持 standalone", icon: "图标：CareerFlow 品牌图标", privacy: "隐私：数据主要保存在当前设备。", license: "开源许可：MIT License" };
-  const tabs = [["general", ui.general, Settings], ["job-settings", t.jobSettings, ClipboardCheck], ["customize", t.customize, PanelsTopLeft], ["templates", t.templates, FileText], ["calendar", t.calendarIntegration, CalendarSync], ["appearance", ui.appearance, Palette], ["language", ui.language, Globe], ["data", ui.data, Database], ["about", ui.about, Info]] as const;
+  const tabs = [["general", ui.general, Settings], ["job-settings", t.jobSettings, ClipboardCheck], ["customize", t.customize, PanelsTopLeft], ["templates", t.templates, FileText], ["calendar", t.calendarIntegration, CalendarSync], ["watch", ja ? "企業ウォッチ接続" : "企业监控连接", Eye], ["appearance", ui.appearance, Palette], ["language", ui.language, Globe], ["data", ui.data, Database], ["about", ui.about, Info]] as const;
   return <SettingsDrawer title={t.settings} close={close}><div className="desktop-settings-layout"><nav className="desktop-settings-nav settings-sidebar"><div className="settings-nav-list">{tabs.map(([key, text, Icon]) => <SettingsNavItem key={key} label={text} icon={Icon} active={tab === key} onClick={() => setTab(key)} />)}</div></nav><div className="desktop-settings-content">
     {tab === "general" && <section className="settings-section"><h3>{ui.storage}</h3><div className="settings-stats">{[[ja ? "企業数" : "企业数", data.companies.length], [ja ? "日程数" : "日程数", data.events.length], [ja ? "資料数" : "资料数", data.materials.length], [ja ? "面接記録数" : "面试记录数", data.interviews.length], [ja ? "準備事項数" : "准备事项数", data.preparations.length], [ui.db, "v" + data.schemaVersion]].map(([label, value]) => <div key={String(label)}><span>{label}</span><strong>{value}</strong></div>)}</div></section>}
     {tab === "job-settings" && <JobHuntSettings t={t} data={data} updatePreferences={updatePreferences} />}
     {tab === "customize" && <CustomizeSettings t={t} data={data} updatePreferences={updatePreferences} />}
     {tab === "templates" && <section className="settings-section"><TemplateManager t={t} data={data} setData={setData} /></section>}
     {tab === "calendar" && <CalendarSettings t={t} data={data} updatePreferences={updatePreferences} exportCalendar={exportCalendar} />}
+    {tab === "watch" && <WatchConnectionSettings locale={locale} />}
     {tab === "appearance" && <section className="settings-section"><h3>{ui.appearance}</h3><div className="settings-segmented">{(["light", "dark", "system"] as Theme[]).map((x) => { const Icon = x === "light" ? Sun : x === "dark" ? Moon : Monitor; return <button type="button" aria-pressed={theme === x} className={theme === x ? "active" : ""} onClick={() => setTheme(x)} key={x}><Icon aria-hidden="true" />{t[x]}</button>; })}</div></section>}
     {tab === "language" && <section className="settings-section"><h3>{ui.language}</h3><div className="settings-segmented">{(["zh", "ja"] as Locale[]).map((x) => <button type="button" aria-pressed={locale === x} className={locale === x ? "active" : ""} onClick={() => setLocale(x)} key={x}>{x === "zh" ? "中文" : "日本語"}</button>)}</div></section>}
     {tab === "data" && <section className="settings-section settings-data-section"><h3>{ui.backup}</h3><BackupControls data={data} theme={theme} locale={locale} setData={setData} /></section>}
