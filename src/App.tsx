@@ -1411,7 +1411,12 @@ export default function App() {
     [selected, setSelected] = useState<string | undefined>(initialRoute.selectedCompanyId || undefined),
     [companiesCollapsed, setCompaniesCollapsed] = useState(() => localStorage.getItem("careerflow-companies-collapsed") === "true"),
     [confirm, setConfirm] = useState<Company>(),
-    [stageSyncPrompt, setStageSyncPrompt] = useState<{ companyId: string; companyName: string; stage: InterviewProgressStage }>(),
+    [stageSyncPrompt, setStageSyncPrompt] = useState<{
+      companyId: string;
+      companyName: string;
+      fromStage: Company["stage"];
+      toStage: InterviewProgressStage;
+    }>(),
     [deleteEvent, setDeleteEvent] = useState<Event>(),
     [filter, setFilter] = useState("all"),
     [companyFilterOpen, setCompanyFilterOpen] = useState(false),
@@ -1792,7 +1797,12 @@ export default function App() {
     }));
     const company = v.companyId ? data.companies.find((item) => item.id === v.companyId) : undefined;
     if (company && v.type === "interview" && isInterviewProgressStage(v.interviewStage) && shouldOfferInterviewStageSync(company.stage, v.interviewStage)) {
-      setStageSyncPrompt({ companyId: company.id, companyName: company.name, stage: v.interviewStage });
+      setStageSyncPrompt({
+        companyId: company.id,
+        companyName: company.name,
+        fromStage: company.stage,
+        toStage: v.interviewStage,
+      });
     }
     setEventFormPreset(undefined);
   };
@@ -2239,7 +2249,9 @@ export default function App() {
               setData((current) => ({
                 ...current,
                 companies: current.companies.map((company) => company.id === prompt.companyId
-                  ? { ...company, stage: prompt.stage, updatedAt: Date.now() }
+                  ? shouldOfferInterviewStageSync(company.stage, prompt.toStage)
+                    ? { ...company, stage: prompt.toStage, updatedAt: Date.now() }
+                    : company
                   : company),
               }));
               setStageSyncPrompt(undefined);
@@ -4249,13 +4261,23 @@ function InterviewStageSyncConfirm({
   apply,
 }: {
   t: any;
-  prompt: { companyId: string; companyName: string; stage: InterviewProgressStage };
+  prompt: { companyId: string; companyName: string; fromStage: Company["stage"]; toStage: InterviewProgressStage };
   close: () => void;
   apply: () => void;
 }) {
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        close();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [close]);
   return (
     <Modal title={t.updateSelectionStage} close={close} className="stage-sync-confirm">
-      <p className="confirm-copy">{t.updateSelectionStageCopy(prompt.companyName, t[prompt.stage])}</p>
+      <p className="confirm-copy">{t.updateSelectionStageCopy(prompt.companyName, t[prompt.toStage])}</p>
       <div className="stage-sync-actions">
         <button type="button" onClick={close}>{t.keepSelectionStage}</button>
         <button type="button" className="primary" onClick={apply}>{t.updateStage}</button>
