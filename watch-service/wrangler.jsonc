@@ -4,12 +4,14 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-09-17",
   "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": false,
   "triggers": { "crons": ["17 */6 * * *"] },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "careerflow-watch",
-      "database_id": "REPLACE_AFTER_D1_CREATE",
+      "database_id": "4ab27a5d-5480-40e2-8945-d1030e228412",
       "migrations_dir": "migrations"
     }
   ],

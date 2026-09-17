@@ -1,7 +1,7 @@
 import { classifyChange, detectMeaningfulChange, extractMeaningfulText, fetchPage, normalizeUrl, sha256 } from './monitor';
 import type { Env, SourceType, TargetRow } from './types';
 
-const json = (body: unknown, status = 200, origin = '*') => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'access-control-allow-origin': origin, 'access-control-allow-headers': 'authorization,content-type', 'access-control-allow-methods': 'GET,POST,PATCH,DELETE,OPTIONS', vary: 'Origin' } });
+const json = (body: unknown, status = 200, origin = '*') => new Response(status === 204 ? null : JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'access-control-allow-origin': origin, 'access-control-allow-headers': 'authorization,content-type', 'access-control-allow-methods': 'GET,POST,PATCH,DELETE,OPTIONS', vary: 'Origin' } });
 
 async function authenticate(request: Request, env: Env) {
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
