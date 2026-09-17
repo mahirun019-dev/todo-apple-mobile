@@ -212,6 +212,8 @@ type Event = {
   title: string;
   type: ItemType;
   stage: Stage;
+  interviewStage?: "first_interview" | "second_interview" | "final_interview" | "other";
+  interviewStageDetail?: string;
   startsAt: string;
   endsAt?: string;
   endAt?: string;
@@ -279,10 +281,58 @@ type Data = {
   preferences: AppPreferences;
   templates: CareerTemplate[];
 };
+type UpcomingDeadline = {
+  id: string;
+  key: string;
+  kind: "event" | "material" | "preparation";
+  companyId?: string;
+  type: string;
+  title: string;
+  at: string;
+  event?: Event;
+  material?: Material;
+  preparation?: Preparation;
+};
 
 const defaultHomeSummary: HomeSummaryModule[] = ["active", "deadlines", "waiting"];
 const defaultHomeSections: HomeSection[] = ["upcoming", "action", "progress", "month", "featured"];
 const defaultHomeModules: HomeModule[] = [...defaultHomeSummary, ...defaultHomeSections];
+const deadlineEventTypes = new Set<ItemType>(["es", "resume", "web_test"]);
+const interviewStageOptions = ["first_interview", "second_interview", "final_interview", "other"] as const;
+function deadlineKey(item: Pick<UpcomingDeadline, "kind" | "id">) {
+  return `${item.kind}:${item.id}`;
+}
+function isDeadlineEvent(event: Event) {
+  return deadlineEventTypes.has(event.type) && !(event as Event & { deletedAt?: boolean }).deletedAt;
+}
+function tokyoDateKey(value: string | number | Date) {
+  const { year, month, day } = tokyoCalendarParts(new Date(value));
+  return `${year}-${month}-${day}`;
+}
+function addTokyoDays(dateKey: string, amount: number) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day + amount));
+  return date.toISOString().slice(0, 10);
+}
+function isDeadlineInCurrentTokyoWeek(item: Pick<UpcomingDeadline, "at">, now = Date.now()) {
+  const today = tokyoDateKey(now);
+  const day = new Date(`${today}T12:00:00+09:00`).getDay();
+  const weekStart = addTokyoDays(today, day === 0 ? -6 : 1 - day);
+  const weekEnd = addTokyoDays(weekStart, 6);
+  const target = tokyoDateKey(parseTokyoCalendarDate(item.at));
+  return target >= weekStart && target <= weekEnd;
+}
+function getUpcomingDeadlines(data: Data, now = Date.now()): UpcomingDeadline[] {
+  const future = (at: string) => {
+    const time = parseTokyoCalendarDate(at).getTime();
+    return Number.isFinite(time) && time >= now;
+  };
+  return [
+    ...data.events.filter((event) => isDeadlineEvent(event) && future(event.startsAt)).map((event) => ({ id: event.id, key: `event:${event.id}`, kind: "event" as const, companyId: event.companyId, type: event.type, title: event.title, at: event.startsAt, event })),
+    ...data.materials.filter((item) => !item.completed && !!item.dueAt && future(item.dueAt!)).map((item) => ({ id: item.id, key: `material:${item.id}`, kind: "material" as const, companyId: item.companyId, type: item.type, title: item.title, at: item.dueAt!, material: item })),
+    ...data.preparations.filter((item) => !item.completed && !!item.dueAt && future(item.dueAt!)).map((item) => ({ id: item.id, key: `preparation:${item.id}`, kind: "preparation" as const, companyId: item.companyId, type: item.type, title: item.title, at: item.dueAt!, preparation: item })),
+  ].sort((a, b) => parseTokyoCalendarDate(a.at).getTime() - parseTokyoCalendarDate(b.at).getTime());
+}
 function defaultPreferences(): AppPreferences {
   const savedRegion = typeof localStorage !== "undefined" ? localStorage.getItem("careerflow-home-region") || "" : "";
   return {
@@ -578,6 +628,8 @@ const tr = {
     position: "职种",
     interest: "志望度",
     stage: "当前选考阶段",
+    interviewStage: "面试阶段",
+    interviewStageDetail: "输入其他面试阶段",
     event: "下一项日程",
     place: "地点或线上方式",
     url: "招聘页面",
@@ -745,6 +797,8 @@ const tr = {
     position: "職種",
     interest: "志望度",
     stage: "選考段階",
+    interviewStage: "面接段階",
+    interviewStageDetail: "その他の面接段階を入力",
     event: "次の日程",
     place: "場所・オンライン",
     url: "採用ページ",
@@ -898,6 +952,8 @@ const tr = {
     positionInput: "Enter a position",
     interest: "Interest",
     stage: "Stage",
+    interviewStage: "Interview stage",
+    interviewStageDetail: "Enter another interview stage",
     event: "Next event",
     place: "Location or online",
     url: "Careers page",
@@ -1517,18 +1573,11 @@ export default function App() {
     () => Object.fromEntries(data.companies.map((x) => [x.id, x])),
     [data.companies],
   );
-  const active = data.companies.filter(isActiveCompany),
-    allDue = [
-      ...data.materials.filter((x) => !x.completed && x.dueAt),
-      ...data.preparations.filter((x) => !x.completed && x.dueAt),
-    ],
-    due = allDue
-      .filter((x) => new Date(x.dueAt!).getTime() < Date.now() + 6048e5)
-      .sort((a, b) => String(a.dueAt).localeCompare(String(b.dueAt))),
-    actionDue = data.materials
-      .filter((x) => !x.completed && x.dueAt)
-      .filter((x) => new Date(x.dueAt!).getTime() < Date.now() + data.preferences.jobHunt.actionWindowDays * 864e5)
-      .sort((a, b) => String(a.dueAt).localeCompare(String(b.dueAt))),
+  const now = Date.now(),
+    allUpcomingDeadlines = getUpcomingDeadlines(data, now),
+    due = allUpcomingDeadlines.filter((item) => isDeadlineInCurrentTokyoWeek(item, now)),
+    actionDue = allUpcomingDeadlines.filter((item) => parseTokyoCalendarDate(item.at).getTime() < now + data.preferences.jobHunt.actionWindowDays * 864e5),
+    active = data.companies.filter(isActiveCompany),
     waiting = data.companies.filter((x) => isWaitingResultCompany(x, data.events)),
     focus = data.materials.filter((x) => x.isWeeklyFocus).slice(0, 3);
   const schedules = [
@@ -1536,10 +1585,11 @@ export default function App() {
       kind: "event" as const,
       id: x.id,
       at: x.startsAt,
-      title: scheduleDisplayTitle(x.title, x.type, t),
+      title: scheduleDisplayTitle(x.title, x.type, t, x),
       company: byId[x.companyId || ""],
       type: x.type,
       event: x,
+      isDeadline: isDeadlineEvent(x),
     })),
     ...data.materials
       .filter((x) => x.dueAt)
@@ -1550,7 +1600,8 @@ export default function App() {
         title: x.title,
         company: byId[x.companyId || ""],
         type: x.type,
-        material: x,
+      material: x,
+      isDeadline: true,
       })),
     ...data.preparations
       .filter((x) => x.dueAt)
@@ -1561,14 +1612,15 @@ export default function App() {
         title: x.title,
         company: byId[x.companyId || ""],
         type: x.type,
-        preparation: x,
+      preparation: x,
+      isDeadline: true,
       })),
   ].sort((a, b) => a.at.localeCompare(b.at));
   const next = schedules[0];
   const upcoming = schedules.filter((x) => x.kind === "event" && new Date(x.at).getTime() >= Date.now());
-  const dueIds = new Set(due.map((x) => x.id));
+  const dueIds = new Set(due.map((x) => x.key));
   const visibleSchedules = scheduleFilter === "this-week-deadline"
-    ? schedules.filter((x) => dueIds.has(x.id))
+    ? schedules.filter((x) => dueIds.has(`${x.kind}:${x.id}`))
     : schedules;
   const toggle = (x: string) =>
     setData((d) => ({
@@ -1739,7 +1791,15 @@ export default function App() {
         companyId: String(f.get("company") || "") || undefined,
         title: String(f.get("type")),
         type: f.get("type") as ItemType,
-        stage: f.get("stage") as Stage,
+        stage: (() => {
+          const type = f.get("type") as ItemType;
+          const interviewStage = String(f.get("interviewStage") || "");
+          return type === "interview" && interviewStage !== "other" && interviewStageOptions.includes(interviewStage as typeof interviewStageOptions[number])
+            ? interviewStage as Stage
+            : base?.stage || eventFormPreset?.stage || data.preferences.jobHunt.defaultCompanyStage;
+        })(),
+        interviewStage: f.get("type") === "interview" ? String(f.get("interviewStage") || "other") as Event["interviewStage"] : undefined,
+        interviewStageDetail: f.get("type") === "interview" && f.get("interviewStage") === "other" ? String(f.get("interviewStageDetail") || "") : undefined,
         startsAt: String(f.get("startsAt")),
         endsAt: base?.endsAt,
         endAt: base?.endAt,
@@ -2604,7 +2664,7 @@ function Dashboard({
     localStorage.setItem("careerflow-company-stage-filter", stage);
     setView("companies");
   };
-  const daysUntil = (at: string) => Math.ceil((new Date(at).getTime() - Date.now()) / 864e5);
+  const daysUntil = (at: string) => Math.ceil((parseTokyoCalendarDate(at).getTime() - Date.now()) / 864e5);
   const actionWindowEnd = Date.now() + data.preferences.jobHunt.actionWindowDays * 864e5;
   const preparationActions = data.preparations
     .filter((item: Preparation) => !item.completed)
@@ -2616,8 +2676,8 @@ function Dashboard({
     });
   const actionItems = [
     ...(data.preferences.jobHunt.showDeadlines ? actionDue : []).map((x: any) => {
-      const days = daysUntil(x.dueAt);
-      return { id: `due-${x.id}`, kind: "material", label: t.actionDeadline, company: byId[x.companyId || ""]?.name || t.general, detail: x.title, at: x.dueAt, urgency: days <= 0 ? "urgent" : days === 1 ? "warning" : "normal", meta: days < 0 ? t.overdueLabel : days === 0 ? t.dueToday : days === 1 ? t.dueTomorrow : when(x.dueAt) };
+      const days = daysUntil(x.at);
+      return { id: `due-${x.key}`, kind: x.kind, label: t.actionDeadline, company: byId[x.companyId || ""]?.name || t.general, detail: x.title, at: x.at, urgency: days <= 0 ? "urgent" : days === 1 ? "warning" : "normal", meta: days < 0 ? t.overdueLabel : days === 0 ? t.dueToday : days === 1 ? t.dueTomorrow : when(x.at), event: x.event };
     }),
     ...(data.preferences.jobHunt.showPreparations ? preparationActions : []).map((x: Preparation) => {
       const days = x.dueAt ? daysUntil(x.dueAt) : null;
@@ -2636,7 +2696,7 @@ function Dashboard({
   const actionTitle = t.actionRequired;
   const actionMore = t.viewAll;
   const openAction = (item: any) => {
-    if (item.kind === "schedule" && item.event) {
+    if (item.kind === "event" && item.event) {
       setEditEvent(item.event);
       setForm("schedule");
     } else if (item.kind === "waiting") {
@@ -2713,9 +2773,8 @@ function Dashboard({
   const selectedMonthItems = selectedMonthDay ? monthEventDays.get(selectedMonthDay) || [] : [];
   const selectedMonthLabel = selectedMonthDay ? new Intl.DateTimeFormat(calendarLocale, { month: "long", day: "numeric" }).format(new Date(monthYear, monthIndex, selectedMonthDay)) : "";
   const deadlineToneFor = (at: string) => {
-    const now = new Date(), target = new Date(at);
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const targetDay = new Date(target.getFullYear(), target.getMonth(), target.getDate()).getTime();
+    const today = parseTokyoCalendarDate(`${tokyoDateKey(Date.now())}T00:00`).getTime();
+    const targetDay = parseTokyoCalendarDate(`${tokyoDateKey(parseTokyoCalendarDate(at))}T00:00`).getTime();
     const days = Math.round((targetDay - today) / 864e5);
     return days <= 0 ? "urgent" : days <= 2 ? "warning" : "deadline";
   };
@@ -2733,7 +2792,7 @@ function Dashboard({
           const day = index + 1;
           const eventsForDay = monthEventDays.get(day) || [];
           const hasEvents = eventsForDay.length > 0;
-          const deadlineItem = eventsForDay.find((item: any) => item.kind !== "event");
+          const deadlineItem = eventsForDay.find((item: any) => item.isDeadline);
           const dotTone = deadlineItem ? deadlineToneFor(deadlineItem.at) : "event";
           const today = new Date();
           const isToday = today.getFullYear() === monthYear && today.getMonth() === monthIndex && today.getDate() === day;
@@ -2773,16 +2832,17 @@ function Dashboard({
     </div>
     {data.companies.length > 3 && <button type="button" className="text-button home-featured-more" onClick={() => setView("companies")}>{t.viewAllCompanies} <ChevronRight aria-hidden="true" /></button>}
   </section> : null;
-  const visibleUpcoming = sectionVisible("upcoming") ? upcoming : [];
+  const deadlineKeys = new Set(due.map((item: UpcomingDeadline) => deadlineKey(item)));
+  const visibleUpcoming = sectionVisible("upcoming") ? upcoming.filter((item: any) => !deadlineKeys.has(`event:${item.id}`)) : [];
   const visibleDeadlines = homeSummaryVisibility.deadlines ? due : [];
   const nextAndDeadlineModule = (visibleUpcoming.length || visibleDeadlines.length) ? <section className="dashboard-section dashboard-next-deadline-module">
     <Title>{t.language === "言語" ? "締切・次の予定" : "截止与下一日程"}</Title>
     <div className="dashboard-next-deadline-list">
-      {visibleDeadlines.slice(0, 2).map((item: any) => <button key={`deadline-${item.id}`} type="button" className={`dashboard-next-deadline-row ${deadlineToneFor(item.dueAt!)}`} onClick={() => setView("materials")}>
-        <time>{whenForLocale(item.dueAt!, t)}</time><span><strong>{item.title}</strong><small>{byId[item.companyId || ""]?.name || t.general}</small></span>
+      {visibleDeadlines.slice(0, 2).map((item: any) => <button key={`deadline-${item.key}`} type="button" className={`dashboard-next-deadline-row ${deadlineToneFor(item.at)}`} onClick={() => item.kind === "event" ? (setEditEvent(item.event), setForm("schedule")) : setView("materials")}>
+        <span><strong>{byId[item.companyId || ""]?.name || t.general}</strong><small>{item.kind === "event" ? scheduleDisplayTitle(item.title, item.type, t, item.event) : item.title || t[item.type] || t.general}</small></span><time>{whenForLocale(item.at, t)}</time>
       </button>)}
       {visibleUpcoming.slice(0, 3).map((item: any) => <button key={`event-${item.id}`} type="button" className="dashboard-next-deadline-row" onClick={() => { setEditEvent(item.event); setForm("schedule"); }}>
-        <time>{whenForLocale(item.at, t)}</time><span><strong>{item.title || item.company?.name || t.untitledSchedule}</strong><small>{item.company?.name || t.general}</small></span>
+        <span><strong>{item.company?.name || t.general}</strong><small>{item.title || t.untitledSchedule}</small></span><time>{whenForLocale(item.at, t)}</time>
       </button>)}
     </div>
   </section> : null;
@@ -2813,7 +2873,7 @@ function Dashboard({
                 {homeSummaryOrder.filter((module: HomeSummaryModule) => homeSummaryVisibility[module]).map((module: HomeSummaryModule) => module === "active"
                   ? <Metric key={module} n={active.length} l={t.inProgress} i={BriefcaseBusiness} onClick={() => navigate("companies", "active")} />
                   : module === "deadlines"
-                    ? <Metric key={module} n={due.length} l={t.dueWeek} i={Clock3} tone={due.length ? deadlineToneFor(due[0].dueAt!) : undefined} onClick={() => navigate("schedule", "this-week-deadline")} />
+                    ? <Metric key={module} n={due.length} l={t.dueWeek} i={Clock3} tone={due.length ? deadlineToneFor(due[0].at) : undefined} onClick={() => navigate("schedule", "this-week-deadline")} />
                     : <Metric key={module} n={waiting.length} l={t.waiting} i={Timer} onClick={() => navigate("companies", "waiting-result")} />)}
             </div>
             {(sectionVisible("progress") || nextAndDeadlineModule) && <div className={`dashboard-local-grid${nextAndDeadlineModule ? " has-supporting" : ""}`}>
@@ -2929,7 +2989,7 @@ function whenForLocale(s: string, t: any) {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
-  }).format(new Date(s));
+  }).format(parseTokyoCalendarDate(s));
 }
 function daysUntilLabel(s: string, t: any) {
   const days = Math.ceil((new Date(s).getTime() - Date.now()) / 864e5);
@@ -3014,7 +3074,12 @@ function formatScheduleLocation(event: Event | undefined) {
 function getEventModeLabel(event: Event | undefined, locale: "zh" | "ja") {
   return event?.eventMode === "offline" ? (locale === "ja" ? "対面" : "线下") : event?.eventMode === "online" ? (locale === "ja" ? "オンライン" : "线上") : (locale === "ja" ? "未定" : "未确定");
 }
-function scheduleDisplayTitle(title: string | undefined, type: string | undefined, t: any) {
+function scheduleDisplayTitle(title: string | undefined, type: string | undefined, t: any, event?: Event) {
+  if (type === "interview") {
+    const interviewStage = event?.interviewStage || (interviewStageOptions.includes(event?.stage as typeof interviewStageOptions[number]) ? event?.stage : undefined);
+    if (interviewStage === "other") return event?.interviewStageDetail?.trim() || t.interview;
+    if (interviewStage) return t[interviewStage] || t.interview;
+  }
   if (type === "general") return title?.trim() || t.general;
   return (type && t[type]) || t.untitledSchedule;
 }
@@ -3332,7 +3397,7 @@ function Schedule({
                   <time>{when(x.at)}</time>
                   <i style={{ background: x.company?.color || "#d18135" }} />
                   <div>
-                    <strong>{scheduleDisplayTitle(x.title, x.type, t)}</strong>
+                    <strong>{scheduleDisplayTitle(x.title, x.type, t, x.event)}</strong>
                     <span>
                       {x.company?.name || t.general} · {t[x.type]}
                     </span>
@@ -3889,6 +3954,12 @@ function EventForm({
   save: any;
   remove: (event: Event) => void;
 }) {
+  const initialType = initial?.type || defaultType || "interview";
+  const legacyInterviewStage = initial?.interviewStage
+    || (interviewStageOptions.includes(initial?.stage as typeof interviewStageOptions[number]) ? initial?.stage as typeof interviewStageOptions[number] : undefined)
+    || (interviewStageOptions.includes(defaultStage as typeof interviewStageOptions[number]) ? defaultStage as typeof interviewStageOptions[number] : "first_interview");
+  const [eventType, setEventType] = useState<ItemType>(initialType);
+  const [interviewStage, setInterviewStage] = useState<typeof interviewStageOptions[number]>(legacyInterviewStage);
   const [mode, setMode] = useState<Event["eventMode"]>(initial?.eventMode || "undecided");
   const [prefecture, setPrefecture] = useState(initial?.prefecture || "");
   const [city, setCity] = useState(initial?.city || "");
@@ -3924,7 +3995,7 @@ function EventForm({
         </label>
         <label>
           <span>{t.language === "言語" ? "種類" : t.language === "Language" ? "Type" : "类型"}</span>
-          <select name="type" defaultValue={initial?.type || defaultType || "interview"}>
+          <select name="type" value={eventType} onChange={(event) => setEventType(event.target.value as ItemType)}>
             {types.map((x) => (
               <option key={x} value={x}>
                 {t[x]}
@@ -3932,16 +4003,18 @@ function EventForm({
             ))}
           </select>
         </label>
-        <label>
-          <span>{t.stage}</span>
-          <select name="stage" defaultValue={initial?.stage || defaultStage || "briefing"}>
-            {stages.map((x) => (
-              <option key={x} value={x}>
-                {t[x]}
-              </option>
-            ))}
-          </select>
-        </label>
+        {eventType === "interview" && <>
+          <label>
+            <span>{t.interviewStage}</span>
+            <select name="interviewStage" value={interviewStage} onChange={(event) => setInterviewStage(event.target.value as typeof interviewStageOptions[number])}>
+              {interviewStageOptions.map((stage) => <option key={stage} value={stage}>{t[stage]}</option>)}
+            </select>
+          </label>
+          {interviewStage === "other" && <label>
+            <span>{t.interviewStageDetail}</span>
+            <input name="interviewStageDetail" defaultValue={initial?.interviewStage === "other" ? initial.interviewStageDetail : ""} required />
+          </label>}
+        </>}
         <label>
           <span>{t.due}</span>
           <input
