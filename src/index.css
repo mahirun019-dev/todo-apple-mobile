@@ -6297,17 +6297,17 @@ html[data-theme="dark"] { --app-page-bg: var(--bg-app); }
 .notification-page-row { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; width: 100%; min-height: 82px; align-items: start; gap: 10px; padding: 14px 8px; border: 0; border-bottom: 1px solid var(--border-color); color: var(--text-primary); background: transparent; text-align: left; transition: background-color 140ms ease; }
 .notification-page-row:hover { background: rgba(0, 0, 0, 0.04); }
 .notification-page-row:active { background: rgba(0, 0, 0, 0.06); }
-.notification-page-row > span:nth-child(2) { display: grid; min-width: 0; gap: 3px; }
+.notification-page-row.is-read { grid-template-columns: minmax(0, 1fr) auto; }
+.notification-page-copy { display: grid; min-width: 0; gap: 3px; }
 .notification-page-row strong, .notification-page-row b, .notification-page-row small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .notification-page-row strong { font-size: 13px; }
 .notification-page-row b { font-size: 14px; font-weight: 620; }
 .notification-page-row small, .notification-page-row time { color: var(--text-secondary); font-size: 12px; line-height: 1.35; }
 .notification-page-row time { padding-top: 3px; white-space: nowrap; }
 .notification-page-dot { width: 7px; height: 7px; margin-top: 7px; border-radius: 999px; background: var(--accent); }
-.notification-page-row.is-read .notification-page-dot { visibility: hidden; }
 .notification-page-row.is-read b { color: var(--text-secondary); font-weight: 500; }
 .notification-page-empty { display: grid; justify-items: start; gap: 12px; margin: 0; padding: 28px 0; color: var(--text-secondary); }
-html[data-theme="dark"] .notification-page-row:hover { background: rgba(255, 255, 255, 0.06); }
+html[data-theme="dark"] .notification-page-row:hover { background: rgba(255, 255, 255, 0.045); }
 html[data-theme="dark"] .notification-page-row:active { background: rgba(255, 255, 255, 0.09); }
 
 .company-watch-updates { display: grid; gap: 0; margin-top: 22px; border-top: 1px solid var(--border-color); }
@@ -7528,7 +7528,7 @@ html[data-theme="dark"] .app-shell > .student-app > .mobile-header { background:
 
   .notification-page-item { border-bottom: 1px solid var(--border-color); }
   .notification-page-row { border-bottom: 0; }
-  .notification-page-item.is-expanded { background: rgba(0, 0, 0, 0.025); }
+  .notification-page-item.is-expanded { background: transparent; box-shadow: none; outline: none; }
   .notification-page-detail { display: grid; grid-template-rows: 0fr; opacity: 0; overflow: hidden; transition: grid-template-rows 180ms ease, opacity 160ms ease; }
   .notification-page-detail > * { min-height: 0; overflow: hidden; }
   .notification-page-item.is-expanded .notification-page-detail { grid-template-rows: 1fr; opacity: 1; }
@@ -7539,13 +7539,13 @@ html[data-theme="dark"] .app-shell > .student-app > .mobile-header { background:
   .notification-page-detail-actions { display: flex; flex-wrap: wrap; gap: 10px; padding: 0 18px 16px 28px; }
   .notification-page-detail-actions .text-button { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; }
   .notification-page-detail-actions svg { width: 14px; height: 14px; }
-  html[data-theme="dark"] .notification-page-item.is-expanded { background: rgba(255, 255, 255, 0.04); }
+  html[data-theme="dark"] .notification-page-item.is-expanded { background: transparent; }
 }
 
 @media (min-width: 768px) {
   .notification-page-item { border-bottom: 1px solid var(--border-color); }
   .notification-page-row { border-bottom: 0; }
-  .notification-page-item.is-expanded { background: rgba(0, 0, 0, 0.025); }
+  .notification-page-item.is-expanded { background: transparent; box-shadow: none; outline: none; }
   .notification-page-detail { display: grid; grid-template-rows: 0fr; opacity: 0; overflow: hidden; transition: grid-template-rows 180ms ease, opacity 160ms ease; }
   .notification-page-detail > * { min-height: 0; overflow: hidden; }
   .notification-page-item.is-expanded .notification-page-detail { grid-template-rows: 1fr; opacity: 1; }
@@ -7555,5 +7555,5 @@ html[data-theme="dark"] .app-shell > .student-app > .mobile-header { background:
   .notification-page-detail-actions { display: flex; gap: 12px; padding: 0 18px 16px 26px; }
   .notification-page-detail-actions .text-button { display: inline-flex; align-items: center; gap: 4px; }
   .notification-page-detail-actions svg { width: 14px; height: 14px; }
-  html[data-theme="dark"] .notification-page-item.is-expanded { background: rgba(255, 255, 255, 0.04); }
+  html[data-theme="dark"] .notification-page-item.is-expanded { background: transparent; }
 }

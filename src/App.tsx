@@ -1967,7 +1967,16 @@ export default function App() {
           </button>
         </aside>
         <header className="mobile-header glass-lite">
-          <button className="mobile-menu-button" data-menu-open={settings ? "true" : "false"} onClick={() => settings ? closeMobileSettings() : setSettings(true)} aria-label={settings ? t.cancel : t.settings}>
+          <button className="mobile-menu-button" data-menu-open={settings ? "true" : "false"} onClick={() => {
+            if (settings) {
+              closeMobileSettings();
+              return;
+            }
+            // The global hamburger always opens at the root level. This must happen
+            // before the persistent navigation surface begins its existing reveal.
+            setMobileSettingsPage(null);
+            setSettings(true);
+          }} aria-label={settings ? t.cancel : t.settings}>
             {settings ? <X /> : <Menu />}
           </button>
           <strong className="mobile-header-title">CareerFlow</strong>
