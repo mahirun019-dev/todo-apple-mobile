@@ -7508,3 +7508,52 @@ html[data-theme="dark"] .app-shell > .student-app > .mobile-header { background:
     background: rgba(255, 255, 255, 0.09);
   }
 }
+
+/* Mobile navigation is a full-width five-tab system. These rules intentionally
+   follow obsolete floating-nav declarations so no legacy inset can clip ES. */
+@media (max-width: 767px) {
+  .app-shell > .student-app > .mobile-header {
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) 44px !important;
+    align-items: center !important;
+    justify-content: initial !important;
+  }
+  .app-shell > .student-app > .mobile-header .mobile-menu-button { position: static !important; width: 44px !important; height: 44px !important; }
+  .mobile-header-title { min-width: 0; text-align: center !important; }
+  .mobile-header-spacer { display: block !important; width: 44px !important; height: 44px !important; pointer-events: none; }
+  [data-testid="mobile-bottom-nav"] { position: fixed !important; inset: auto 0 0 !important; display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)) !important; width: 100% !important; height: calc(64px + env(safe-area-inset-bottom)) !important; min-height: calc(64px + env(safe-area-inset-bottom)) !important; padding: 0 0 env(safe-area-inset-bottom) !important; overflow: visible !important; }
+  [data-testid="mobile-bottom-nav"] > button, [data-testid="mobile-bottom-nav"] > button.active { min-width: 0 !important; width: 100% !important; height: 64px !important; padding: 3px 1px !important; border-radius: 0 !important; }
+  [data-testid="mobile-bottom-nav"] > button > span:last-child { overflow: visible !important; font-size: clamp(9px, 2.7vw, 11px) !important; line-height: 1.15 !important; text-overflow: clip !important; white-space: nowrap !important; }
+  [data-testid="mobile-bottom-nav"] > button svg { width: 21px !important; height: 21px !important; }
+
+  .notification-page-item { border-bottom: 1px solid var(--border-color); }
+  .notification-page-row { border-bottom: 0; }
+  .notification-page-item.is-expanded { background: rgba(0, 0, 0, 0.025); }
+  .notification-page-detail { display: grid; grid-template-rows: 0fr; opacity: 0; overflow: hidden; transition: grid-template-rows 180ms ease, opacity 160ms ease; }
+  .notification-page-detail > * { min-height: 0; overflow: hidden; }
+  .notification-page-item.is-expanded .notification-page-detail { grid-template-rows: 1fr; opacity: 1; }
+  .notification-page-detail dl { display: grid; gap: 11px; margin: 0; padding: 0 18px 14px 28px; }
+  .notification-page-detail dl > div { display: grid; gap: 3px; }
+  .notification-page-detail dt { color: var(--text-secondary); font-size: 12px; }
+  .notification-page-detail dd { margin: 0; color: var(--text-primary); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+  .notification-page-detail-actions { display: flex; flex-wrap: wrap; gap: 10px; padding: 0 18px 16px 28px; }
+  .notification-page-detail-actions .text-button { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; }
+  .notification-page-detail-actions svg { width: 14px; height: 14px; }
+  html[data-theme="dark"] .notification-page-item.is-expanded { background: rgba(255, 255, 255, 0.04); }
+}
+
+@media (min-width: 768px) {
+  .notification-page-item { border-bottom: 1px solid var(--border-color); }
+  .notification-page-row { border-bottom: 0; }
+  .notification-page-item.is-expanded { background: rgba(0, 0, 0, 0.025); }
+  .notification-page-detail { display: grid; grid-template-rows: 0fr; opacity: 0; overflow: hidden; transition: grid-template-rows 180ms ease, opacity 160ms ease; }
+  .notification-page-detail > * { min-height: 0; overflow: hidden; }
+  .notification-page-item.is-expanded .notification-page-detail { grid-template-rows: 1fr; opacity: 1; }
+  .notification-page-detail dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 0; padding: 0 18px 14px 26px; }
+  .notification-page-detail dt { margin-bottom: 3px; color: var(--text-secondary); font-size: 12px; }
+  .notification-page-detail dd { margin: 0; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
+  .notification-page-detail-actions { display: flex; gap: 12px; padding: 0 18px 16px 26px; }
+  .notification-page-detail-actions .text-button { display: inline-flex; align-items: center; gap: 4px; }
+  .notification-page-detail-actions svg { width: 14px; height: 14px; }
+  html[data-theme="dark"] .notification-page-item.is-expanded { background: rgba(255, 255, 255, 0.04); }
+}

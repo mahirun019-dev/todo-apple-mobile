@@ -68,7 +68,11 @@ export function WatchProvider({ children }: { children: ReactNode }) {
     setTargets([]);
     setEvents([]);
   };
-  const markRead = async (id: string) => { await request(`/api/events/${id}/read`, { method: 'POST' }); setEvents((current) => current.map((event) => event.id === id ? { ...event, read: 1 } : event)); };
+  const markRead = async (id: string) => {
+    setEvents((current) => current.map((event) => event.id === id ? { ...event, read: 1 } : event));
+    const response = await request(`/api/events/${id}/read`, { method: 'POST' });
+    if (!response.ok) void refresh();
+  };
   const markAllRead = async () => { await request('/api/events/read-all', { method: 'POST' }); setEvents((current) => current.map((event) => ({ ...event, read: 1 }))); };
   const value = useMemo(() => ({ configured: Boolean(API), authenticated: Boolean(token), targets, events, error, connect, disconnect, refresh, request, markRead, markAllRead }), [token, targets, events, error, request, refresh]);
   return <Context.Provider value={value}>{children}</Context.Provider>;

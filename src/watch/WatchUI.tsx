@@ -84,14 +84,24 @@ function dateGroup(value: string, locale: Locale, text: typeof watchText.ja | ty
 export function NotificationPage({ locale, openCompany, openSettings }: NotificationPageProps) {
   const text = watchText[locale], watch = useWatch();
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const [expandedNotificationId, setExpandedNotificationId] = useState<string | null>(null);
   const events = useMemo(() => (filter === 'unread' ? watch.events.filter((event) => !event.read) : watch.events), [filter, watch.events]);
   const groups = useMemo(() => events.reduce<Record<string, WatchEvent[]>>((all, event) => { const key = dateGroup(event.detected_at, locale, text); (all[key] ||= []).push(event); return all; }, {}), [events, locale, text]);
-  const choose = async (event: WatchEvent) => { if (!event.read) await watch.markRead(event.id); openCompany(event.company_id, event.company_name, event.id); };
+  const choose = async (event: WatchEvent) => {
+    if (!event.read) await watch.markRead(event.id);
+    setExpandedNotificationId((current) => current === event.id ? null : event.id);
+  };
   return <section className="notification-page">
     <header className="notification-page-head"><div><h1>{text.updates}</h1><p>{locale === 'ja' ? '採用情報ページの重要な更新を確認できます。' : '集中查看招聘页面的重要更新。'}</p></div>{watch.authenticated && <button type="button" className="text-button" onClick={() => void watch.markAllRead()} disabled={!watch.events.some((event) => !event.read)}>{text.markAllRead}</button>}</header>
     {!watch.configured ? <p className="notification-page-empty">{text.unavailable}</p> : !watch.authenticated ? <div className="notification-page-empty"><p>{text.notConnected}</p><button type="button" className="text-button" onClick={openSettings}>{text.goToSettings}<ExternalLink /></button></div> : <>
       <div className="notification-page-filters" role="tablist"><button className={filter === 'all' ? 'active' : ''} onClick={() => setFilter('all')}>{text.all}</button><button className={filter === 'unread' ? 'active' : ''} onClick={() => setFilter('unread')}>{text.unread}</button></div>
-      {events.length ? <div className="notification-day-groups">{Object.entries(groups).map(([day, group]) => <section key={day}><h2>{day}</h2><div>{group.map((event) => <button type="button" className={`notification-page-row${event.read ? ' is-read' : ''}`} key={event.id} onClick={() => void choose(event)}><span className="notification-page-dot" aria-hidden="true" /><span><strong>{event.company_name}</strong><b>{event.title}</b><small>{event.summary}</small></span><time>{formatDate(event.detected_at, locale)}</time></button>)}</div></section>)}</div> : <p className="notification-page-empty">{text.noUpdates}</p>}
+      {events.length ? <div className="notification-day-groups">{Object.entries(groups).map(([day, group]) => <section key={day}><h2>{day}</h2><div>{group.map((event) => {
+        const expanded = expandedNotificationId === event.id;
+        return <article className={`notification-page-item${event.read ? ' is-read' : ''}${expanded ? ' is-expanded' : ''}`} key={event.id}>
+          <button type="button" className="notification-page-row" aria-expanded={expanded} onClick={() => void choose(event)}><span className="notification-page-dot" aria-hidden="true" /><span><strong>{event.company_name}</strong><b>{event.title}</b><small>{event.summary}</small></span><time>{formatDate(event.detected_at, locale)}</time></button>
+          <div className="notification-page-detail" aria-hidden={!expanded}><dl><div><dt>{text.changes}</dt><dd>{event.summary}</dd></div><div><dt>{text.sourcePage}</dt><dd>{text[event.source_type]}</dd></div><div><dt>{text.detected}</dt><dd>{formatDate(event.detected_at, locale)}</dd></div>{event.before_excerpt && <div><dt>{text.before}</dt><dd>{event.before_excerpt}</dd></div>}{event.after_excerpt && <div><dt>{text.after}</dt><dd>{event.after_excerpt}</dd></div>}</dl><div className="notification-page-detail-actions"><button type="button" className="text-button" onClick={() => openCompany(event.company_id, event.company_name, event.id)}>{text.viewCompany}</button>{event.source_url && <a className="text-button" href={event.source_url} target="_blank" rel="noreferrer">{text.openSource}<ExternalLink /></a>}</div></div>
+        </article>;
+      })}</div></section>)}</div> : <p className="notification-page-empty">{text.noUpdates}</p>}
     </>}
   </section>;
 }
