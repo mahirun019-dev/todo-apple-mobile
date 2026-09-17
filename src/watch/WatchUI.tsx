@@ -73,13 +73,13 @@ export function NotificationBell({ locale, openCompany }: { locale: Locale; open
     setSelected(event);
     if (!event.read) await watch.markRead(event.id);
   };
-  if (!watch.configured || !watch.authenticated) return null;
+  if (!watch.configured) return null;
   const panel = open ? createPortal(<>
     <button className="watch-notification-backdrop" aria-label={text.cancel} onClick={() => setOpen(false)} />
     <section ref={panelRef} className="watch-notification-panel" style={{ '--notification-top': `${position.top}px`, '--notification-right': `${position.right}px` } as CSSProperties} role="dialog" aria-label={text.updates}>
       <header><h2>{text.updates}</h2><button type="button" className="watch-notification-close" onClick={() => setOpen(false)} aria-label={text.cancel}><X /></button></header>
       <div className="watch-notification-list">
-        {watch.events.length ? watch.events.slice(0, 20).map((event) => <button key={event.id} className={`watch-notification-item${event.read ? ' is-read' : ''}`} onClick={() => void choose(event)}>
+        {!watch.authenticated ? <div className="watch-notification-login"><p>{text.auth}</p><WatchLogin locale={locale} /></div> : watch.events.length ? watch.events.slice(0, 20).map((event) => <button key={event.id} className={`watch-notification-item${event.read ? ' is-read' : ''}`} onClick={() => void choose(event)}>
           <span className="watch-notification-dot" aria-hidden="true" />
           <span><strong>{event.company_name}</strong><small>{event.title}</small><small>{event.summary}</small></span><time>{formatDate(event.detected_at, locale)}</time>
         </button>) : <p className="watch-notification-empty">{locale === 'ja' ? '新しい企業アップデートはありません' : '暂无新的企业更新'}</p>}

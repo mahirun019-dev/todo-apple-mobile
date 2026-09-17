@@ -64,6 +64,7 @@ import {
   Trash2,
   Upload,
   X,
+  Star,
 } from "lucide-react";
 
 type View = "dashboard" | "companies" | "schedule" | "materials";
@@ -1971,6 +1972,7 @@ export default function App() {
                 waiting,
                 next,
                 upcoming,
+                schedules,
                 focus,
                 byId,
                 toggle,
@@ -2536,6 +2538,7 @@ function Dashboard({
   waiting,
   next,
   upcoming,
+  schedules,
   focus,
   byId,
   toggle,
@@ -2553,6 +2556,8 @@ function Dashboard({
     if (matchingCompany) openCompany(matchingCompany.id);
   };
   const [displayedMonth, setDisplayedMonth] = useState({ year: initialMonth.getFullYear(), month: initialMonth.getMonth() });
+  const [selectedMonthDay, setSelectedMonthDay] = useState<number | null>(null);
+  const [progressExpanded, setProgressExpanded] = useState(false);
   const shiftMonth = (offset: number) => setDisplayedMonth((current) => {
     const next = new Date(current.year, current.month + offset, 1);
     return { year: next.getFullYear(), month: next.getMonth() };
@@ -2627,32 +2632,42 @@ function Dashboard({
     </div>
     {actionItems.length > 3 && <button type="button" className="text-button mobile-action-more" onClick={() => setView("materials")}>{actionMore}</button>}
   </section> : null;
-  const deadlinesModule = due.length > 0 ? <section>
-    <Title className="deadline-title" action={<button className="text-button" onClick={() => open("es")}><Plus />{t.addMaterial}</button>}>{t.deadlines}</Title>
-    <div className="deadline-list">{due.map((x: any) => <MaterialRow key={x.id} x={x} company={byId[x.companyId]} t={t} toggle={toggle} focus={focusToggle} />)}</div>
-  </section> : null;
+  const stages = [
+    "funnelInterested",
+    "funnelDocuments",
+    "funnelAptitude",
+    "funnelInterview",
+    "funnelFinal",
+    "funnelOffer",
+  ] as FunnelStage[];
+  const stageRows = stages.map((stage) => ({
+    stage,
+    count: data.companies.filter((company: Company) => funnelStageFor(company.stage) === stage).length,
+  }));
+  const mobileVisibleStages = stageRows.some(({ count }) => count > 0)
+    ? stageRows.filter(({ count }) => count > 0)
+    : [stageRows[0]];
+  const mobileHiddenStages = stageRows.filter(({ stage }) => !mobileVisibleStages.some((item) => item.stage === stage));
+  const StageRow = ({ stage, count }: { stage: FunnelStage; count: number }) => (
+    <button type="button" className={`funnel-row${count > 0 ? " has-count" : ""}`} key={stage} onClick={() => openFunnel(stage)} aria-label={`${t[stage]}: ${count}`}>
+      <span className="funnel-row-label">{t[stage]}</span>
+      <span className="funnel-row-meta"><b className={count > 0 ? "has-count" : undefined}>{count}</b><ChevronRight aria-hidden="true" /></span>
+    </button>
+  );
   const progressModule = <section className="dashboard-section dashboard-progress-module">
     <Title>{t.funnel}</Title>
-    <div className="funnel">
-      {([
-        "funnelInterested",
-        "funnelDocuments",
-        "funnelAptitude",
-        "funnelInterview",
-        "funnelFinal",
-        "funnelOffer",
-      ] as FunnelStage[]).map((s) => (
-        <button type="button" className="funnel-row" key={s} onClick={() => openFunnel(s)} aria-label={`${t[s]}: ${data.companies.filter((x: Company) => funnelStageFor(x.stage) === s).length}`}>
-          <span className="funnel-row-label">{t[s]}</span>
-          <span className="funnel-row-meta">
-            {(() => {
-              const count = data.companies.filter((x: Company) => funnelStageFor(x.stage) === s).length;
-              return <b className={count > 0 ? "has-count" : undefined}>{count}</b>;
-            })()}
-            <ChevronRight aria-hidden="true" />
-          </span>
+    <div className="funnel funnel-desktop">{stageRows.map(({ stage, count }) => <StageRow key={stage} stage={stage} count={count} />)}</div>
+    <div className="funnel funnel-mobile">
+      {mobileVisibleStages.map(({ stage, count }) => <StageRow key={stage} stage={stage} count={count} />)}
+      {mobileHiddenStages.length > 0 && <>
+        <button type="button" className="funnel-expand" aria-expanded={progressExpanded} onClick={() => setProgressExpanded((value) => !value)}>
+          <span>{stageRows.some(({ count }) => count > 0)
+            ? (t.language === "言語" ? `その他の選考段階 ${mobileHiddenStages.length}` : `其他选考阶段 ${mobileHiddenStages.length}`)
+            : (t.language === "言語" ? "すべての選考段階を見る" : "查看全部选考阶段")}</span>
+          {progressExpanded ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
         </button>
-      ))}
+        <div className={`funnel-collapsed-rows${progressExpanded ? " is-expanded" : ""}`}><div>{mobileHiddenStages.map(({ stage, count }) => <StageRow key={stage} stage={stage} count={count} />)}</div></div>
+      </>}
     </div>
   </section>;
   const monthYear = displayedMonth.year;
@@ -2662,14 +2677,20 @@ function Dashboard({
   const firstWeekday = new Date(monthYear, monthIndex, 1).getDay();
   const calendarLocale = t.language === "言語" ? "ja-JP" : t.language === "Language" ? "en-US" : "zh-CN";
   const weekdayLabels = Array.from({ length: 7 }, (_, index) => new Intl.DateTimeFormat(calendarLocale, { weekday: "short" }).format(new Date(2021, 7, 1 + index)));
-  const monthEvents = data.events.filter((event: Event) => event.startsAt.slice(0, 7) === monthPrefix && !(event as Event & { deletedAt?: boolean }).deletedAt);
-  const monthEventDays = new Map<number, Event[]>();
-  monthEvents.forEach((event: Event) => {
-    const day = Number(event.startsAt.slice(8, 10));
+  const monthItems = schedules.filter((item: any) => item.at.slice(0, 7) === monthPrefix);
+  const monthEventDays = new Map<number, typeof monthItems>();
+  monthItems.forEach((item: any) => {
+    const day = Number(item.at.slice(8, 10));
     if (!Number.isInteger(day) || day < 1 || day > daysInMonth) return;
-    monthEventDays.set(day, [...(monthEventDays.get(day) || []), event]);
+    monthEventDays.set(day, [...(monthEventDays.get(day) || []), item]);
   });
   const monthLabel = new Intl.DateTimeFormat(calendarLocale, { month: "long", year: "numeric" }).format(new Date(monthYear, monthIndex, 1));
+  const selectedMonthItems = selectedMonthDay ? monthEventDays.get(selectedMonthDay) || [] : [];
+  const selectedMonthLabel = selectedMonthDay ? new Intl.DateTimeFormat(calendarLocale, { month: "long", day: "numeric" }).format(new Date(monthYear, monthIndex, selectedMonthDay)) : "";
+  const deadlineToneFor = (at: string) => {
+    const days = daysUntil(at);
+    return days <= 0 ? "urgent" : days <= 2 ? "warning" : "deadline";
+  };
   const monthModule = <section className="dashboard-section home-month-module">
     <Title action={<div className="home-month-controls">
       <button type="button" onClick={() => shiftMonth(-1)} aria-label={t.previousMonth}><ChevronLeft aria-hidden="true" /></button>
@@ -2684,13 +2705,22 @@ function Dashboard({
           const day = index + 1;
           const eventsForDay = monthEventDays.get(day) || [];
           const hasEvents = eventsForDay.length > 0;
+          const deadlineItem = eventsForDay.find((item: any) => item.kind !== "event");
+          const dotTone = deadlineItem ? deadlineToneFor(deadlineItem.at) : "event";
           const today = new Date();
           const isToday = today.getFullYear() === monthYear && today.getMonth() === monthIndex && today.getDate() === day;
-          return <button type="button" className={`home-month-day${hasEvents ? " has-events" : ""}${isToday ? " is-today" : ""}`} key={day} disabled={!hasEvents} onClick={() => setView("schedule")} aria-label={`${monthYear}/${monthIndex + 1}/${day}${hasEvents ? ` ${eventsForDay.length}` : ""}`}><span>{day}</span>{hasEvents && <i style={{ background: byId[eventsForDay[0].companyId || ""]?.color || "var(--accent)" }} />}</button>;
+          return <button type="button" className={`home-month-day${hasEvents ? " has-events" : ""}${isToday ? " is-today" : ""}${selectedMonthDay === day ? " is-selected" : ""}`} key={day} onClick={() => setSelectedMonthDay(day)} aria-label={`${monthYear}/${monthIndex + 1}/${day}${hasEvents ? ` ${eventsForDay.length}` : ""}`}><span>{day}</span>{hasEvents && <i className={`calendar-event-dot ${dotTone}`} />}</button>;
         })}
       </div>
     </div>
-    {!monthEvents.length && <p className="home-month-empty">{t.monthNoEvents}</p>}
+    {selectedMonthDay !== null && <div className="home-month-day-detail" aria-live="polite">
+      <strong>{selectedMonthLabel}</strong>
+      {selectedMonthItems.length ? <div>{selectedMonthItems.map((item: any) => <button type="button" key={item.id} onClick={() => item.kind === "event" ? (setEditEvent(item.event), setForm("schedule")) : setView("materials")}>
+        <span className={`calendar-item-dot ${item.kind === "event" ? "event" : deadlineToneFor(item.at)}`} />
+        <span><b>{item.title || item.company?.name || t.general}</b><small>{item.company?.name || t.general} · {whenForLocale(item.at, t)}</small></span>
+      </button>)}</div> : <p>{t.language === "言語" ? "予定なし" : "暂无日程"}</p>}
+    </div>}
+    {!monthItems.length && selectedMonthDay === null && <p className="home-month-empty">{t.monthNoEvents}</p>}
     <button type="button" className="home-month-view-all text-button" onClick={() => setView("schedule")}>
       {t.viewAllSchedules}<ChevronRight aria-hidden="true" />
     </button>
@@ -2708,12 +2738,25 @@ function Dashboard({
     <Title>{t.featuredCompanies}</Title>
     <div className="home-featured-list">
       {featuredCandidates.map(({ company, nextEvent }: any) => <button type="button" className="home-featured-row" key={company.id} onClick={() => openCompany(company.id)}>
-        <span className="home-featured-interest">{formatInterest(company)}</span>
+        <StarRating value={company.interestLevel} className="home-featured-interest" />
         <span className="home-featured-copy"><strong>{company.name}</strong><small>{stageDisplayLabel(company.stage, t)}{nextEvent ? ` · ${whenForLocale(nextEvent.startsAt, t)}` : ""}</small></span>
         <ChevronRight aria-hidden="true" />
       </button>)}
     </div>
     {data.companies.length > 3 && <button type="button" className="text-button home-featured-more" onClick={() => setView("companies")}>{t.viewAllCompanies} <ChevronRight aria-hidden="true" /></button>}
+  </section> : null;
+  const visibleUpcoming = sectionVisible("upcoming") ? upcoming : [];
+  const visibleDeadlines = homeSummaryVisibility.deadlines ? due : [];
+  const nextAndDeadlineModule = (visibleUpcoming.length || visibleDeadlines.length) ? <section className="dashboard-section dashboard-next-deadline-module">
+    <Title>{t.language === "言語" ? "締切・次の予定" : "截止与下一日程"}</Title>
+    <div className="dashboard-next-deadline-list">
+      {visibleDeadlines.slice(0, 2).map((item: any) => <button key={`deadline-${item.id}`} type="button" className={`dashboard-next-deadline-row ${deadlineToneFor(item.dueAt!)}`} onClick={() => setView("materials")}>
+        <time>{whenForLocale(item.dueAt!, t)}</time><span><strong>{item.title}</strong><small>{byId[item.companyId || ""]?.name || t.general}</small></span>
+      </button>)}
+      {visibleUpcoming.slice(0, 3).map((item: any) => <button key={`event-${item.id}`} type="button" className="dashboard-next-deadline-row" onClick={() => { setEditEvent(item.event); setForm("schedule"); }}>
+        <time>{whenForLocale(item.at, t)}</time><span><strong>{item.title || item.company?.name || t.untitledSchedule}</strong><small>{item.company?.name || t.general}</small></span>
+      </button>)}
+    </div>
   </section> : null;
   const homeSections: Record<HomeSection, ReactNode> = { upcoming: upcomingModule, action: actionModule, progress: progressModule, month: monthModule, featured: featuredModule };
   return (
@@ -2738,20 +2781,20 @@ function Dashboard({
         </div>
         <div className="main-dashboard-layout">
           <div className="dashboard-main">
-            <div className="dashboard-top-grid">
-              <div className="overview-grid">
+            <div className="overview-grid">
                 {homeSummaryOrder.filter((module: HomeSummaryModule) => homeSummaryVisibility[module]).map((module: HomeSummaryModule) => module === "active"
                   ? <Metric key={module} n={active.length} l={t.inProgress} i={BriefcaseBusiness} onClick={() => navigate("companies", "active")} />
                   : module === "deadlines"
-                    ? <Metric key={module} n={due.length} l={t.dueWeek} i={Clock3} onClick={() => navigate("schedule", "this-week-deadline")} />
+                    ? <Metric key={module} n={due.length} l={t.dueWeek} i={Clock3} tone={due.length ? deadlineToneFor(due[0].dueAt!) : undefined} onClick={() => navigate("schedule", "this-week-deadline")} />
                     : <Metric key={module} n={waiting.length} l={t.waiting} i={Timer} onClick={() => navigate("companies", "waiting-result")} />)}
-              </div>
-              {homeSectionOrder.filter((module: HomeSection) => module === "upcoming" && sectionVisible(module) && homeSections[module] !== null).map((module: HomeSection) => <div key={module}>{homeSections[module]}</div>)}
+            </div>
+            <div className={`dashboard-local-grid${nextAndDeadlineModule ? " has-supporting" : ""}`}>
+              {sectionVisible("progress") && progressModule}
+              {nextAndDeadlineModule}
             </div>
             <div className="dashboard-full-width-sections">
-              {homeSummaryVisibility.deadlines && deadlinesModule}
               <div className="dashboard-customizable-modules">
-                {homeSectionOrder.filter((module: HomeSection) => module !== "upcoming" && sectionVisible(module) && homeSections[module] !== null).map((module: HomeSection) => <div key={module}>{homeSections[module]}</div>)}
+                {homeSectionOrder.filter((module: HomeSection) => module !== "upcoming" && module !== "progress" && sectionVisible(module) && homeSections[module] !== null).map((module: HomeSection) => <div key={module}>{homeSections[module]}</div>)}
               </div>
             </div>
           </div>
@@ -2783,9 +2826,9 @@ function Dashboard({
     </>
   );
 }
-function Metric({ n, l, i: I, onClick }: { n: number; l: string; i: any; onClick: () => void }) {
+function Metric({ n, l, i: I, onClick, tone }: { n: number; l: string; i: any; onClick: () => void; tone?: string }) {
   return (
-    <button type="button" className="metric metric-link entity-card" onClick={onClick} aria-label={`${l}: ${n}`}>
+    <button type="button" className={`metric metric-link entity-card${tone ? ` is-${tone}` : ""}`} onClick={onClick} aria-label={`${l}: ${n}`}>
       <I className="metric-icon" aria-hidden="true" />
       <div>
         <strong>{n}</strong>
@@ -2869,11 +2912,14 @@ function daysUntilLabel(s: string, t: any) {
 function companyJobCategory(company: Company) {
   return company.jobCategory || company.position || "";
 }
-function formatInterest(company: Company) {
-  return `${"★".repeat(Math.max(0, Math.min(5, company.interestLevel)))}${"☆".repeat(Math.max(0, 5 - Math.min(5, company.interestLevel)))}`;
+function StarRating({ value, className = "" }: { value: number; className?: string }) {
+  const rating = Math.max(0, Math.min(5, value));
+  return <span className={`star-rating ${className}`} aria-label={`${rating} / 5`}>
+    {Array.from({ length: 5 }, (_, index) => <Star key={index} className={index < rating ? "is-filled" : ""} aria-hidden="true" />)}
+  </span>;
 }
 function formatCompanyMetadata(company: Company) {
-  return [company.industry, companyJobCategory(company), formatInterest(company)].filter((value) => Boolean(value && value.trim()));
+  return [company.industry, companyJobCategory(company)].filter((value) => Boolean(value && value.trim()));
 }
 function companyFutureEvents(events: Event[], companyId: string | undefined) {
   if (!companyId) return [];
@@ -3012,7 +3058,7 @@ function Companies({
           <div>
             <BackNavigation label={t.companies} onClick={onBack} />
             <h1>{co.name}</h1>
-            <p>{metadata.length ? metadata.join(" · ") : t.notSet}</p>
+            <p className="company-detail-metadata">{metadata.length ? <>{metadata.join(" · ")}<span aria-hidden="true"> · </span><StarRating value={co.interestLevel} /></> : <StarRating value={co.interestLevel} />}</p>
           </div>
           <div className="head-actions">
             <button
@@ -3049,7 +3095,7 @@ function Companies({
               </div>
               <div>
                 <dt>{t.interest}</dt>
-                <dd>{formatInterest(co)}</dd>
+                <dd><StarRating value={co.interestLevel} /></dd>
               </div>
             </dl>
             <h2>{t.companyInfo}</h2>
@@ -3192,7 +3238,7 @@ function Companies({
               <div className="company-card-body">
                 <h3 title={x.name}>{x.name}</h3>
                 {(data.preferences.customize.companyCard.industry || data.preferences.customize.companyCard.position) && <p>{[data.preferences.customize.companyCard.industry ? x.industry : "", data.preferences.customize.companyCard.position ? companyJobCategory(x) : ""].filter(Boolean).join(" / ") || t.notSet}</p>}
-                {(data.preferences.customize.companyCard.stage || data.preferences.customize.companyCard.interest) && <span>{data.preferences.customize.companyCard.stage ? stageDisplayLabel(x.stage, t) : ""}{data.preferences.customize.companyCard.stage && data.preferences.customize.companyCard.interest ? ` · ${t.interest} ` : data.preferences.customize.companyCard.interest ? `${t.interest} ` : ""}{data.preferences.customize.companyCard.interest ? formatInterest(x) : ""}</span>}
+                {(data.preferences.customize.companyCard.stage || data.preferences.customize.companyCard.interest) && <span className="company-card-stage">{data.preferences.customize.companyCard.stage ? stageDisplayLabel(x.stage, t) : ""}{data.preferences.customize.companyCard.stage && data.preferences.customize.companyCard.interest ? <span aria-hidden="true"> · </span> : null}{data.preferences.customize.companyCard.interest ? <StarRating value={x.interestLevel} /> : null}</span>}
                 {data.preferences.customize.companyCard.nextEvent && <span>{nextEvent ? `${t.nextSchedule} · ${whenForLocale(nextEvent.startsAt, t)} · ${daysUntilLabel(nextEvent.startsAt, t)}` : t.noSchedule}</span>}
                 <CompanyWatchStatus companyId={x.id} companyName={x.name} locale={t.language === "言語" ? "ja" : "zh"} />
               </div>
