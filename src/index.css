@@ -7083,15 +7083,16 @@ html[data-theme="dark"] .app-shell > .student-app > .mobile-header { background:
 .dashboard-next-deadline-row small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dashboard-next-deadline-row strong { font-size: 14px; font-weight: 650; }
 .dashboard-next-deadline-row small { color: var(--text-secondary); font-size: 12px; }
-.dashboard-next-deadline-row.deadline time { color: #a66910; }
-.dashboard-next-deadline-row.warning time { color: #b35d0d; font-weight: 700; }
-.dashboard-next-deadline-row.urgent time { color: #bc4644; font-weight: 700; }
+.dashboard-next-deadline-row.warning time { color: #a66910; font-weight: 700; }
+.dashboard-next-deadline-row.due-today time { color: #c96a16; font-weight: 700; }
+.dashboard-next-deadline-row.overdue time { color: #bc4644; font-weight: 700; }
 .metric .kpi-number { color: var(--text-primary); }
-.metric.is-deadline .metric-icon { color: #a66910; }
-.metric.is-warning .metric-icon { color: #b35d0d; }
-.metric.is-urgent .metric-icon { color: #bc4644; }
-.metric.is-warning .kpi-number { color: #b35d0d; }
-.metric.is-urgent .kpi-number { color: #bc4644; }
+.metric.is-warning .metric-icon { color: #a66910; }
+.metric.is-due-today .metric-icon { color: #c96a16; }
+.metric.is-overdue .metric-icon { color: #bc4644; }
+.metric.is-warning .kpi-number { color: #a66910; }
+.metric.is-due-today .kpi-number { color: #c96a16; }
+.metric.is-overdue .kpi-number { color: #bc4644; }
 
 .funnel-mobile { display: none; }
 .dashboard-progress-module .funnel-desktop { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--border-color); }
@@ -7116,9 +7117,10 @@ html[data-theme="dark"] .app-shell > .student-app > .mobile-header { background:
 .home-month-day.has-events:active { background: rgba(0, 0, 0, 0.06); }
 .home-month-day.is-selected { background: var(--bg-muted); }
 .calendar-event-dot { width: 5px; height: 5px; border-radius: 999px; background: var(--accent); }
-.calendar-event-dot.deadline { background: #bd7817; }
+.calendar-event-dot.normal { background: #bd7817; }
 .calendar-event-dot.warning { background: #c96a16; }
-.calendar-event-dot.urgent { background: #c94a47; }
+.calendar-event-dot.due-today { background: #c96a16; }
+.calendar-event-dot.overdue { background: #c94a47; }
 .home-month-day-detail { display: grid; gap: 7px; margin-top: 12px; padding: 11px 0 0; border-top: 1px solid var(--border-color); }
 .home-month-day-detail > strong { font-size: 13px; }
 .home-month-day-detail > div { display: grid; }
@@ -7132,9 +7134,10 @@ html[data-theme="dark"] .app-shell > .student-app > .mobile-header { background:
 .home-month-day-detail small,
 .home-month-day-detail p { margin: 0; color: var(--text-secondary); font-size: 12px; }
 .calendar-item-dot { width: 6px; height: 6px; border-radius: 999px; background: var(--accent); }
-.calendar-item-dot.deadline { background: #bd7817; }
+.calendar-item-dot.normal { background: #bd7817; }
 .calendar-item-dot.warning { background: #c96a16; }
-.calendar-item-dot.urgent { background: #c94a47; }
+.calendar-item-dot.due-today { background: #c96a16; }
+.calendar-item-dot.overdue { background: #c94a47; }
 
 @media (min-width: 1024px) {
   .main-dashboard-layout { display: block; width: min(100%, 1340px); margin-inline: auto; }
@@ -7179,20 +7182,33 @@ html[data-theme="dark"] .app-shell > .student-app > .mobile-header { background:
 [data-theme="dark"] .home-month-day.has-events:active,
 [data-theme="dark"] .home-month-day-detail > div > button:active,
 [data-theme="dark"] .funnel-expand:active { background: rgba(255, 255, 255, 0.09); }
-[data-theme="dark"] .dashboard-next-deadline-row.deadline time { color: #e0a24d; }
-[data-theme="dark"] .dashboard-next-deadline-row.warning time { color: #ef9134; }
-[data-theme="dark"] .dashboard-next-deadline-row.urgent time { color: #ee7975; }
-[data-theme="dark"] .metric.is-deadline .metric-icon { color: #e0a24d; }
-[data-theme="dark"] .metric.is-warning .metric-icon { color: #ef9134; }
-[data-theme="dark"] .metric.is-urgent .metric-icon { color: #ee7975; }
-[data-theme="dark"] .metric.is-warning .kpi-number { color: #ef9134; }
-[data-theme="dark"] .metric.is-urgent .kpi-number { color: #ee7975; }
-[data-theme="dark"] .calendar-event-dot.deadline,
-[data-theme="dark"] .calendar-item-dot.deadline { background: #e0a24d; }
+[data-theme="dark"] .dashboard-next-deadline-row.warning time { color: #e0a24d; }
+[data-theme="dark"] .dashboard-next-deadline-row.due-today time { color: #ef9134; }
+[data-theme="dark"] .dashboard-next-deadline-row.overdue time { color: #ee7975; }
+[data-theme="dark"] .metric.is-warning .metric-icon { color: #e0a24d; }
+[data-theme="dark"] .metric.is-due-today .metric-icon { color: #ef9134; }
+[data-theme="dark"] .metric.is-overdue .metric-icon { color: #ee7975; }
+[data-theme="dark"] .metric.is-warning .kpi-number { color: #e0a24d; }
+[data-theme="dark"] .metric.is-due-today .kpi-number { color: #ef9134; }
+[data-theme="dark"] .metric.is-overdue .kpi-number { color: #ee7975; }
+[data-theme="dark"] .calendar-event-dot.normal,
+[data-theme="dark"] .calendar-item-dot.normal { background: #e0a24d; }
 [data-theme="dark"] .calendar-event-dot.warning,
 [data-theme="dark"] .calendar-item-dot.warning { background: #ef9134; }
-[data-theme="dark"] .calendar-event-dot.urgent,
-[data-theme="dark"] .calendar-item-dot.urgent { background: #ee7975; }
+[data-theme="dark"] .calendar-event-dot.due-today,
+[data-theme="dark"] .calendar-item-dot.due-today { background: #ef9134; }
+[data-theme="dark"] .calendar-event-dot.overdue,
+[data-theme="dark"] .calendar-item-dot.overdue { background: #ee7975; }
+
+.stage-sync-confirm .drawer { width: min(420px, 100%); padding: 20px; }
+.stage-sync-confirm .drawer > header { margin-bottom: 14px; }
+.stage-sync-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.stage-sync-actions button { min-height: 42px; border: 1px solid var(--border-default); border-radius: 10px; color: var(--button-secondary-text); background: var(--button-secondary-bg); font-weight: 700; }
+.stage-sync-actions .primary { color: var(--button-primary-text); background: var(--button-primary-bg); border-color: var(--button-primary-bg); }
+@media (max-width: 767px) {
+  .stage-sync-confirm { align-items: end; padding: 0; }
+  .stage-sync-confirm .drawer { width: 100%; max-height: none; padding: 20px 20px calc(20px + env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; }
+}
 
 /* Home heading and section rhythm stay consistent when optional modules appear or disappear. */
 .dashboard-main .dashboard-section > .section-title h2,

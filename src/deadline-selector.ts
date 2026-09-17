@@ -10,6 +10,7 @@ export type DeadlineItem<TEvent = unknown, TMaterial = unknown, TPreparation = u
   material?: TMaterial;
   preparation?: TPreparation;
 };
+export type DeadlineUrgency = "normal" | "warning" | "due-today" | "overdue";
 
 type EventSource = { id: string; companyId?: string; type: string; title: string; startsAt: string; deletedAt?: boolean };
 type MaterialSource = { id: string; companyId?: string; type: string; title: string; dueAt?: string; completed: boolean };
@@ -41,7 +42,7 @@ export function parseTokyoCalendarDate(value: string) {
   return new Date(`${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:00+09:00`);
 }
 
-function tokyoDateKey(value: string | number | Date) {
+export function getTokyoDateKey(value: string | number | Date) {
   const { year, month, day } = tokyoParts(new Date(value));
   return `${year}-${month}-${day}`;
 }
@@ -52,24 +53,39 @@ function addTokyoDays(dateKey: string, amount: number) {
 }
 
 export function getUpcomingDeadlines<TEvent extends EventSource, TMaterial extends MaterialSource, TPreparation extends PreparationSource>(data: DeadlineSource<TEvent, TMaterial, TPreparation>, now = Date.now()): DeadlineItem<TEvent, TMaterial, TPreparation>[] {
-  const future = (at: string) => {
+  const validDate = (at: string) => {
     const time = parseTokyoCalendarDate(at).getTime();
-    return Number.isFinite(time) && time >= now;
+    return Number.isFinite(time);
   };
   return [
-    ...data.events.filter((item) => !item.deletedAt && future(item.startsAt)).map((item) => ({ id: item.id, key: `event:${item.id}`, kind: "event" as const, companyId: item.companyId, type: item.type, title: item.title, at: item.startsAt, event: item })),
-    ...data.materials.filter((item) => !item.completed && !!item.dueAt && future(item.dueAt!)).map((item) => ({ id: item.id, key: `material:${item.id}`, kind: "material" as const, companyId: item.companyId, type: item.type, title: item.title, at: item.dueAt!, material: item })),
-    ...data.preparations.filter((item) => !item.completed && !!item.dueAt && future(item.dueAt!)).map((item) => ({ id: item.id, key: `preparation:${item.id}`, kind: "preparation" as const, companyId: item.companyId, type: item.type, title: item.title, at: item.dueAt!, preparation: item })),
+    ...data.events.filter((item) => !item.deletedAt && validDate(item.startsAt)).map((item) => ({ id: item.id, key: `event:${item.id}`, kind: "event" as const, companyId: item.companyId, type: item.type, title: item.title, at: item.startsAt, event: item })),
+    ...data.materials.filter((item) => !item.completed && !!item.dueAt && validDate(item.dueAt!)).map((item) => ({ id: item.id, key: `material:${item.id}`, kind: "material" as const, companyId: item.companyId, type: item.type, title: item.title, at: item.dueAt!, material: item })),
+    ...data.preparations.filter((item) => !item.completed && !!item.dueAt && validDate(item.dueAt!)).map((item) => ({ id: item.id, key: `preparation:${item.id}`, kind: "preparation" as const, companyId: item.companyId, type: item.type, title: item.title, at: item.dueAt!, preparation: item })),
   ].sort((a, b) => parseTokyoCalendarDate(a.at).getTime() - parseTokyoCalendarDate(b.at).getTime());
 }
 
 export function selectWeeklyDeadlines<TEvent extends EventSource, TMaterial extends MaterialSource, TPreparation extends PreparationSource>(data: DeadlineSource<TEvent, TMaterial, TPreparation>, now = Date.now()) {
-  const today = tokyoDateKey(now);
+  const today = getTokyoDateKey(now);
   const weekday = new Date(`${today}T12:00:00+09:00`).getDay();
   const weekStart = addTokyoDays(today, weekday === 0 ? -6 : 1 - weekday);
   const weekEnd = addTokyoDays(weekStart, 6);
   return getUpcomingDeadlines(data, now).filter((item) => {
-    const date = tokyoDateKey(parseTokyoCalendarDate(item.at));
+    const date = getTokyoDateKey(parseTokyoCalendarDate(item.at));
     return date >= weekStart && date <= weekEnd;
   });
+}
+
+export function getDeadlineUrgency(at: string, now = Date.now()): DeadlineUrgency {
+  const deadline = parseTokyoCalendarDate(at).getTime();
+  if (deadline <= now) return "overdue";
+  if (getTokyoDateKey(deadline) === getTokyoDateKey(now)) return "due-today";
+  return deadline - now <= 48 * 36e5 ? "warning" : "normal";
+}
+
+export function getHighestDeadlineUrgency(items: Array<Pick<DeadlineItem, "at">>, now = Date.now()): DeadlineUrgency {
+  const rank: Record<DeadlineUrgency, number> = { normal: 0, warning: 1, "due-today": 2, overdue: 3 };
+  return items.reduce<DeadlineUrgency>((highest, item) => {
+    const urgency = getDeadlineUrgency(item.at, now);
+    return rank[urgency] > rank[highest] ? urgency : highest;
+  }, "normal");
 }

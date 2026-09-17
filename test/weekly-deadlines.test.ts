@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { selectWeeklyDeadlines } from "../src/deadline-selector.ts";
+import { getDeadlineUrgency } from "../src/deadline-selector.ts";
+import { shouldOfferInterviewStageSync } from "../src/interview-stage.ts";
 
 const base = { materials: [], preparations: [] };
 
@@ -24,4 +26,18 @@ test("uses the Monday through Sunday JST week boundary", () => {
   }, new Date("2026-09-18T12:00:00+09:00").getTime());
 
   assert.deepEqual(weekly.map((item) => item.id), ["sunday"]);
+});
+
+test("treats tomorrow's deadline as warning, not overdue", () => {
+  assert.equal(
+    getDeadlineUrgency("2026-09-19T07:27", new Date("2026-09-18T08:00:00+09:00").getTime()),
+    "warning",
+  );
+});
+
+test("offers only forward interview-stage synchronization", () => {
+  assert.equal(shouldOfferInterviewStageSync("saved", "first_interview"), true);
+  assert.equal(shouldOfferInterviewStageSync("first_interview", "second_interview"), true);
+  assert.equal(shouldOfferInterviewStageSync("final_interview", "first_interview"), false);
+  assert.equal(shouldOfferInterviewStageSync("offer", "final_interview"), false);
 });

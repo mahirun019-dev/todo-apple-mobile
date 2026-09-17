@@ -68,7 +68,8 @@ import {
   X,
   Star,
 } from "lucide-react";
-import { getUpcomingDeadlines, parseTokyoCalendarDate, selectWeeklyDeadlines } from "./deadline-selector";
+import { getDeadlineUrgency, getHighestDeadlineUrgency, getUpcomingDeadlines, parseTokyoCalendarDate, selectWeeklyDeadlines } from "./deadline-selector";
+import { isInterviewProgressStage, shouldOfferInterviewStageSync, type InterviewProgressStage } from "./interview-stage";
 
 type View = "dashboard" | "companies" | "notifications" | "schedule" | "materials";
 type CompanyRouteFilter = "active" | "waiting-result";
@@ -452,8 +453,8 @@ type FunnelStage = "funnelInterested" | "funnelDocuments" | "funnelAptitude" | "
 function funnelStageFor(stage: Company["stage"]): FunnelStage | null {
   const value = String(stage).trim().toLowerCase();
   if (["offer", "内定", "offer received"].includes(value)) return "funnelOffer";
-  if (["final_interview", "final selection", "final interview", "最终选考", "最終選考"].includes(value)) return "funnelFinal";
-  if (["first_interview", "second_interview", "third_interview", "group_interview", "interview", "面试", "一次面试", "二次面试", "三次面试", "小组面试", "面谈", "面接中", "面接", "interviewing"].includes(value)) return "funnelInterview";
+  if (["final selection", "最终选考", "最終選考"].includes(value)) return "funnelFinal";
+  if (["first_interview", "second_interview", "final_interview", "third_interview", "group_interview", "interview", "面试", "一次面试", "二次面试", "三次面试", "小组面试", "面谈", "面接中", "面接", "interviewing"].includes(value)) return "funnelInterview";
   if (["web_test", "spi", "玉手箱", "cab", "gab", "aptitude test", "适性検査", "适性检査", "web / aptitude test", "web・适性测试", "web・適性検査"].includes(value)) return "funnelAptitude";
   if (["es_draft", "es_submitted", "resume", "document screening", "书类选考", "書類選考", "材料选考", "document_screening", "es"].includes(value)) return "funnelDocuments";
   if (["saved", "briefing", "interested", "关注中", "気になる"].includes(value)) return "funnelInterested";
@@ -587,6 +588,10 @@ const tr = {
     stage: "当前选考阶段",
     interviewStage: "面试阶段",
     interviewStageDetail: "输入其他面试阶段",
+    updateSelectionStage: "更新选考阶段？",
+    updateSelectionStageCopy: (company: string, stage: string) => `将 ${company} 的选考阶段更改为「${stage}」。`,
+    keepSelectionStage: "不更改",
+    updateStage: "更新",
     event: "下一项日程",
     place: "地点或线上方式",
     url: "招聘页面",
@@ -756,6 +761,10 @@ const tr = {
     stage: "選考段階",
     interviewStage: "面接段階",
     interviewStageDetail: "その他の面接段階を入力",
+    updateSelectionStage: "選考段階を更新しますか？",
+    updateSelectionStageCopy: (company: string, stage: string) => `${company}の選考段階を「${stage}」に変更します。`,
+    keepSelectionStage: "変更しない",
+    updateStage: "更新する",
     event: "次の日程",
     place: "場所・オンライン",
     url: "採用ページ",
@@ -911,6 +920,10 @@ const tr = {
     stage: "Stage",
     interviewStage: "Interview stage",
     interviewStageDetail: "Enter another interview stage",
+    updateSelectionStage: "Update selection stage?",
+    updateSelectionStageCopy: (company: string, stage: string) => `Change ${company}'s selection stage to “${stage}”.`,
+    keepSelectionStage: "Keep current stage",
+    updateStage: "Update stage",
     event: "Next event",
     place: "Location or online",
     url: "Careers page",
@@ -1398,6 +1411,7 @@ export default function App() {
     [selected, setSelected] = useState<string | undefined>(initialRoute.selectedCompanyId || undefined),
     [companiesCollapsed, setCompaniesCollapsed] = useState(() => localStorage.getItem("careerflow-companies-collapsed") === "true"),
     [confirm, setConfirm] = useState<Company>(),
+    [stageSyncPrompt, setStageSyncPrompt] = useState<{ companyId: string; companyName: string; stage: InterviewProgressStage }>(),
     [deleteEvent, setDeleteEvent] = useState<Event>(),
     [filter, setFilter] = useState("all"),
     [companyFilterOpen, setCompanyFilterOpen] = useState(false),
@@ -1483,7 +1497,7 @@ export default function App() {
     });
     return () => cancelAnimationFrame(frame);
   }, [view, selected]);
-  const hasOpenOverlay = Boolean(form || settings || confirm || deleteEvent || recordPickerOpen || companyFilterOpen || companyRecordMenuOpen);
+  const hasOpenOverlay = Boolean(form || settings || confirm || stageSyncPrompt || deleteEvent || recordPickerOpen || companyFilterOpen || companyRecordMenuOpen);
   useEffect(() => {
     if (hasOpenOverlay) document.body.dataset.overlayOpen = "true";
     else delete document.body.dataset.overlayOpen;
@@ -1522,7 +1536,7 @@ export default function App() {
     [data.companies],
   );
   const now = Date.now(),
-    allUpcomingDeadlines = getUpcomingDeadlines(data, now),
+    allUpcomingDeadlines = getUpcomingDeadlines(data, now).filter((item) => parseTokyoCalendarDate(item.at).getTime() >= now),
     due = selectWeeklyDeadlines(data, now),
     actionDue = allUpcomingDeadlines.filter((item) => item.kind === "material" && parseTokyoCalendarDate(item.at).getTime() < now + data.preferences.jobHunt.actionWindowDays * 864e5),
     active = data.companies.filter(isActiveCompany),
@@ -1776,6 +1790,10 @@ export default function App() {
         ? d.events.map((x) => (x.id === v.id ? v : x))
         : [v, ...d.events],
     }));
+    const company = v.companyId ? data.companies.find((item) => item.id === v.companyId) : undefined;
+    if (company && v.type === "interview" && isInterviewProgressStage(v.interviewStage) && shouldOfferInterviewStageSync(company.stage, v.interviewStage)) {
+      setStageSyncPrompt({ companyId: company.id, companyName: company.name, stage: v.interviewStage });
+    }
     setEventFormPreset(undefined);
   };
   const saveInterview = (e: FormEvent<HTMLFormElement>) => {
@@ -2209,6 +2227,23 @@ export default function App() {
             company={confirm}
             close={() => setConfirm(undefined)}
             remove={deleteCompany}
+          />
+        )}{" "}
+        {stageSyncPrompt && (
+          <InterviewStageSyncConfirm
+            t={t}
+            prompt={stageSyncPrompt}
+            close={() => setStageSyncPrompt(undefined)}
+            apply={() => {
+              const prompt = stageSyncPrompt;
+              setData((current) => ({
+                ...current,
+                companies: current.companies.map((company) => company.id === prompt.companyId
+                  ? { ...company, stage: prompt.stage, updatedAt: Date.now() }
+                  : company),
+              }));
+              setStageSyncPrompt(undefined);
+            }}
           />
         )}{" "}
         {deleteEvent && (
@@ -2720,10 +2755,7 @@ function Dashboard({
   const monthLabel = new Intl.DateTimeFormat(calendarLocale, { month: "long", year: "numeric" }).format(new Date(monthYear, monthIndex, 1));
   const selectedMonthItems = selectedMonthDay ? monthEventDays.get(selectedMonthDay) || [] : [];
   const selectedMonthLabel = selectedMonthDay ? new Intl.DateTimeFormat(calendarLocale, { month: "long", day: "numeric" }).format(new Date(monthYear, monthIndex, selectedMonthDay)) : "";
-  const deadlineToneFor = (at: string) => {
-    const hours = (parseTokyoCalendarDate(at).getTime() - Date.now()) / 36e5;
-    return hours <= 24 ? "urgent" : hours <= 48 ? "warning" : "deadline";
-  };
+  const deadlineToneFor = (at: string) => getDeadlineUrgency(at);
   const monthModule = <section className="dashboard-section home-month-module">
     <Title action={<div className="home-month-controls">
       <button type="button" onClick={() => shiftMonth(-1)} aria-label={t.previousMonth}><ChevronLeft aria-hidden="true" /></button>
@@ -2819,7 +2851,7 @@ function Dashboard({
                 {homeSummaryOrder.filter((module: HomeSummaryModule) => homeSummaryVisibility[module]).map((module: HomeSummaryModule) => module === "active"
                   ? <Metric key={module} n={active.length} l={t.inProgress} i={BriefcaseBusiness} onClick={() => navigate("companies", "active")} />
                   : module === "deadlines"
-                    ? <Metric key={module} n={due.length} l={t.dueWeek} i={Clock3} tone={due.length ? deadlineToneFor(due[0].at) : undefined} onClick={() => navigate("schedule", "this-week-deadline")} />
+                    ? <Metric key={module} n={due.length} l={t.dueWeek} i={Clock3} tone={due.length ? getHighestDeadlineUrgency(due) : undefined} onClick={() => navigate("schedule", "this-week-deadline")} />
                     : <Metric key={module} n={waiting.length} l={t.waiting} i={Timer} onClick={() => navigate("companies", "waiting-result")} />)}
             </div>
             {(sectionVisible("progress") || nextAndDeadlineModule) && <div className={`dashboard-local-grid${nextAndDeadlineModule ? " has-supporting" : ""}`}>
@@ -4206,6 +4238,27 @@ function DeleteEventConfirm({
       <div className="confirm-actions">
         <button onClick={close}>{t.cancel}</button>
         <button className="danger-solid" onClick={remove}>{t.deleteAction}</button>
+      </div>
+    </Modal>
+  );
+}
+function InterviewStageSyncConfirm({
+  t,
+  prompt,
+  close,
+  apply,
+}: {
+  t: any;
+  prompt: { companyId: string; companyName: string; stage: InterviewProgressStage };
+  close: () => void;
+  apply: () => void;
+}) {
+  return (
+    <Modal title={t.updateSelectionStage} close={close} className="stage-sync-confirm">
+      <p className="confirm-copy">{t.updateSelectionStageCopy(prompt.companyName, t[prompt.stage])}</p>
+      <div className="stage-sync-actions">
+        <button type="button" onClick={close}>{t.keepSelectionStage}</button>
+        <button type="button" className="primary" onClick={apply}>{t.updateStage}</button>
       </div>
     </Modal>
   );
