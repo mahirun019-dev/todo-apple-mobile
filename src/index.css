@@ -3445,18 +3445,18 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   transition: background-color 80ms ease, color 80ms ease;
 }
 .sidebar .nav-list button:hover {
-  color: #2a2b2e;
-  background: #ececee !important;
+  color: #202124;
+  background: rgba(0, 0, 0, 0.07) !important;
 }
 .sidebar .nav-list button:active,
 .sidebar .nav-list button[data-pressed="true"] {
   color: #202124;
-  background: #dedfe2 !important;
+  background: rgba(0, 0, 0, 0.1) !important;
 }
 .sidebar .nav-list button.active,
 .sidebar .nav-list button[aria-current="page"] {
   color: #111214 !important;
-  background: #ececee !important;
+  background: rgba(0, 0, 0, 0.1) !important;
   font-weight: 600;
 }
 .sidebar .nav-list button svg {
@@ -3481,11 +3481,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .course-nav > button.selected::before { background: #24262b !important; }
 .course-nav > button.selected > i { background: #24262b !important; }
 [data-theme="dark"] .sidebar .nav-list button { color: #9a9fa8; }
-[data-theme="dark"] .sidebar .nav-list button:hover { color: #f5f5f5; background: #24262a !important; }
+[data-theme="dark"] .sidebar .nav-list button:hover { color: #f5f5f5; background: rgba(255, 255, 255, 0.08) !important; }
 [data-theme="dark"] .sidebar .nav-list button:active,
-[data-theme="dark"] .sidebar .nav-list button[data-pressed="true"] { background: #303238 !important; }
+[data-theme="dark"] .sidebar .nav-list button[data-pressed="true"] { background: rgba(255, 255, 255, 0.12) !important; }
 [data-theme="dark"] .sidebar .nav-list button.active,
-[data-theme="dark"] .sidebar .nav-list button[aria-current="page"] { color: #f5f5f5 !important; background: #24262a !important; }
+[data-theme="dark"] .sidebar .nav-list button[aria-current="page"] { color: #f5f5f5 !important; background: rgba(255, 255, 255, 0.12) !important; }
 [data-theme="dark"] .sidebar .nav-list button.active svg,
 [data-theme="dark"] .sidebar .nav-list button[aria-current="page"] svg { color: #f5f5f5; }
 .career-mobile-nav > button svg {
@@ -5344,14 +5344,9 @@ html[data-theme="dark"] { --app-page-bg: var(--bg-app); }
     transform: translateY(0) !important;
   }
 
-  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(1) { transition-delay: 170ms !important; }
-  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(2) { transition-delay: 190ms !important; }
-  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(3) { transition-delay: 210ms !important; }
-  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(4) { transition-delay: 230ms !important; }
-  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(5) { transition-delay: 250ms !important; }
-  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(6) { transition-delay: 270ms !important; }
-  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(7) { transition-delay: 290ms !important; }
-  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button:nth-of-type(8) { transition-delay: 310ms !important; }
+  /* Root navigation has nine rows. One shared delay prevents the unlisted
+     last item from appearing before the rest of the root menu. */
+  .mobile-settings-layer[data-open="true"] .mobile-settings-nav > button { transition-delay: 170ms !important; }
 
   .app-shell > .student-app > .mobile-header .mobile-menu-button svg {
     transform-origin: center;
@@ -6294,9 +6289,11 @@ html[data-theme="dark"] { --app-page-bg: var(--bg-app); }
 .notification-day-groups { display: grid; gap: 26px; }
 .notification-day-groups section > h2 { margin: 0 0 8px; color: var(--text-secondary); font-size: 13px; font-weight: 650; }
 .notification-day-groups section > div { border-top: 1px solid var(--border-color); }
-.notification-page-row { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; width: 100%; min-height: 82px; align-items: start; gap: 10px; padding: 14px 8px; border: 0; border-bottom: 1px solid var(--border-color); color: var(--text-primary); background: transparent; text-align: left; transition: background-color 140ms ease; }
-.notification-page-row:hover { background: rgba(0, 0, 0, 0.04); }
-.notification-page-row:active { background: rgba(0, 0, 0, 0.06); }
+.notification-page-row { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; width: 100%; min-height: 82px; align-items: start; gap: 10px; padding: 14px 8px; border: 0; border-bottom: 1px solid var(--border-color); color: var(--text-primary); background: transparent; text-align: left; -webkit-tap-highlight-color: transparent; transition: background-color 140ms ease; }
+.notification-page-row:active,
+.notification-page-row:focus:not(:focus-visible),
+.notification-page-row[aria-expanded="true"] { background: transparent; box-shadow: none; outline: none; }
+.notification-page-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .notification-page-row.is-read { grid-template-columns: minmax(0, 1fr) auto; }
 .notification-page-copy { display: grid; min-width: 0; gap: 3px; }
 .notification-page-row strong, .notification-page-row b, .notification-page-row small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -6307,8 +6304,10 @@ html[data-theme="dark"] { --app-page-bg: var(--bg-app); }
 .notification-page-dot { width: 7px; height: 7px; margin-top: 7px; border-radius: 999px; background: var(--accent); }
 .notification-page-row.is-read b { color: var(--text-secondary); font-weight: 500; }
 .notification-page-empty { display: grid; justify-items: start; gap: 12px; margin: 0; padding: 28px 0; color: var(--text-secondary); }
-html[data-theme="dark"] .notification-page-row:hover { background: rgba(255, 255, 255, 0.045); }
-html[data-theme="dark"] .notification-page-row:active { background: rgba(255, 255, 255, 0.09); }
+@media (hover: hover) and (pointer: fine) {
+  .notification-page-row:hover { background: rgba(0, 0, 0, 0.04); }
+  html[data-theme="dark"] .notification-page-row:hover { background: rgba(255, 255, 255, 0.045); }
+}
 
 .company-watch-updates { display: grid; gap: 0; margin-top: 22px; border-top: 1px solid var(--border-color); }
 .company-watch-updates h3 { margin: 18px 0 4px; font-size: 15px; }
