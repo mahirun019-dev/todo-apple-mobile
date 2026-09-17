@@ -1,4 +1,4 @@
-import { classifyChange, detectMeaningfulChange, extractMeaningfulText, fetchPage, normalizeUrl, sha256 } from './monitor';
+import { classifyChange, detectMeaningfulChange, fetchPage, inspectRecruitmentContent, normalizeUrl, sha256 } from './monitor';
 import type { Env, SourceType, TargetRow } from './types';
 
 const json = (body: unknown, status = 200, origin = '*') => new Response(status === 204 ? null : JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'access-control-allow-origin': origin, 'access-control-allow-headers': 'authorization,content-type', 'access-control-allow-methods': 'GET,POST,PATCH,DELETE,OPTIONS', vary: 'Origin' } });
@@ -35,8 +35,9 @@ export async function checkTarget(env: Env, target: TargetRow) {
   if (!lock.meta.changes) return;
   try {
     const fetched = await fetchPage(target.url);
-    const text = extractMeaningfulText(fetched.html, target.source_type);
-    if (text.length < 80) throw new Error('INSUFFICIENT_PUBLIC_CONTENT');
+    const analysis = inspectRecruitmentContent(fetched.html, target.source_type);
+    if (!analysis.valid) throw new Error('INSUFFICIENT_PUBLIC_CONTENT');
+    const text = analysis.text;
     const hash = await sha256(text);
     const change = target.snapshot ? detectMeaningfulChange(target.snapshot, text) : null;
     if (change && hash !== target.last_hash) {
@@ -99,6 +100,7 @@ export default {
     }
     const eventMatch = url.pathname.match(/^\/api\/events\/([^/]+)\/read$/);
     if (eventMatch && request.method === 'POST') { await env.DB.prepare('UPDATE watch_events SET read=1 WHERE id=?').bind(eventMatch[1]).run(); return json({}, 200, origin); }
+    if (url.pathname === '/api/events/read-all' && request.method === 'POST') { await env.DB.prepare('UPDATE watch_events SET read=1').run(); return json({}, 200, origin); }
     return json({ error: 'NOT_FOUND' }, 404, origin);
   }
 };

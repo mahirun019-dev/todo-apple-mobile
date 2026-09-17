@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { classifyChange, detectMeaningfulChange, extractMeaningfulText, normalizeUrl } from '../src/monitor';
+import { classifyChange, detectMeaningfulChange, extractMeaningfulText, inspectRecruitmentContent, normalizeUrl } from '../src/monitor';
 
 test('normalizes public URLs and strips tracking', () => assert.equal(normalizeUrl(' https://EXAMPLE.com/recruit/?utm_source=x#top '), 'https://example.com/recruit/'));
 test('rejects unsafe URLs', () => { for (const url of ['javascript:alert(1)', 'http://127.0.0.1/x', 'https://user:pass@example.com']) assert.throws(() => normalizeUrl(url)); });
@@ -18,4 +18,9 @@ test('classifies at least five recruitment categories', () => {
   assert.equal(classifyChange(['Webテスト選考フロー']), 'selection_updated');
   assert.equal(classifyChange(['募集要項 初任給']), 'job_info_updated');
   assert.equal(classifyChange(['募集終了']), 'recruitment_closed');
+});
+test('accepts a concise public recruitment-status page as a valid baseline', () => {
+  const result = inspectRecruitmentContent('<main><h1>2027年度 新卒採用</h1><p>現在、募集を終了しております。</p></main>', 'official');
+  assert.equal(result.valid, true);
+  assert.match(result.highConfidenceLines.join(' '), /募集を終了/);
 });

@@ -3265,7 +3265,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     -webkit-backdrop-filter: blur(28px) saturate(175%) !important;
     border: 1px solid var(--bottom-nav-border) !important;
     box-shadow: var(--bottom-nav-shadow), inset 0 1px 0 var(--bottom-nav-highlight) !important;
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
   }
   html[data-theme="dark"] [data-bottom-nav="true"] {
     background: rgba(70,76,88,.18) !important;
@@ -6260,11 +6260,75 @@ html[data-theme="dark"] { --app-page-bg: var(--bg-app); }
     color: currentColor !important;
   }
 
+  [data-testid="mobile-bottom-nav"] > button > span:last-child {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 8px;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-nav-bell { position: relative; display: grid; place-items: center; }
+  .mobile-nav-bell i { position: absolute; top: -7px; right: -11px; min-width: 14px; height: 14px; padding: 0 3px; border-radius: 999px; color: #fff; background: var(--danger, #b44743); font-size: 8px; font-style: normal; font-weight: 700; line-height: 14px; text-align: center; }
+
   [data-testid="mobile-bottom-nav"] > button:focus-visible {
     outline: 2px solid currentColor !important;
     outline-offset: -3px !important;
   }
 
+}
+
+/* Notifications are a real destination, not a popover. */
+.mobile-header-spacer { display: block; width: 44px; height: 44px; flex: 0 0 44px; }
+.nav-list .nav-unread-badge { display: inline-grid; min-width: 17px; height: 17px; place-items: center; margin-left: auto; padding: 0 4px; border-radius: 999px; color: #fff; background: var(--danger, #b44743); font-size: 10px; font-weight: 700; line-height: 1; }
+.nav-list button > span { display: flex; min-width: 0; align-items: center; gap: 8px; }
+.notification-page { width: min(100%, 920px); margin-inline: auto; padding: 8px 0 48px; }
+.notification-page-head { display: flex; align-items: start; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
+.notification-page-head h1 { margin: 0; font-size: 28px; }
+.notification-page-head p { margin: 6px 0 0; color: var(--text-secondary); }
+.notification-page-head .text-button { flex: 0 0 auto; }
+.notification-page-filters { display: flex; gap: 6px; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); }
+.notification-page-filters button { min-height: 38px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; color: var(--text-secondary); background: transparent; }
+.notification-page-filters button.active { border-bottom-color: var(--accent); color: var(--text-primary); font-weight: 650; }
+.notification-day-groups { display: grid; gap: 26px; }
+.notification-day-groups section > h2 { margin: 0 0 8px; color: var(--text-secondary); font-size: 13px; font-weight: 650; }
+.notification-day-groups section > div { border-top: 1px solid var(--border-color); }
+.notification-page-row { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; width: 100%; min-height: 82px; align-items: start; gap: 10px; padding: 14px 8px; border: 0; border-bottom: 1px solid var(--border-color); color: var(--text-primary); background: transparent; text-align: left; transition: background-color 140ms ease; }
+.notification-page-row:hover { background: rgba(0, 0, 0, 0.04); }
+.notification-page-row:active { background: rgba(0, 0, 0, 0.06); }
+.notification-page-row > span:nth-child(2) { display: grid; min-width: 0; gap: 3px; }
+.notification-page-row strong, .notification-page-row b, .notification-page-row small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notification-page-row strong { font-size: 13px; }
+.notification-page-row b { font-size: 14px; font-weight: 620; }
+.notification-page-row small, .notification-page-row time { color: var(--text-secondary); font-size: 12px; line-height: 1.35; }
+.notification-page-row time { padding-top: 3px; white-space: nowrap; }
+.notification-page-dot { width: 7px; height: 7px; margin-top: 7px; border-radius: 999px; background: var(--accent); }
+.notification-page-row.is-read .notification-page-dot { visibility: hidden; }
+.notification-page-row.is-read b { color: var(--text-secondary); font-weight: 500; }
+.notification-page-empty { display: grid; justify-items: start; gap: 12px; margin: 0; padding: 28px 0; color: var(--text-secondary); }
+html[data-theme="dark"] .notification-page-row:hover { background: rgba(255, 255, 255, 0.06); }
+html[data-theme="dark"] .notification-page-row:active { background: rgba(255, 255, 255, 0.09); }
+
+.company-watch-updates { display: grid; gap: 0; margin-top: 22px; border-top: 1px solid var(--border-color); }
+.company-watch-updates h3 { margin: 18px 0 4px; font-size: 15px; }
+.company-watch-update { display: flex; align-items: start; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border-color); transition: background-color 180ms ease; }
+.company-watch-update strong { font-size: 14px; }
+.company-watch-update p { margin: 4px 0 0; color: var(--text-secondary); font-size: 13px; }
+.company-watch-update time { flex: 0 0 auto; color: var(--text-secondary); font-size: 12px; }
+.company-watch-update.is-highlighted { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+
+@media (max-width: 767px) {
+  .notification-page { padding: 8px 0 calc(var(--mobile-bottom-nav-height) + 24px); }
+  .notification-page-head { margin-bottom: 18px; }
+  .notification-page-head h1 { font-size: 25px; }
+  .notification-page-head p { font-size: 13px; }
+  .notification-page-row { min-height: 78px; padding-inline: 4px; }
+  .notification-page-row time { font-size: 11px; }
+  .watch-target-action-layer { position: fixed; z-index: 1110; inset: 0; display: grid; align-items: end; }
+  .watch-target-action-layer .action-sheet-backdrop { position: absolute; inset: 0; border: 0; background: rgba(0, 0, 0, 0.26); }
+  .watch-target-action-sheet { position: relative; z-index: 1; width: 100%; max-width: none; margin: 0; padding: 8px 16px calc(12px + env(safe-area-inset-bottom)); border-radius: 20px 20px 0 0; }
+  .watch-target-action-sheet > button { min-height: 52px; }
 }
 
 /* Mobile refinement: keep the hamburger understated without changing its size or layout. */
@@ -6967,38 +7031,7 @@ html[data-theme="dark"] #root {
   }
 }
 
-/* Watch notifications are a compact global inbox, not a dashboard module. */
 .dashboard-head-actions { display: flex; align-items: center; justify-self: end; gap: 8px; }
-.watch-notification-trigger { position: relative; display: grid; width: 44px; height: 44px; place-items: center; padding: 0; border: 0; border-radius: 10px; color: var(--text-secondary); background: transparent; }
-.watch-notification-trigger:hover { color: var(--text-primary); background: var(--bg-muted); }
-.watch-notification-trigger:active { background: var(--bg-selected); }
-.watch-notification-trigger svg { width: 20px; height: 20px; }
-.watch-notification-trigger > span { position: absolute; top: 4px; right: 3px; display: grid; min-width: 17px; height: 17px; place-items: center; padding: 0 4px; border: 2px solid var(--bg-app); border-radius: 999px; color: #fff; background: var(--danger, #b44743); font-size: 10px; font-weight: 750; line-height: 1; }
-.watch-notification-backdrop { display: none; }
-.watch-notification-panel { position: fixed; z-index: 1100; top: var(--notification-top); right: var(--notification-right); width: min(368px, calc(100vw - 32px)); max-height: min(560px, calc(100dvh - var(--notification-top) - 24px)); overflow: auto; border: 1px solid var(--border-color); border-radius: 14px; color: var(--text-primary); background: var(--bg-surface); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14); }
-.watch-notification-panel > header { display: flex; align-items: center; justify-content: space-between; min-height: 54px; padding: 0 10px 0 16px; border-bottom: 1px solid var(--border-color); }
-.watch-notification-panel h2 { margin: 0; font-size: 16px; }
-.watch-notification-close { display: grid; width: 36px; height: 36px; place-items: center; padding: 0; border: 0; border-radius: 9px; color: var(--text-secondary); background: transparent; }
-.watch-notification-close:hover { color: var(--text-primary); background: var(--bg-muted); }
-.watch-notification-close svg { width: 18px; height: 18px; }
-.watch-notification-list { display: grid; padding: 6px; }
-.watch-notification-item { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; width: 100%; min-height: 72px; align-items: start; gap: 9px; padding: 11px 10px; border: 0; border-radius: 9px; color: var(--text-primary); background: transparent; text-align: left; }
-.watch-notification-item:hover { background: var(--bg-muted); }
-.watch-notification-item:active { background: var(--bg-selected); }
-.watch-notification-item > span:nth-child(2) { display: grid; min-width: 0; gap: 3px; }
-.watch-notification-item strong, .watch-notification-item small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.watch-notification-item strong { font-size: 13px; }
-.watch-notification-item small, .watch-notification-item time { color: var(--text-secondary); font-size: 11px; line-height: 1.35; }
-.watch-notification-item time { padding-top: 2px; white-space: nowrap; }
-.watch-notification-dot { width: 7px; height: 7px; margin-top: 5px; border-radius: 999px; background: var(--accent); }
-.watch-notification-item.is-read { opacity: 0.58; }
-.watch-notification-item.is-read .watch-notification-dot { visibility: hidden; }
-.watch-notification-empty { margin: 0; padding: 24px 16px; color: var(--text-secondary); font-size: 13px; text-align: center; }
-.watch-notification-login { display: grid; gap: 12px; padding: 18px 12px; }
-.watch-notification-login > p { margin: 0; color: var(--text-secondary); font-size: 13px; }
-.watch-notification-login .watch-login { display: grid; gap: 10px; }
-.watch-notification-login .watch-login label { display: grid; gap: 6px; color: var(--text-secondary); font-size: 12px; }
-.watch-notification-login .watch-login input { min-height: 42px; }
 
 /* Main information groups use whitespace and dividers instead of nested surfaces. */
 .dashboard-section,
@@ -7030,14 +7063,6 @@ html[data-theme="dark"] #root {
     -webkit-backdrop-filter: var(--careerflow-mobile-header-backdrop) !important;
   }
 html[data-theme="dark"] .app-shell > .student-app > .mobile-header { background: rgba(0, 0, 0, 0.9) !important; }
-  .app-shell > .student-app > .mobile-header > .watch-notification-trigger { position: absolute; right: 12px; width: 40px; height: 40px; color: var(--text-primary); background: rgba(255, 255, 255, 0.28); }
-  html[data-theme="dark"] .app-shell > .student-app > .mobile-header > .watch-notification-trigger { background: rgba(255, 255, 255, 0.05); }
-  .watch-notification-backdrop { position: fixed; z-index: 1090; inset: 0; display: block; border: 0; background: rgba(0, 0, 0, 0.22); }
-  .watch-notification-panel { z-index: 1100; top: auto; right: 0; bottom: 0; width: 100%; max-height: min(72dvh, 620px); border-width: 1px 0 0; border-radius: 20px 20px 0 0; box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.14); }
-  .watch-notification-panel > header { min-height: 58px; padding-left: 20px; }
-  .watch-notification-list { padding: 8px 12px calc(12px + env(safe-area-inset-bottom)); }
-  .watch-notification-item { min-height: 78px; padding: 12px 8px; }
-  body:has(.watch-notification-panel) [data-testid="mobile-bottom-nav"] { display: none !important; }
   .dashboard-section > .section-title { margin-bottom: 12px; }
   .dashboard-progress-module,
   .home-month-module,
@@ -7238,17 +7263,10 @@ html[data-theme="dark"] .app-shell > .student-app > .mobile-header { background:
   }
 }
 
-/* Mobile has one notification presentation: the header trigger. */
-@media (max-width: 767px) {
-  .dashboard-head-actions > .watch-notification-trigger {
-    display: none;
-  }
-}
-
 /* Watch is a service setting; business pages only show its real server status. */
 .company-watch-connect { display: grid; gap: 8px; padding: 14px 0 2px; color: var(--text-secondary); }
 .company-watch-connect p { margin: 0; }
-.company-watch-connect .text-button, .watch-notification-login .text-button { display: inline-flex; width: fit-content; align-items: center; gap: 6px; }
+.company-watch-connect .text-button { display: inline-flex; width: fit-content; align-items: center; gap: 6px; }
 .watch-connection-settings { display: grid; max-width: 460px; gap: 12px; }
 .watch-connection-settings h3, .watch-connection-settings p { margin: 0; }
 .watch-connection-settings p { color: var(--text-secondary); line-height: 1.55; }
@@ -7257,20 +7275,6 @@ html[data-theme="dark"] .app-shell > .student-app > .mobile-header { background:
 .watch-status.paused { color: var(--text-secondary); }
 .watch-target-actions-desktop { display: flex; gap: 4px; }
 .watch-target-actions-more { display: none !important; }
-
-/* The global inbox is one anchored surface, never a dashboard card. */
-.watch-notification-panel { width: min(384px, calc(100vw - 32px)); overflow: hidden auto; border-radius: 13px; background: var(--bg-surface-elevated, var(--bg-surface)); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14); }
-.watch-notification-panel > header { min-height: 52px; }
-.watch-notification-list { padding: 6px; }
-.watch-notification-item { min-height: 70px; border-radius: 8px; cursor: pointer; transition: background-color 140ms ease; }
-.watch-notification-item:hover { background: rgba(0, 0, 0, 0.045); }
-.watch-notification-item:active { background: rgba(0, 0, 0, 0.07); }
-.watch-notification-item.is-read { opacity: 1; }
-.watch-notification-item.is-read strong { color: var(--text-secondary); font-weight: 500; }
-.watch-notification-login { padding: 20px 14px; }
-.watch-notification-login .watch-login { display: none; }
-[data-theme="dark"] .watch-notification-item:hover { background: rgba(255, 255, 255, 0.06); }
-[data-theme="dark"] .watch-notification-item:active { background: rgba(255, 255, 255, 0.09); }
 
 /* Stages always share one typographic rhythm; only their count changes emphasis. */
 .dashboard-progress-module .funnel-row.has-count .funnel-row-label,

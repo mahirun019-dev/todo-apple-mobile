@@ -3,7 +3,7 @@ import type { WatchEvent, WatchTarget } from './types';
 
 const API = (import.meta.env.VITE_WATCH_API_URL as string | undefined)?.replace(/\/$/, '');
 const TOKEN_KEY = 'careerflow-watch-session';
-type ContextValue = { configured: boolean; authenticated: boolean; targets: WatchTarget[]; events: WatchEvent[]; error: string; connect(code: string): Promise<void>; disconnect(): void; refresh(): Promise<void>; request(path: string, init?: RequestInit): Promise<Response>; markRead(id: string): Promise<void>; };
+type ContextValue = { configured: boolean; authenticated: boolean; targets: WatchTarget[]; events: WatchEvent[]; error: string; connect(code: string): Promise<void>; disconnect(): void; refresh(): Promise<void>; request(path: string, init?: RequestInit): Promise<Response>; markRead(id: string): Promise<void>; markAllRead(): Promise<void>; };
 const Context = createContext<ContextValue | null>(null);
 
 // Company data remains local in CareerFlow. This key lets authenticated devices
@@ -69,7 +69,8 @@ export function WatchProvider({ children }: { children: ReactNode }) {
     setEvents([]);
   };
   const markRead = async (id: string) => { await request(`/api/events/${id}/read`, { method: 'POST' }); setEvents((current) => current.map((event) => event.id === id ? { ...event, read: 1 } : event)); };
-  const value = useMemo(() => ({ configured: Boolean(API), authenticated: Boolean(token), targets, events, error, connect, disconnect, refresh, request, markRead }), [token, targets, events, error, request, refresh]);
+  const markAllRead = async () => { await request('/api/events/read-all', { method: 'POST' }); setEvents((current) => current.map((event) => ({ ...event, read: 1 }))); };
+  const value = useMemo(() => ({ configured: Boolean(API), authenticated: Boolean(token), targets, events, error, connect, disconnect, refresh, request, markRead, markAllRead }), [token, targets, events, error, request, refresh]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useWatch() { const value = useContext(Context); if (!value) throw new Error('WatchProvider missing'); return value; }

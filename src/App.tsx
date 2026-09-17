@@ -15,8 +15,8 @@ import { createBackup, type BackupSnapshot } from "./backups";
 import { geocodeCoordinates, getWeather, getWeatherByCoordinates, type WeatherResult } from "./weather";
 import prefectureData from "./data/japan-prefectures.json";
 import municipalityData from "./data/japan-municipalities.json";
-import { companyWatchKey, WatchProvider } from "./watch/WatchProvider";
-import { CompanyWatchSection, CompanyWatchStatus, NotificationBell, WatchConnectionSettings } from "./watch/WatchUI";
+import { companyWatchKey, useWatch, WatchProvider } from "./watch/WatchProvider";
+import { CompanyWatchSection, CompanyWatchStatus, NotificationPage, WatchConnectionSettings } from "./watch/WatchUI";
 
 import {
   Database,
@@ -24,6 +24,7 @@ import {
   DatabaseArrowUp,
   ArrowLeft,
   BarChart3,
+  Bell,
   BriefcaseBusiness,
   Building2,
   CalendarDays,
@@ -68,7 +69,7 @@ import {
   Star,
 } from "lucide-react";
 
-type View = "dashboard" | "companies" | "schedule" | "materials";
+type View = "dashboard" | "companies" | "notifications" | "schedule" | "materials";
 type CompanyRouteFilter = "active" | "waiting-result";
 type ScheduleRouteFilter = "this-week-deadline";
 type Theme = "light" | "dark" | "system";
@@ -463,13 +464,14 @@ function readRouteState(): { view: View; companyFilter: CompanyRouteFilter | nul
   const routeByPath: Record<string, View> = {
     "/home": "dashboard",
     "/companies": "companies",
+    "/notifications": "notifications",
     "/schedule": "schedule",
     "/materials": "materials",
     "/es-interview": "materials",
   };
   const path = window.location.pathname.replace(/\/$/, "");
   const requestedView = params.get("view");
-  const view = (["dashboard", "companies", "schedule", "materials"] as View[]).includes(requestedView as View)
+  const view = (["dashboard", "companies", "notifications", "schedule", "materials"] as View[]).includes(requestedView as View)
     ? requestedView as View
     : routeByPath[path.slice(path.lastIndexOf("/"))] || "dashboard";
   const filter = params.get("filter");
@@ -483,6 +485,7 @@ function readRouteState(): { view: View; companyFilter: CompanyRouteFilter | nul
 const tr = {
   zh: {
     dashboard: "主页",
+    notifications: "通知",
     companies: "企业",
     schedule: "日程",
     materials: "ES・面试",
@@ -649,6 +652,7 @@ const tr = {
   },
   ja: {
     dashboard: "ホーム",
+    notifications: "通知",
     companies: "企業",
     schedule: "日程",
     materials: "ES・面接",
@@ -815,6 +819,7 @@ const tr = {
   },
   en: {
     dashboard: "Home",
+    notifications: "Notifications",
     companies: "Companies",
     schedule: "Schedule",
     materials: "ES · Interview",
@@ -1377,7 +1382,6 @@ export default function App() {
       return saved === "ja" ? "ja" : "zh";
     }),
     [settings, setSettings] = useState(false),
-    [notificationOpen, setNotificationOpen] = useState(false),
     [mobileSettingsPage, setMobileSettingsPage] = useState<string | null>(null),
     [form, setForm] = useState<CreateType | null>(null),
     [eventFormPreset, setEventFormPreset] = useState<EventFormPreset>(),
@@ -1426,12 +1430,12 @@ export default function App() {
     navigate("companies", route.companyFilter || undefined, companyId);
   };
   const openCompany = (companyId: string) => selectCompany(companyId);
-  const openWatchedCompany = (companyId: string, companyName?: string) => {
+  const [watchHighlightEventId, setWatchHighlightEventId] = useState<string>();
+  const openWatchedCompany = (companyId: string, companyName?: string, eventId?: string) => {
     const matchingCompany = data.companies.find((company) => company.id === companyId || (companyName && companyWatchKey(company.name) === companyWatchKey(companyName)));
-    if (matchingCompany) selectCompany(matchingCompany.id);
+    if (matchingCompany) { setWatchHighlightEventId(eventId); selectCompany(matchingCompany.id); }
   };
   const openWatchSettings = () => {
-    setNotificationOpen(false);
     if (isMobile) {
       setMobileSettingsPage("watch");
     }
@@ -1967,7 +1971,7 @@ export default function App() {
             {settings ? <X /> : <Menu />}
           </button>
           <strong className="mobile-header-title">CareerFlow</strong>
-          {isMobile && <NotificationBell locale={t.language === "言語" ? "ja" : "zh"} openCompany={openWatchedCompany} openSettings={openWatchSettings} open={notificationOpen} onOpenChange={setNotificationOpen} />}
+          <span className="mobile-header-spacer" aria-hidden="true" />
         </header>
         <main ref={workspaceRef} className="workspace">
           {view === "dashboard" && (
@@ -1995,8 +1999,6 @@ export default function App() {
                 setEditEvent,
                 setForm,
                 onExportCalendar: (event: Event) => exportCalendar([event]),
-                notificationOpen,
-                setNotificationOpen,
               }}
             />
           )}
@@ -2023,9 +2025,11 @@ export default function App() {
                 onBack: backToCompanies,
                 onOpenCompany: openCompany,
                 openWatchSettings,
+                watchHighlightEventId,
               }}
             />
           )}
+          {view === "notifications" && <NotificationPage locale={t.language === "言語" ? "ja" : "zh"} openCompany={openWatchedCompany} openSettings={openWatchSettings} />}
           {view === "schedule" && (
             <Schedule
               {...{
@@ -2235,11 +2239,13 @@ function Nav({
   setView: (v: View) => void;
   t: any;
 }) {
+  const { events } = useWatch();
   const [activeSection, setActiveSection] = useState<View>(view);
   useEffect(() => setActiveSection(view), [view]);
   const a: [View, any, string][] = [
     ["dashboard", Home, "dashboard"],
     ["companies", Building2, "companies"],
+    ["notifications", Bell, "notifications"],
     ["schedule", CalendarDays, "schedule"],
     ["materials", BriefcaseBusiness, "materials"],
   ];
@@ -2261,7 +2267,7 @@ function Nav({
           key={v}
         >
           <I />
-          <span>{t[k]}</span>
+          <span>{t[k]}{v === "notifications" && events.filter((event) => !event.read).length > 0 && <b className="nav-unread-badge">{Math.min(99, events.filter((event) => !event.read).length)}{events.filter((event) => !event.read).length > 99 ? "+" : ""}</b>}</span>
         </button>
       ))}
     </div>
@@ -2277,6 +2283,8 @@ function MobileNav({
   setView: (v: View) => void;
   t: any;
 }) {
+  const { events } = useWatch();
+  const unread = events.filter((event) => !event.read).length;
   useLayoutEffect(() => {
     const nav = document.querySelector<HTMLElement>('[data-mobile-bottom-nav="true"]');
     if (!nav) return;
@@ -2364,6 +2372,17 @@ function MobileNav({
       >
         <Building2 />
         <span>{t.companies}</span>
+      </button>
+      <button
+        className={view === "notifications" ? "active" : ""}
+        onClick={() => setView("notifications")}
+        aria-current={view === "notifications" ? "page" : undefined}
+        onPointerDown={(e) => { e.currentTarget.dataset.pressed = "true"; }}
+        onPointerUp={(e) => { delete e.currentTarget.dataset.pressed; }}
+        onPointerLeave={(e) => { delete e.currentTarget.dataset.pressed; }}
+      >
+        <span className="mobile-nav-bell"><Bell />{unread > 0 && <i>{unread > 99 ? "99+" : unread}</i>}</span>
+        <span>{t.notifications}</span>
       </button>
       <button
         className={view === "schedule" ? "active" : ""}
@@ -2563,16 +2582,9 @@ function Dashboard({
   setView,
   setEditEvent,
   setForm,
-  notificationOpen,
-  setNotificationOpen,
   isMobile,
-  openWatchSettings,
 }: any) {
   const initialMonth = new Date();
-  const openWatchedCompany = (companyId: string, companyName?: string) => {
-    const matchingCompany = data.companies.find((company: Company) => company.id === companyId || (companyName && companyWatchKey(company.name) === companyWatchKey(companyName)));
-    if (matchingCompany) openCompany(matchingCompany.id);
-  };
   const [displayedMonth, setDisplayedMonth] = useState({ year: initialMonth.getFullYear(), month: initialMonth.getMonth() });
   const [selectedMonthDay, setSelectedMonthDay] = useState<number | null>(null);
   const shiftMonth = (offset: number) => setDisplayedMonth((current) => {
@@ -2780,7 +2792,6 @@ function Dashboard({
           </h1>
         </div>
         <div className="dashboard-head-actions">
-          {!isMobile && <NotificationBell locale={t.language === "言語" ? "ja" : "zh"} openCompany={openWatchedCompany} openSettings={openWatchSettings} open={notificationOpen} onOpenChange={setNotificationOpen} />}
           <PrimaryActionButton className="dashboard-company-action" onClick={() => open("company")}>
             <Plus />
             {t.addCompany}
@@ -3024,6 +3035,7 @@ function Companies({
   onBack,
   onOpenCompany,
   openWatchSettings,
+  watchHighlightEventId,
 }: any) {
   const co = selected ? byId[selected] : undefined;
   const [query, setQuery] = useState("");
@@ -3119,7 +3131,7 @@ function Companies({
             </dl>
           </section>
           <section className="detail-stack">
-            <CompanyWatchSection company={co} locale={t.language === "言語" ? "ja" : "zh"} openSettings={openWatchSettings} />
+            <CompanyWatchSection company={co} locale={t.language === "言語" ? "ja" : "zh"} openSettings={openWatchSettings} highlightEventId={watchHighlightEventId} />
             <Title action={<div className="record-action-wrap">
               <button type="button" className="primary" onPointerDown={(event) => event.stopPropagation()} onClick={() => setRecordMenuOpen(!recordMenuOpen)}><Plus />{t.addRecord}</button>
               <RecordActionMenu

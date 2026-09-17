@@ -3,6 +3,7 @@ import robotsParser from "robots-parser";
 import type { EventType, SourceType } from "./types";
 
 const RECRUITMENT = /(エントリー|プレエントリー|応募|募集|新卒|採用|説明会|セミナー|予約|インターン|オープン[・\s-]?カンパニー|ES|エントリーシート|提出|締切|適性検査|Web\s*テスト|面接|選考|受付開始|受付終了)/i;
+const HIGH_CONFIDENCE_RECRUITMENT = /(募集(?:を)?終了|受付終了|エントリー受付中|応募受付中|説明会受付中|予約受付中|採用予定|募集要項|新卒採用|採用情報|募集職種|採用スケジュール)/i;
 const PRIVATE_HOST = /(^localhost$|\.localhost$|\.local$|\.internal$|^0\.|^10\.|^127\.|^169\.254\.|^172\.(1[6-9]|2\d|3[01])\.|^192\.168\.|^::1$|^fc|^fd|^fe80)/i;
 
 export function normalizeUrl(input: string): string {
@@ -28,6 +29,22 @@ export function extractMeaningfulText(html: string, sourceType: SourceType): str
     .filter((line) => line.length >= 2 && line.length <= 600)
     .filter((line) => !/^(最終更新|generated|page generated|アクセス解析)[:：]?\s*\d{4}/i.test(line));
   return [...new Set(lines)].join('\n').slice(0, 100_000);
+}
+
+export function inspectRecruitmentContent(html: string, sourceType: SourceType) {
+  const $ = load(html);
+  const rawText = $('body').text().normalize('NFKC').replace(/\s+/g, ' ').trim();
+  const cleanedText = extractMeaningfulText(html, sourceType);
+  const recruitmentLines = cleanedText.split('\n').filter((line) => RECRUITMENT.test(line));
+  const highConfidenceLines = cleanedText.split('\n').filter((line) => HIGH_CONFIDENCE_RECRUITMENT.test(line));
+  return {
+    rawTextLength: rawText.length,
+    cleanedTextLength: cleanedText.length,
+    recruitmentTextLength: recruitmentLines.join('\n').length,
+    highConfidenceLines,
+    text: cleanedText,
+    valid: cleanedText.length >= 80 || highConfidenceLines.length > 0,
+  };
 }
 
 export function detectMeaningfulChange(before: string, after: string) {
