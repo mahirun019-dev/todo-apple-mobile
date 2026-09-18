@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#f7f7f8" />
     <meta name="color-scheme" content="light dark" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="CareerFlow" />
     <meta name="application-name" content="CareerFlow" />
     <link rel="apple-touch-icon" sizes="180x180" href="/todo-apple-mobile/apple-touch-icon.png" />
@@ -38,7 +38,8 @@
           root.dataset.displayMode = isStandalone ? "standalone" : "browser";
           root.style.colorScheme = isDark ? "dark" : "light";
           document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColor);
-          document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')?.setAttribute("content", isDark ? "black" : "default");
+          const statusBarStyle = isStandalone ? "black-translucent" : (isDark ? "black" : "default");
+          document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')?.setAttribute("content", statusBarStyle);
         } catch {
           document.documentElement.dataset.theme = "light";
           document.documentElement.style.colorScheme = "light";

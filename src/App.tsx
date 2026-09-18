@@ -51,6 +51,7 @@ import {
   Menu,
   Monitor,
   Moon,
+  NotebookPen,
   Palette,
   Plus,
   Settings,
@@ -1534,7 +1535,12 @@ export default function App() {
       document.documentElement.dataset.theme = isDark ? "dark" : "light";
       document.documentElement.style.colorScheme = isDark ? "dark" : "light";
       document.querySelector('meta[name="theme-color"]')?.setAttribute("content", isDark ? "#000000" : "#f7f7f8");
-      document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')?.setAttribute("content", isDark ? "black" : "default");
+      const isStandalone = document.documentElement.dataset.displayMode === "standalone"
+        || window.matchMedia("(display-mode: standalone)").matches;
+      document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')?.setAttribute(
+        "content",
+        isStandalone ? "black-translucent" : (isDark ? "black" : "default"),
+      );
     };
     applyTheme();
     localStorage.setItem(THEME, theme);
@@ -2311,7 +2317,7 @@ function Nav({
     ["companies", Building2, "companies"],
     ["notifications", Bell, "notifications"],
     ["schedule", CalendarDays, "schedule"],
-    ["materials", ClipboardCheck, "materials"],
+    ["materials", NotebookPen, "materials"],
   ];
   return (
     <div className="nav-list">
@@ -2472,7 +2478,7 @@ function MobileNav({
         onPointerUp={(e) => { delete e.currentTarget.dataset.pressed; }}
         onPointerLeave={(e) => { delete e.currentTarget.dataset.pressed; }}
       >
-        <ClipboardCheck />
+        <NotebookPen />
         <span className="mobile-nav-label" aria-hidden="true">{t.materials}</span>
       </button>
     </nav>

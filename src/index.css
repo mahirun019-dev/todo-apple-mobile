@@ -4801,7 +4801,6 @@ html[data-theme="dark"] { --app-page-bg: var(--bg-app); }
   --careerflow-mobile-header-border: rgba(255, 255, 255, 0.58);
   --careerflow-mobile-header-backdrop: blur(18px) saturate(145%);
   --careerflow-mobile-header-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 8px 22px rgba(31, 55, 85, 0.1);
-  --careerflow-mobile-header-standalone-background: #f7f7f8;
   --careerflow-glass-border: rgba(0, 0, 0, 0.06);
   --careerflow-glass-backdrop: saturate(180%) blur(20px);
   --careerflow-glass-shadow: none;
@@ -4813,7 +4812,6 @@ html[data-theme="dark"] { --app-page-bg: var(--bg-app); }
   --careerflow-mobile-header-border: rgba(255, 255, 255, 0.13);
   --careerflow-mobile-header-backdrop: blur(18px) saturate(145%);
   --careerflow-mobile-header-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.13), 0 8px 22px rgba(0, 0, 0, 0.2);
-  --careerflow-mobile-header-standalone-background: #000000;
   --careerflow-glass-border: rgba(255, 255, 255, 0.08);
   --careerflow-glass-backdrop: saturate(160%) blur(20px);
   --careerflow-glass-shadow: none;
@@ -4836,13 +4834,13 @@ html[data-theme="dark"] { --app-page-bg: var(--bg-app); }
     -webkit-backdrop-filter: var(--careerflow-mobile-header-backdrop) !important;
   }
 
-  /* iOS standalone keeps the status bar outside backdrop compositing. Use one
-     opaque canvas for the complete top edge instead of a solid safe area over glass. */
+  /* Standalone keeps the same glass surface; black-translucent lets it continue
+     behind the status bar and safe area instead of creating a solid top strip. */
   html[data-display-mode="standalone"] .app-shell > .student-app > .mobile-header {
-    background: var(--careerflow-mobile-header-standalone-background) !important;
-    box-shadow: none !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+    background: var(--careerflow-mobile-header-background) !important;
+    box-shadow: var(--careerflow-mobile-header-shadow) !important;
+    backdrop-filter: var(--careerflow-mobile-header-backdrop) !important;
+    -webkit-backdrop-filter: var(--careerflow-mobile-header-backdrop) !important;
   }
 
   .action-sheet {
