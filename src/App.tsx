@@ -69,7 +69,7 @@ import {
   Star,
 } from "lucide-react";
 import { getDeadlineUrgency, getHighestDeadlineUrgency, getUpcomingDeadlines, parseTokyoCalendarDate, selectWeeklyDeadlines } from "./deadline-selector";
-import { isInterviewProgressStage, shouldOfferInterviewStageSync } from "./interview-stage";
+import { compareCompanyStageToEvent, isInterviewProgressStage, shouldOfferInterviewStageSync, type StageProgressionCheck } from "./interview-stage";
 
 type View = "dashboard" | "companies" | "notifications" | "schedule" | "materials";
 type CompanyRouteFilter = "active" | "waiting-result";
@@ -591,6 +591,12 @@ const tr = {
     syncCompanyStage: (stage: string) => `同时将企业选考阶段更新为「${stage}」`,
     currentCompanyStage: (company: string, stage: string) => `${company}的当前选考阶段：${stage}`,
     stageSyncFailed: "日程已保存，但企业选考阶段更新失败。",
+    stageProgressionTitle: "确认选考阶段",
+    stageProgressionCurrent: (stage: string) => `当前选考阶段是“${stage}”。`,
+    stageProgressionBackward: (stage: string) => `“${stage}”是早于当前选考阶段的日程。要继续添加吗？`,
+    stageProgressionTerminal: "添加此日程不会改变企业的选考阶段。",
+    stageProgressionBack: "返回",
+    stageProgressionContinue: "继续添加",
     event: "下一项日程",
     place: "地点或线上方式",
     url: "招聘页面",
@@ -763,6 +769,12 @@ const tr = {
     syncCompanyStage: (stage: string) => `企業の選考段階も「${stage}」に更新する`,
     currentCompanyStage: (company: string, stage: string) => `${company}の現在の選考段階：${stage}`,
     stageSyncFailed: "日程は保存されましたが、企業の選考段階の更新に失敗しました。",
+    stageProgressionTitle: "選考段階の確認",
+    stageProgressionCurrent: (stage: string) => `現在の選考段階は「${stage}」です。`,
+    stageProgressionBackward: (stage: string) => `「${stage}」は現在の選考段階より前の予定です。このまま追加しますか？`,
+    stageProgressionTerminal: "この予定を追加しても選考段階は変更されません。",
+    stageProgressionBack: "戻る",
+    stageProgressionContinue: "そのまま追加",
     event: "次の日程",
     place: "場所・オンライン",
     url: "採用ページ",
@@ -921,6 +933,12 @@ const tr = {
     syncCompanyStage: (stage: string) => `Also update the company's selection stage to “${stage}”`,
     currentCompanyStage: (company: string, stage: string) => `${company}'s current selection stage: ${stage}`,
     stageSyncFailed: "The schedule was saved, but the company stage could not be updated.",
+    stageProgressionTitle: "Check selection stage",
+    stageProgressionCurrent: (stage: string) => `The current selection stage is “${stage}”.`,
+    stageProgressionBackward: (stage: string) => `“${stage}” is earlier than the current selection stage. Add it anyway?`,
+    stageProgressionTerminal: "Adding this event will not change the company's selection stage.",
+    stageProgressionBack: "Back",
+    stageProgressionContinue: "Add anyway",
     event: "Next event",
     place: "Location or online",
     url: "Careers page",
@@ -3936,12 +3954,20 @@ function EventForm({
   const [prefecture, setPrefecture] = useState(initial?.prefecture || "");
   const [city, setCity] = useState(initial?.city || "");
   const [isSaving, setIsSaving] = useState(false);
+  const [stageWarning, setStageWarning] = useState<StageProgressionCheck>();
   const selectedCompany = companies.find((company) => company.id === companyId);
+  const formRef = useRef<HTMLFormElement>(null);
+  const skipStageWarningRef = useRef(false);
   const canSyncCompanyStage = Boolean(
     eventType === "interview"
     && selectedCompany
     && isInterviewProgressStage(interviewStage)
     && shouldOfferInterviewStageSync(selectedCompany.stage, interviewStage),
+  );
+  const stageProgression = compareCompanyStageToEvent(selectedCompany?.stage, eventType, interviewStage);
+  const shouldWarnStageProgression = Boolean(
+    selectedCompany
+    && (stageProgression.kind === "backward" || stageProgression.kind === "terminal"),
   );
   const [syncCompanyStage, setSyncCompanyStage] = useState(canSyncCompanyStage);
   const savingRef = useRef(false);
@@ -3952,19 +3978,30 @@ function EventForm({
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (isSaving || savingRef.current) return;
+    if (!skipStageWarningRef.current && shouldWarnStageProgression) {
+      setStageWarning(stageProgression);
+      return;
+    }
     savingRef.current = true;
     setIsSaving(true);
     try {
       await save(event);
       close();
     } finally {
+      skipStageWarningRef.current = false;
       savingRef.current = false;
       setIsSaving(false);
     }
   };
+  const continueWithStageWarning = () => {
+    setStageWarning(undefined);
+    skipStageWarningRef.current = true;
+    formRef.current?.requestSubmit();
+  };
   return (
-    <Modal title={initial ? t.edit : t.addEvent} close={close}>
-      <form className="form-grid" onSubmit={handleSubmit}>
+    <>
+      <Modal title={initial ? t.edit : t.addEvent} close={close}>
+      <form ref={formRef} className="form-grid" onSubmit={handleSubmit}>
         <label>
           <span>{t.company}</span>
           <select name="company" value={companyId} onChange={(event) => setCompanyId(event.target.value)}>
@@ -4028,7 +4065,65 @@ function EventForm({
         </label>
         <Actions t={t} close={close} remove={initial ? () => remove(initial) : undefined} isSaving={isSaving} />
       </form>
-    </Modal>
+      </Modal>
+      {stageWarning && selectedCompany && stageProgression.eventStage && <StageProgressionWarning
+        t={t}
+        check={stageWarning}
+        currentStageLabel={t[stageWarning.currentStage || selectedCompany.stage] || stageWarning.currentStage || selectedCompany.stage}
+        eventStageLabel={t[stageProgression.eventStage] || stageProgression.eventStage}
+        close={() => setStageWarning(undefined)}
+        continueAnyway={continueWithStageWarning}
+      />}
+    </>
+  );
+}
+
+function StageProgressionWarning({
+  t,
+  check,
+  currentStageLabel,
+  eventStageLabel,
+  close,
+  continueAnyway,
+}: {
+  t: any;
+  check: StageProgressionCheck;
+  currentStageLabel: string;
+  eventStageLabel: string;
+  close: () => void;
+  continueAnyway: () => void;
+}) {
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        close();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [close]);
+  return createPortal(
+    <div className="stage-progression-warning-layer" role="dialog" aria-modal="true" aria-labelledby="stage-progression-warning-title">
+      <button type="button" className="stage-progression-warning-backdrop" onClick={close} aria-label={t.stageProgressionBack} />
+      <section className="stage-progression-warning-dialog">
+        <header>
+          <h2 id="stage-progression-warning-title">{t.stageProgressionTitle}</h2>
+          <CloseButton onClick={close} label={t.stageProgressionBack} />
+        </header>
+        <div className="stage-progression-warning-copy">
+          <p>{t.stageProgressionCurrent(currentStageLabel)}</p>
+          {check.kind === "backward"
+            ? <p>{t.stageProgressionBackward(eventStageLabel)}</p>
+            : <p>{t.stageProgressionTerminal}</p>}
+        </div>
+        <div className="stage-progression-warning-actions">
+          <button type="button" onClick={close}>{t.stageProgressionBack}</button>
+          <button type="button" className="primary" onClick={continueAnyway}>{t.stageProgressionContinue}</button>
+        </div>
+      </section>
+    </div>,
+    document.body,
   );
 }
 function InterviewForm({

@@ -7228,6 +7228,87 @@ html[data-theme="dark"] .app-shell > .student-app > .mobile-header { background:
   line-height: 1.45;
 }
 
+.stage-progression-warning-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+.stage-progression-warning-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(18, 30, 48, 0.22);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.stage-progression-warning-dialog {
+  position: relative;
+  width: min(440px, 100%);
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+}
+.stage-progression-warning-dialog > header {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--border-default);
+}
+.stage-progression-warning-dialog h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 650;
+}
+.stage-progression-warning-dialog .close-button {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  color: var(--text-secondary);
+  background: transparent;
+}
+.stage-progression-warning-copy {
+  display: grid;
+  gap: 8px;
+  padding: 20px 18px 4px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.stage-progression-warning-copy p { margin: 0; }
+.stage-progression-warning-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 18px;
+}
+.stage-progression-warning-actions button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--border-default);
+  border-radius: 9px;
+  color: var(--text-primary);
+  background: var(--button-secondary-bg);
+  font-weight: 650;
+}
+.stage-progression-warning-actions button.primary {
+  color: var(--button-primary-text);
+  background: var(--button-primary-bg);
+  border-color: var(--button-primary-bg);
+}
+@media (max-width: 767px) {
+  .stage-progression-warning-layer { padding: 16px; }
+  .stage-progression-warning-dialog { width: min(420px, 100%); }
+  .stage-progression-warning-actions { display: grid; grid-template-columns: 1fr 1fr; }
+}
+
 /* Home heading and section rhythm stay consistent when optional modules appear or disappear. */
 .dashboard-main .dashboard-section > .section-title h2,
 .dashboard-sidebar .section-title h2 {
