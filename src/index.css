@@ -2794,84 +2794,6 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   .company-next-editor-card { align-items: flex-start; flex-direction: column; }
   .company-next-editor-card button { width: 100%; }
 }
-.mobile-action-required { display: block; }
-.mobile-action-required .section-title { margin-bottom: 14px; }
-.action-required-count {
-  display: inline-grid;
-  min-width: 24px;
-  height: 24px;
-  place-items: center;
-  padding: 0 6px;
-  border-radius: 999px;
-  color: var(--text-primary);
-  background: var(--bg-muted);
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-.mobile-action-list { display: grid; gap: 0; }
-.mobile-action-item {
-  display: grid;
-  width: 100%;
-  gap: 6px;
-  padding: 12px 0;
-  border: 0;
-  border-bottom: 1px solid var(--border-color);
-  color: var(--text-primary);
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-}
-.mobile-action-item:last-child { border-bottom: 0; }
-.mobile-action-item:hover { background: var(--bg-muted); }
-.mobile-action-item:active { background: var(--bg-selected); }
-.mobile-action-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 6px; }
-.mobile-action-primary {
-  display: grid;
-  min-width: 0;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 8px;
-}
-.mobile-action-kind {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--text-secondary);
-  font-size: 12px;
-  white-space: nowrap;
-}
-.mobile-action-icon { display: inline-flex; align-items: center; }
-.mobile-action-icon svg { width: 15px; height: 15px; color: currentColor; stroke: currentColor; }
-.mobile-action-item strong {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 14px;
-}
-.mobile-action-primary > svg { width: 18px; height: 18px; color: var(--text-muted); }
-.mobile-action-secondary {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 12px;
-  padding-left: 23px;
-  color: var(--text-secondary);
-  font-size: 12px;
-}
-.mobile-action-secondary > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mobile-action-secondary time { flex: 0 0 auto; color: var(--text-secondary); white-space: nowrap; }
-.mobile-action-more { display: block; margin: 10px auto 0; }
-.mobile-action-item.warning .mobile-action-kind,
-.mobile-action-item.warning .mobile-action-secondary time { color: #a56b16; }
-.mobile-action-item.urgent .mobile-action-kind,
-.mobile-action-item.urgent .mobile-action-secondary time { color: #b34a43; }
-[data-theme="dark"] .mobile-action-item.warning .mobile-action-kind,
-[data-theme="dark"] .mobile-action-item.warning .mobile-action-secondary time { color: #e5b35d; }
-[data-theme="dark"] .mobile-action-item.urgent .mobile-action-kind,
-[data-theme="dark"] .mobile-action-item.urgent .mobile-action-secondary time { color: #ffaaa4; }
 @media (max-width: 767px) {
   .dashboard-sidebar > .entity-card:last-child {
     display: none;
@@ -4717,14 +4639,12 @@ html[data-theme="dark"] { --app-page-bg: var(--bg-app); }
   }
 
   .career-app .next-class,
-  .career-app .mobile-action-required,
   .career-app .dashboard-sidebar > .entity-card {
     padding: 22px 20px;
     border-radius: 16px;
   }
 
   .career-app .next-class > .section-title,
-  .career-app .mobile-action-required > .section-title,
   .career-app .dashboard-sidebar > .entity-card > .section-title {
     margin-bottom: 16px;
   }
@@ -5895,14 +5815,12 @@ html[data-theme="dark"] { --app-page-bg: var(--bg-app); }
 
 /* Home dashboard modules share one card rhythm across viewport sizes. */
 .dashboard-customizable-modules > div > .next-class,
-.dashboard-customizable-modules > div > .mobile-action-required,
 .dashboard-customizable-modules > div > .dashboard-progress-module {
   padding: 22px 20px;
   border-radius: 16px;
 }
 
 .dashboard-customizable-modules > div > .next-class > .section-title,
-.dashboard-customizable-modules > div > .mobile-action-required > .section-title,
 .dashboard-customizable-modules > div > .dashboard-progress-module > .section-title {
   margin-bottom: 18px;
 }

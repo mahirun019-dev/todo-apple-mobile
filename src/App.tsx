@@ -46,7 +46,6 @@ import {
   FileText,
   Globe,
   Home,
-  Hourglass,
   MoreHorizontal,
   Menu,
   Monitor,
@@ -56,7 +55,6 @@ import {
   Plus,
   Settings,
   Info,
-  ListChecks,
   Search,
   Sun,
   ClipboardCheck,
@@ -69,7 +67,7 @@ import {
   X,
   Star,
 } from "lucide-react";
-import { getDeadlineUrgency, getHighestDeadlineUrgency, getUpcomingDeadlines, parseTokyoCalendarDate, selectWeeklyDeadlines } from "./deadline-selector";
+import { getDeadlineUrgency, getHighestDeadlineUrgency, parseTokyoCalendarDate, selectWeeklyDeadlines } from "./deadline-selector";
 import { compareCompanyStageToEvent, isInterviewProgressStage, shouldOfferInterviewStageSync, type StageProgressionCheck } from "./interview-stage";
 
 type View = "dashboard" | "companies" | "notifications" | "schedule" | "materials";
@@ -102,8 +100,7 @@ type EventFormPreset = Pick<Event, "type" | "stage">;
 type Priority = "low" | "medium" | "high";
 type CreateType = "company" | "schedule" | "es" | "interview" | "preparation";
 type HomeSummaryModule = "active" | "deadlines" | "waiting";
-type HomeSection = "upcoming" | "action" | "progress" | "month" | "featured";
-type HomeModule = HomeSummaryModule | HomeSection;
+type HomeSection = "upcoming" | "progress" | "month" | "featured";
 type CompanySort = "updated" | "event" | "interest" | "name";
 type TemplateCategory = "selfPr" | "gakuchika" | "motivation" | "interviewQuestion" | "reverseQuestion" | "preparation";
 type CareerTemplate = {
@@ -116,11 +113,6 @@ type CareerTemplate = {
 type AppPreferences = {
   jobHunt: {
     homeRegion: string;
-    actionWindowDays: 3 | 7 | 14;
-    resultWaitingDays: 7 | 10 | 14;
-    showDeadlines: boolean;
-    showPreparations: boolean;
-    showWaiting: boolean;
     defaultCompanyStage: Stage;
     defaultInterestLevel: number;
   };
@@ -285,8 +277,7 @@ type Data = {
   templates: CareerTemplate[];
 };
 const defaultHomeSummary: HomeSummaryModule[] = ["active", "deadlines", "waiting"];
-const defaultHomeSections: HomeSection[] = ["upcoming", "action", "progress", "month", "featured"];
-const defaultHomeModules: HomeModule[] = [...defaultHomeSummary, ...defaultHomeSections];
+const defaultHomeSections: HomeSection[] = ["upcoming", "progress", "month", "featured"];
 const interviewStageOptions = ["first_interview", "second_interview", "final_interview", "other"] as const;
 function isDeadlineEvent(event: Event) {
   return !(event as Event & { deletedAt?: boolean }).deletedAt
@@ -297,18 +288,13 @@ function defaultPreferences(): AppPreferences {
   return {
     jobHunt: {
       homeRegion: savedRegion,
-      actionWindowDays: 7,
-      resultWaitingDays: 7,
-      showDeadlines: true,
-      showPreparations: true,
-      showWaiting: true,
       defaultCompanyStage: "saved",
       defaultInterestLevel: 3,
     },
     customize: {
       homeSummaryVisibility: { active: true, deadlines: true, waiting: true },
       homeSummaryOrder: [...defaultHomeSummary],
-      homeSectionVisibility: { upcoming: true, action: true, progress: true, month: true, featured: true },
+      homeSectionVisibility: { upcoming: true, progress: true, month: true, featured: true },
       homeSectionVisibilityVersion: 1,
       homeSectionOrder: [...defaultHomeSections],
       companyCard: { industry: true, position: true, stage: true, interest: true, nextEvent: true },
@@ -321,6 +307,11 @@ function defaultPreferences(): AppPreferences {
 function normalizePreferenceOrder<T extends string>(value: unknown, allowed: T[], fallback: T[], legacy?: unknown[]): T[] {
   const source = Array.isArray(value) ? value : Array.isArray(legacy) ? legacy : [];
   return allowed.filter((key) => source.includes(key)).concat(fallback.filter((key) => !source.includes(key)));
+}
+
+function normalizeVisibility<T extends string>(allowed: T[], value: unknown, fallback: Record<T, boolean>): Record<T, boolean> {
+  const source = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  return Object.fromEntries(allowed.map((key) => [key, typeof source[key] === "boolean" ? source[key] : fallback[key]])) as Record<T, boolean>;
 }
 
 function makeBackupSnapshot(data: Data, theme: Theme, locale: Locale): BackupSnapshot {
@@ -546,16 +537,13 @@ const tr = {
     inProgress: "选考中",
     dueWeek: "本周截止",
     waiting: "等待结果",
-    next: "近期日程",
     deadlines: "本周截止",
+    deadlineNext: "截止与下一日程",
     funnel: "选考进度",
     monthSchedule: "本月日程", monthNoEvents: "本月暂无日程", featuredCompanies: "重点企业", viewAllCompanies: "查看全部企业",
     previousMonth: "上个月", nextMonth: "下个月", viewAllSchedules: "查看全部日程",
     results: "结果待办列表",
-    actionRequired: "待处理", actionRequiredList: "待处理事项", viewAll: "查看全部",
-    actionDeadline: "截止", actionSchedule: "日程", actionWaiting: "等待结果", actionPreparation: "准备", actionMaterial: "材料",
     dueToday: "今天截止", dueTomorrow: "明天截止", overdueLabel: "已逾期",
-    waitingDays: (n: number) => `等待结果第${n}天`, noActions: "暂无需要处理的事项",
     focus: "本周准备重点",
     funnelInterested: "关注中",
     funnelDocuments: "材料选考",
@@ -660,10 +648,7 @@ const tr = {
     scheduleSub: "说明会、笔试、面试与截止时间",
     jobSettings: "求职设置", customize: "自定义", templates: "模板", calendarIntegration: "日历连接",
     homeRegion: "常驻就活地区", homeRegionHint: "没有填写详细地点的日程将使用此地区作为天气和出行参考。",
-    actionWindow: "待处理时间范围", actionWindowHint: "用于首页待处理事项和临近截止提醒。", days3: "3天内", days7: "7天内", days14: "14天内",
-    resultWaitingThreshold: "等待结果判定", resultWaitingHint: "选考结束后持续未更新达到此天数时进入待处理。",
-    showDeadlines: "显示截止事项", showPreparations: "显示未完成准备事项", showWaiting: "显示长期等待结果",
-    defaultStage: "新企业默认选考阶段", defaultInterest: "新企业默认志望度", defaultStageHint: "这是新增企业时自动填入的默认值。", defaultInterestHint: "保存前仍可单独修改，不会影响已经登记的企业。", homeModules: "主页显示项目", homeSummary: "顶部摘要", homeSummaryOrder: "摘要卡片顺序", homeSections: "主页内容区块", homeSectionsOrder: "内容区块顺序", companyCard: "企业卡片显示信息",
+    defaultStage: "新企业默认选考阶段", defaultInterest: "新企业默认志望度", defaultStageHint: "这是新增企业时自动填入的默认值。", defaultInterestHint: "保存前仍可单独修改，不会影响已经登记的企业。", homeSummary: "顶部摘要", homeSummaryOrder: "摘要卡片顺序", homeSections: "主页内容区块", homeSectionsOrder: "内容区块顺序", companyCard: "企业卡片显示信息",
     showIndustry: "行业", showPosition: "职种", showStage: "选考阶段", showInterest: "志望度", showNextEvent: "下一日程", defaultCompanySort: "默认企业排序",
     sortUpdated: "最近更新", sortEvent: "下一日程", sortInterest: "志望度从高到低", sortName: "企业名称", moveUp: "上移", moveDown: "下移",
     templateNew: "新建模板", templateEdit: "编辑模板", templateDelete: "删除模板", templateDuplicate: "复制模板", templateCategory: "类别", templateTitle: "标题", templateContent: "内容", templateSave: "保存模板", templateEmpty: "还没有模板", templateInsert: "从模板插入", chooseTemplate: "选择模板", insertTemplate: "插入", noTemplates: "暂无可用模板",
@@ -724,16 +709,13 @@ const tr = {
     inProgress: "選考中",
     dueWeek: "今週の締切",
     waiting: "結果待ち",
-    next: "今後の予定",
     deadlines: "今週の締切",
+    deadlineNext: "締切・次の予定",
     funnel: "選考進捗",
     monthSchedule: "今月の予定", monthNoEvents: "今月の予定はありません", featuredCompanies: "注目企業", viewAllCompanies: "すべての企業を見る",
     previousMonth: "前の月", nextMonth: "次の月", viewAllSchedules: "すべての日程を見る",
     results: "結果待ち一覧",
-    actionRequired: "要対応", actionRequiredList: "要対応一覧", viewAll: "すべて見る",
-    actionDeadline: "締切", actionSchedule: "日程", actionWaiting: "結果待ち", actionPreparation: "準備", actionMaterial: "書類",
     dueToday: "今日締切", dueTomorrow: "明日締切", overdueLabel: "期限超過",
-    waitingDays: (n: number) => `結果待ち ${n}日目`, noActions: "現在、対応が必要な項目はありません",
     focus: "今週の準備重点",
     funnelInterested: "気になる",
     funnelDocuments: "書類選考",
@@ -838,10 +820,7 @@ const tr = {
     scheduleSub: "説明会・筆記・面接・締切",
     jobSettings: "就活設定", customize: "カスタマイズ", templates: "テンプレート", calendarIntegration: "カレンダー連携",
     homeRegion: "常駐就活地域", homeRegionHint: "詳細な場所がない日程では、この地域を天気や移動の目安に使用します。",
-    actionWindow: "要対応の対象期間", actionWindowHint: "ホームの要対応と締切の目安に使用します。", days3: "3日以内", days7: "7日以内", days14: "14日以内",
-    resultWaitingThreshold: "結果待ち判定", resultWaitingHint: "選考終了後、この日数更新がない項目を要対応に表示します。",
-    showDeadlines: "締切を表示", showPreparations: "未完了の準備事項を表示", showWaiting: "長期間の結果待ちを表示",
-    defaultStage: "新規企業のデフォルト選考段階", defaultInterest: "新規企業のデフォルト志望度", defaultStageHint: "新しく企業を追加するときの初期値です。登録時に個別に変更できます。既存の企業には影響しません。", defaultInterestHint: "新しく企業を追加するときの初期値です。登録時に個別に変更できます。既存の企業には影響しません。", homeModules: "ホーム画面の表示項目", homeSummary: "上部サマリー", homeSummaryOrder: "サマリーカードの順序", homeSections: "ホームセクション", homeSectionsOrder: "セクションの順序", companyCard: "企業カードの表示情報",
+    defaultStage: "新規企業のデフォルト選考段階", defaultInterest: "新規企業のデフォルト志望度", defaultStageHint: "新しく企業を追加するときの初期値です。登録時に個別に変更できます。既存の企業には影響しません。", defaultInterestHint: "新しく企業を追加するときの初期値です。登録時に個別に変更できます。既存の企業には影響しません。", homeSummary: "上部サマリー", homeSummaryOrder: "サマリーカードの順序", homeSections: "ホームセクション", homeSectionsOrder: "セクションの順序", companyCard: "企業カードの表示情報",
     showIndustry: "業界", showPosition: "職種", showStage: "選考段階", showInterest: "志望度", showNextEvent: "次の日程", defaultCompanySort: "既定の企業並び替え",
     sortUpdated: "最近更新", sortEvent: "次の日程", sortInterest: "志望度の高い順", sortName: "企業名", moveUp: "上へ", moveDown: "下へ",
     templateNew: "新規作成", templateEdit: "編集", templateDelete: "削除", templateDuplicate: "複製", templateCategory: "カテゴリ", templateTitle: "タイトル", templateContent: "内容", templateSave: "テンプレートを保存", templateEmpty: "テンプレートはまだありません", templateInsert: "テンプレートから挿入", chooseTemplate: "テンプレートを選択", insertTemplate: "挿入", noTemplates: "使用できるテンプレートがありません",
@@ -902,16 +881,13 @@ const tr = {
     inProgress: "In process",
     dueWeek: "Due this week",
     waiting: "Waiting",
-    next: "Next key event",
     deadlines: "Due this week",
+    deadlineNext: "Deadlines & next events",
     funnel: "Application funnel",
     monthSchedule: "This month's schedule", monthNoEvents: "No events this month", featuredCompanies: "Featured companies", viewAllCompanies: "View all companies",
     previousMonth: "Previous month", nextMonth: "Next month", viewAllSchedules: "View all schedules",
     results: "Waiting for result",
-    actionRequired: "Needs attention", actionRequiredList: "Needs attention", viewAll: "View all",
-    actionDeadline: "Deadline", actionSchedule: "Schedule", actionWaiting: "Waiting", actionPreparation: "Preparation", actionMaterial: "Documents",
     dueToday: "Due today", dueTomorrow: "Due tomorrow", overdueLabel: "Overdue",
-    waitingDays: (n: number) => `Waiting ${n} days`, noActions: "No items need attention right now",
     focus: "Weekly priorities",
     funnelInterested: "Interested",
     funnelDocuments: "Document Screening",
@@ -998,10 +974,7 @@ const tr = {
     scheduleSub: "Briefings, tests, interviews and deadlines",
     jobSettings: "Job hunt settings", customize: "Customize", templates: "Templates", calendarIntegration: "Calendar integration",
     homeRegion: "Home job-search region", homeRegionHint: "Used as a weather and travel reference when an event has no detailed location.",
-    actionWindow: "Attention window", actionWindowHint: "Used for upcoming deadlines and the home attention list.", days3: "Within 3 days", days7: "Within 7 days", days14: "Within 14 days",
-    resultWaitingThreshold: "Waiting-result threshold", resultWaitingHint: "Items with no update after this many days appear in Needs attention.",
-    showDeadlines: "Show deadlines", showPreparations: "Show incomplete preparation", showWaiting: "Show long-waiting results",
-    defaultStage: "Default stage for new companies", defaultInterest: "Default interest for new companies", defaultStageHint: "Used as the initial value when adding a company. You can change it before saving; existing companies are unaffected.", defaultInterestHint: "Used as the initial value when adding a company. You can change it before saving; existing companies are unaffected.", homeModules: "Home modules", homeSummary: "Summary cards", homeSummaryOrder: "Summary card order", homeSections: "Home sections", homeSectionsOrder: "Section order", companyCard: "Company card details",
+    defaultStage: "Default stage for new companies", defaultInterest: "Default interest for new companies", defaultStageHint: "Used as the initial value when adding a company. You can change it before saving; existing companies are unaffected.", defaultInterestHint: "Used as the initial value when adding a company. You can change it before saving; existing companies are unaffected.", homeSummary: "Summary cards", homeSummaryOrder: "Summary card order", homeSections: "Home sections", homeSectionsOrder: "Section order", companyCard: "Company card details",
     showIndustry: "Industry", showPosition: "Position", showStage: "Stage", showInterest: "Interest", showNextEvent: "Next event", defaultCompanySort: "Default company sort",
     sortUpdated: "Recently updated", sortEvent: "Next event", sortInterest: "Interest", sortName: "Company name", moveUp: "Move up", moveDown: "Move down",
     templateNew: "New template", templateEdit: "Edit", templateDelete: "Delete", templateDuplicate: "Duplicate", templateCategory: "Category", templateTitle: "Title", templateContent: "Content", templateSave: "Save template", templateEmpty: "No templates yet", templateInsert: "Insert from template", chooseTemplate: "Choose a template", insertTemplate: "Insert", noTemplates: "No templates available",
@@ -1231,14 +1204,14 @@ function normalize(x: any): Data {
   const defaults = defaultPreferences();
   const rawPreferences = (x.preferences || (x.settings && x.settings.preferences) || {}) as Partial<AppPreferences>;
   const rawJobHunt = (rawPreferences.jobHunt || {}) as Partial<AppPreferences["jobHunt"]>;
-  const rawCustomize = (rawPreferences.customize || {}) as Partial<AppPreferences["customize"]> & { homeModules?: HomeModule[] };
+  const rawCustomize = (rawPreferences.customize || {}) as Partial<AppPreferences["customize"]> & { homeModules?: unknown[] };
   const rawCard = (rawCustomize.companyCard || {}) as Partial<AppPreferences["customize"]["companyCard"]>;
   const rawCalendar = (rawPreferences.calendar || {}) as Partial<AppPreferences["calendar"]>;
   const legacyHomeModules = Array.isArray(rawCustomize.homeModules) ? rawCustomize.homeModules : undefined;
   const summaryOrder = normalizePreferenceOrder(rawCustomize.homeSummaryOrder, defaultHomeSummary, defaultHomeSummary, legacyHomeModules);
   const sectionOrder = normalizePreferenceOrder(rawCustomize.homeSectionOrder, defaultHomeSections, defaultHomeSections, legacyHomeModules);
   const legacySummaryVisibility = Object.fromEntries(defaultHomeSummary.map((key) => [key, legacyHomeModules ? legacyHomeModules.includes(key) : true])) as Record<HomeSummaryModule, boolean>;
-  const legacySectionVisibility = Object.fromEntries(defaultHomeSections.map((key) => [key, legacyHomeModules ? legacyHomeModules.includes(key) || !["upcoming", "action", "progress"].includes(key) : true])) as Record<HomeSection, boolean>;
+  const legacySectionVisibility = Object.fromEntries(defaultHomeSections.map((key) => [key, legacyHomeModules ? legacyHomeModules.includes(key) || !["upcoming", "progress"].includes(key) : true])) as Record<HomeSection, boolean>;
   const rawSummaryVisibility = (rawCustomize.homeSummaryVisibility || {}) as Partial<Record<HomeSummaryModule, boolean>>;
   const rawSectionVisibility = (rawCustomize.homeSectionVisibility || {}) as Partial<Record<HomeSection, boolean>>;
   const homeSectionVisibilityVersion = Number(rawCustomize.homeSectionVisibilityVersion) || 0;
@@ -1247,21 +1220,14 @@ function normalize(x: any): Data {
     : rawSectionVisibility;
   const preferences: AppPreferences = {
     jobHunt: {
-      ...defaults.jobHunt,
-      ...rawJobHunt,
       homeRegion: typeof rawJobHunt.homeRegion === "string" ? rawJobHunt.homeRegion : defaults.jobHunt.homeRegion,
-      actionWindowDays: [3, 7, 14].includes(Number(rawJobHunt.actionWindowDays)) ? Number(rawJobHunt.actionWindowDays) as 3 | 7 | 14 : defaults.jobHunt.actionWindowDays,
-      resultWaitingDays: [7, 10, 14].includes(Number(rawJobHunt.resultWaitingDays)) ? Number(rawJobHunt.resultWaitingDays) as 7 | 10 | 14 : defaults.jobHunt.resultWaitingDays,
-      showPreparations: typeof rawJobHunt.showPreparations === "boolean" ? rawJobHunt.showPreparations : defaults.jobHunt.showPreparations,
       defaultCompanyStage: stages.includes(rawJobHunt.defaultCompanyStage as Stage) ? rawJobHunt.defaultCompanyStage as Stage : defaults.jobHunt.defaultCompanyStage,
       defaultInterestLevel: Math.min(5, Math.max(1, Number(rawJobHunt.defaultInterestLevel) || defaults.jobHunt.defaultInterestLevel)),
     },
     customize: {
-      ...defaults.customize,
-      ...rawCustomize,
-      homeSummaryVisibility: { ...legacySummaryVisibility, ...rawSummaryVisibility },
+      homeSummaryVisibility: normalizeVisibility(defaultHomeSummary, rawSummaryVisibility, legacySummaryVisibility),
       homeSummaryOrder: summaryOrder,
-      homeSectionVisibility: { ...legacySectionVisibility, ...migratedSectionVisibility },
+      homeSectionVisibility: normalizeVisibility(defaultHomeSections, migratedSectionVisibility, legacySectionVisibility),
       homeSectionVisibilityVersion: 1,
       homeSectionOrder: sectionOrder,
       companyCard: { ...defaults.customize.companyCard, ...rawCard },
@@ -1674,12 +1640,9 @@ export default function App() {
     [data.companies],
   );
   const now = Date.now(),
-    allUpcomingDeadlines = getUpcomingDeadlines(data, now).filter((item) => parseTokyoCalendarDate(item.at).getTime() >= now),
     due = selectWeeklyDeadlines(data, now),
-    actionDue = allUpcomingDeadlines.filter((item) => item.kind === "material" && parseTokyoCalendarDate(item.at).getTime() < now + data.preferences.jobHunt.actionWindowDays * 864e5),
     active = data.companies.filter(isActiveCompany),
-    waiting = data.companies.filter((x) => isWaitingResultCompany(x, data.events)),
-    focus = data.materials.filter((x) => x.isWeeklyFocus).slice(0, 3);
+    waiting = data.companies.filter((x) => isWaitingResultCompany(x, data.events));
   const schedules = [
     ...data.events.map((x) => ({
       kind: "event" as const,
@@ -1716,7 +1679,6 @@ export default function App() {
       isDeadline: true,
       })),
   ].sort((a, b) => a.at.localeCompare(b.at));
-  const next = schedules[0];
   const upcoming = schedules.filter((x) => x.kind === "event" && new Date(x.at).getTime() >= Date.now());
   const dueIds = new Set(due.map((x) => x.key));
   const visibleSchedules = scheduleFilter === "this-week-deadline"
@@ -2168,17 +2130,11 @@ export default function App() {
                 data,
                 active,
                 due,
-                actionDue,
                 waiting,
-                next,
                 upcoming,
                 schedules,
-                focus,
                 byId,
-                toggle,
-                focusToggle,
                 open,
-                isMobile,
                 openWatchSettings,
                 navigate,
                 openCompany,
@@ -2759,22 +2715,16 @@ function Dashboard({
   data,
   active,
   due,
-  actionDue,
   waiting,
-  next,
   upcoming,
   schedules,
-  focus,
   byId,
-  toggle,
-  focusToggle,
   open,
   navigate,
   openCompany,
   setView,
   setEditEvent,
   setForm,
-  isMobile,
 }: any) {
   const initialMonth = new Date();
   const [displayedMonth, setDisplayedMonth] = useState({ year: initialMonth.getFullYear(), month: initialMonth.getMonth() });
@@ -2787,72 +2737,8 @@ function Dashboard({
     localStorage.setItem("careerflow-company-stage-filter", stage);
     setView("companies");
   };
-  const daysUntil = (at: string) => Math.ceil((parseTokyoCalendarDate(at).getTime() - Date.now()) / 864e5);
-  const actionWindowEnd = Date.now() + data.preferences.jobHunt.actionWindowDays * 864e5;
-  const preparationActions = data.preparations
-    .filter((item: Preparation) => !item.completed)
-    .filter((item: Preparation) => {
-      const dueTime = item.dueAt ? new Date(item.dueAt).getTime() : NaN;
-      const dueSoon = Number.isFinite(dueTime) && dueTime < actionWindowEnd;
-      const eventSoon = !!item.companyId && upcoming.some((event: any) => event.event?.companyId === item.companyId && new Date(event.at).getTime() < actionWindowEnd);
-      return dueSoon || eventSoon;
-    });
-  const actionItems = [
-    ...(data.preferences.jobHunt.showDeadlines ? actionDue : []).map((x: any) => {
-      const days = daysUntil(x.at);
-      return { id: `due-${x.key}`, kind: x.kind, label: t.actionDeadline, company: byId[x.companyId || ""]?.name || t.general, detail: x.title, at: x.at, urgency: days <= 0 ? "urgent" : days === 1 ? "warning" : "normal", meta: days < 0 ? t.overdueLabel : days === 0 ? t.dueToday : days === 1 ? t.dueTomorrow : when(x.at), event: x.event };
-    }),
-    ...(data.preferences.jobHunt.showPreparations ? preparationActions : []).map((x: Preparation) => {
-      const days = x.dueAt ? daysUntil(x.dueAt) : null;
-      return { id: `preparation-${x.id}`, kind: "preparation", label: t.actionPreparation, company: byId[x.companyId || ""]?.name || t.general, detail: x.title, at: x.dueAt, urgency: days !== null && days <= 0 ? "urgent" : days === 1 ? "warning" : "normal", meta: days === null ? t.incomplete : days < 0 ? t.overdueLabel : days === 0 ? t.dueToday : days === 1 ? t.dueTomorrow : when(x.dueAt!) };
-    }),
-    ...(data.preferences.jobHunt.showWaiting ? waiting : []).map((x: any) => {
-      const days = Math.max(1, Math.floor((Date.now() - x.updatedAt) / 864e5));
-      return days >= data.preferences.jobHunt.resultWaitingDays ? { id: `waiting-${x.id}`, kind: "waiting", label: t.actionWaiting, company: x.name, detail: t.waitingDays(days), at: undefined, urgency: days >= 14 ? "urgent" : "warning", meta: t.waitingDays(days) } : null;
-    }).filter(Boolean),
-  ].sort((a: any, b: any) => {
-    const priority: Record<string, number> = { urgent: 0, warning: 1, normal: 2 };
-    return priority[a.urgency] - priority[b.urgency] || String(a.at || "9999").localeCompare(String(b.at || "9999"));
-  });
   const { homeSummaryVisibility, homeSummaryOrder, homeSectionVisibility, homeSectionOrder } = data.preferences.customize;
   const sectionVisible = (module: HomeSection) => homeSectionVisibility[module] !== false;
-  const actionTitle = t.actionRequired;
-  const actionMore = t.viewAll;
-  const openAction = (item: any) => {
-    if (item.kind === "event" && item.event) {
-      setEditEvent(item.event);
-      setForm("schedule");
-    } else if (item.kind === "waiting") {
-      navigate("companies", "waiting-result");
-    } else {
-      setView("materials");
-    }
-  };
-  const upcomingModule = upcoming.length ? <section className="entity-card next-class">
-    <Title>{t.next}</Title>
-    <div className="dashboard-upcoming-list">
-      {upcoming.slice(0, 3).map((item: any) => <button type="button" className="dashboard-upcoming-item" key={item.id} onClick={() => { setEditEvent(item.event); setForm("schedule"); }}>
-          <i style={{ background: item.company?.color || "#555555" }} />
-          <div>
-            <h3>{item.title || item.company?.name || t.untitledSchedule}</h3>
-            <p>{t[item.type]} · {when(item.at)}</p>
-            <span>{getEventModeLabel(item.event, t.language === "言語" ? "ja" : "zh")}{item.event?.eventMode === "offline" && formatScheduleLocation(item.event) ? ` · ${formatScheduleLocation(item.event)}` : item.event?.eventMode === "online" && item.event.onlinePlatform ? ` · ${item.event.onlinePlatform}` : ""} · {relative(item.at, t)}</span>
-            <WeatherLine location={item.event?.eventMode === "offline" ? formatScheduleLocation(item.event) : undefined} prefecture={item.event?.prefecture} municipality={item.event?.municipality || item.event?.city} latitude={item.event?.latitude} longitude={item.event?.longitude} date={item.at} locale={t.language === "言語" ? "ja" : "zh"} />
-          </div>
-        </button>)}
-      {upcoming.length > 3 && <button type="button" className="text-button" onClick={() => setView("schedule")}>{t.language === "言語" ? "すべての予定を見る" : "查看全部日程"}</button>}
-    </div>
-  </section> : null;
-  const actionModule = actionItems.length > 0 ? <section className="entity-card mobile-action-required">
-    <Title action={<span className="action-required-count">{actionItems.length}</span>}>{actionTitle}</Title>
-    <div className="mobile-action-list">
-      {actionItems.slice(0, 3).map((item: any) => <button type="button" key={item.id} className={`mobile-action-item ${item.urgency}`} onClick={() => openAction(item)}>
-        <span className="mobile-action-primary"><span className="mobile-action-kind"><span className="mobile-action-icon">{item.kind === "material" ? <FileText /> : item.kind === "preparation" ? <ListChecks /> : item.kind === "schedule" ? <CalendarClock /> : <Hourglass />}</span>{item.label}</span><strong>{item.company}</strong><ChevronRight aria-hidden="true" /></span>
-        <span className="mobile-action-secondary"><span>{item.detail}</span><time>{item.meta}</time></span>
-      </button>)}
-    </div>
-    {actionItems.length > 3 && <button type="button" className="text-button mobile-action-more" onClick={() => setView("materials")}>{actionMore}</button>}
-  </section> : null;
   const stages = [
     "funnelInterested",
     "funnelDocuments",
@@ -2954,7 +2840,7 @@ function Dashboard({
   const visibleUpcoming = sectionVisible("upcoming") ? upcoming.filter((item: any) => !deadlineKeys.has(`event:${item.id}`)) : [];
   const visibleDeadlines = homeSummaryVisibility.deadlines ? due : [];
   const nextAndDeadlineModule = (visibleUpcoming.length || visibleDeadlines.length) ? <section className="dashboard-section dashboard-next-deadline-module">
-    <Title>{t.language === "言語" ? "締切・次の予定" : "截止与下一日程"}</Title>
+    <Title>{t.deadlineNext}</Title>
     <div className="dashboard-next-deadline-list">
       {visibleDeadlines.slice(0, 2).map((item: any) => <button key={`deadline-${item.key}`} type="button" className={`dashboard-next-deadline-row ${deadlineToneFor(item.at)}`} onClick={() => item.kind === "event" ? (setEditEvent(item.event), setForm("schedule")) : setView("materials")}>
         <span><strong>{byId[item.companyId || ""]?.name || t.general}</strong><small>{item.kind === "event" ? scheduleDisplayTitle(item.title, item.type, t, item.event) : item.title || t[item.type] || t.general}</small></span><time>{whenForLocale(item.at, t)}</time>
@@ -2964,7 +2850,7 @@ function Dashboard({
       </button>)}
     </div>
   </section> : null;
-  const homeSections: Record<HomeSection, ReactNode> = { upcoming: upcomingModule, action: actionModule, progress: progressModule, month: monthModule, featured: featuredModule };
+  const homeSections: Record<HomeSection, ReactNode> = { upcoming: null, progress: progressModule, month: monthModule, featured: featuredModule };
   const remainingHomeModules = homeSectionOrder.filter((module: HomeSection) => module !== "upcoming" && module !== "progress" && sectionVisible(module) && homeSections[module] !== null);
   return (
     <>
@@ -4585,9 +4471,6 @@ function JobHuntSettings({ t, data, updatePreferences }: any) {
   const update = (patch: Partial<AppPreferences["jobHunt"]>) => updatePreferences((current: AppPreferences) => ({ ...current, jobHunt: { ...current.jobHunt, ...patch } }));
   return <section className="settings-section settings-form-section"><h3>{t.jobSettings}</h3>
     <label className="settings-field"><span>{t.homeRegion}</span><select value={settings.homeRegion} onChange={(event) => { update({ homeRegion: event.target.value }); localStorage.setItem("careerflow-home-region", event.target.value); }}><option value="">{t.notSet}</option>{prefectures.map((region) => <option key={region} value={region}>{region}</option>)}</select><small>{t.homeRegionHint}</small></label>
-    <label className="settings-field"><span>{t.actionWindow}</span><select value={settings.actionWindowDays} onChange={(event) => update({ actionWindowDays: Number(event.target.value) as 3 | 7 | 14 })}>{[[3, t.days3], [7, t.days7], [14, t.days14]].map(([value, label]) => <option key={String(value)} value={value}>{label}</option>)}</select><small>{t.actionWindowHint}</small></label>
-    <label className="settings-field"><span>{t.resultWaitingThreshold}</span><select value={settings.resultWaitingDays} onChange={(event) => update({ resultWaitingDays: Number(event.target.value) as 7 | 10 | 14 })}>{[7, 10, 14].map((value) => <option key={value} value={value}>{value}{t.days}</option>)}</select><small>{t.resultWaitingHint}</small></label>
-    <div className="settings-toggle-group"><strong>{t.actionRequired}</strong><label><input type="checkbox" checked={settings.showDeadlines} onChange={(event) => update({ showDeadlines: event.target.checked })} />{t.showDeadlines}</label><label><input type="checkbox" checked={settings.showPreparations} onChange={(event) => update({ showPreparations: event.target.checked })} />{t.showPreparations}</label><label><input type="checkbox" checked={settings.showWaiting} onChange={(event) => update({ showWaiting: event.target.checked })} />{t.showWaiting}</label></div>
     <label className="settings-field"><span>{t.defaultStage}</span><select value={settings.defaultCompanyStage} onChange={(event) => update({ defaultCompanyStage: event.target.value as Stage })}>{stages.map((stage) => <option key={stage} value={stage}>{t[stage]}</option>)}</select><small>{t.defaultStageHint}</small></label>
     <label className="settings-field"><span>{t.defaultInterest}</span><select value={settings.defaultInterestLevel} onChange={(event) => update({ defaultInterestLevel: Number(event.target.value) })}>{[1, 2, 3, 4, 5].map((value) => <option key={value} value={value}>{value} / 5</option>)}</select><small>{t.defaultInterestHint}</small></label>
   </section>;
@@ -4595,7 +4478,7 @@ function JobHuntSettings({ t, data, updatePreferences }: any) {
 function CustomizeSettings({ t, data, updatePreferences }: any) {
   const settings = data.preferences.customize;
   const summaryLabels: Record<HomeSummaryModule, string> = { active: t.inProgress, deadlines: t.dueWeek, waiting: t.waiting };
-  const sectionLabels: Record<HomeSection, string> = { upcoming: t.next, action: t.actionRequired, progress: t.funnel, month: t.monthSchedule, featured: t.featuredCompanies };
+  const sectionLabels: Record<HomeSection, string> = { upcoming: t.deadlineNext, progress: t.funnel, month: t.monthSchedule, featured: t.featuredCompanies };
   const update = (patch: Partial<AppPreferences["customize"]>) => updatePreferences((current: AppPreferences) => ({ ...current, customize: { ...current.customize, ...patch } }));
   const toggleSummary = (module: HomeSummaryModule) => update({ homeSummaryVisibility: { ...settings.homeSummaryVisibility, [module]: !settings.homeSummaryVisibility[module] } });
   const toggleSection = (module: HomeSection) => update({ homeSectionVisibility: { ...settings.homeSectionVisibility, [module]: settings.homeSectionVisibility[module] === false } });
