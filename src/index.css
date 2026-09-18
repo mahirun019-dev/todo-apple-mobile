@@ -7101,7 +7101,7 @@ html[data-theme="dark"] .app-shell > .student-app > .mobile-header { background:
 .metric.is-normal .metric-icon,
 .metric.is-warning .metric-icon,
 .metric.is-due-today .metric-icon,
-.metric.is-overdue .metric-icon { color: var(--urgency-deadline-icon); }
+.metric.is-overdue .metric-icon { color: var(--text-secondary); }
 .metric.is-warning .kpi-number { color: var(--urgency-warning); }
 .metric.is-due-today .kpi-number { color: var(--urgency-due-today); }
 .metric.is-overdue .kpi-number { color: var(--urgency-overdue); }
