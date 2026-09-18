@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#f7f7f8" />
     <meta name="color-scheme" content="light dark" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="CareerFlow" />
     <meta name="application-name" content="CareerFlow" />
     <link rel="apple-touch-icon" sizes="180x180" href="/todo-apple-mobile/apple-touch-icon.png" />
@@ -20,7 +20,7 @@
       html, body, #root { background-color: #f7f7f8; }
       html[data-theme="dark"],
       html[data-theme="dark"] body,
-      html[data-theme="dark"] #root { background-color: #1f2328; }
+      html[data-theme="dark"] #root { background-color: #000000; }
     </style>
   </head>
   <body>
@@ -32,7 +32,7 @@
           const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
           const isDark = savedTheme === "dark" || (savedTheme !== "light" && prefersDark);
           const root = document.documentElement;
-          const themeColor = isDark ? "#1f2328" : "#f7f7f8";
+          const themeColor = isDark ? "#000000" : "#f7f7f8";
           root.dataset.theme = isDark ? "dark" : "light";
           root.style.colorScheme = isDark ? "dark" : "light";
           document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColor);

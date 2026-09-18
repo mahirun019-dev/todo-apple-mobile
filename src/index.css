@@ -4700,7 +4700,8 @@ html[data-theme="dark"] { --app-page-bg: var(--bg-app); }
   .career-app .workspace {
     height: auto;
     min-height: 0;
-    padding-bottom: calc(var(--mobile-bottom-nav-height) - env(safe-area-inset-bottom) - 24px);
+    padding-bottom: calc(var(--mobile-bottom-nav-height) + 16px);
+    scroll-padding-bottom: calc(var(--mobile-bottom-nav-height) + 16px);
     box-sizing: border-box;
   }
 
