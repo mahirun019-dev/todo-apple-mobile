@@ -2934,6 +2934,17 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
     box-shadow: var(--careerflow-mobile-header-shadow);
     backdrop-filter: var(--careerflow-mobile-header-backdrop);
     -webkit-backdrop-filter: var(--careerflow-mobile-header-backdrop);
+    transform: translate3d(0, calc(-1 * var(--mobile-header-offset, 0px)), 0);
+    will-change: transform;
+    transition: none;
+  }
+
+  .app-shell > .student-app > .mobile-header[data-scroll-settling="true"] {
+    transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .app-shell > .student-app > .mobile-header[data-scroll-hidden="true"] {
+    pointer-events: none;
   }
 
   .app-shell > .student-app > .mobile-header .mobile-menu-button {

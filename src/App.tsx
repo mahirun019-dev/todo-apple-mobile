@@ -1435,6 +1435,7 @@ export default function App() {
     [icon, setIcon] = useState(() => localStorage.getItem(ICON) || "");
   const json = useRef<HTMLInputElement>(null),
     iconRef = useRef<HTMLInputElement>(null),
+    mobileHeaderRef = useRef<HTMLElement>(null),
     workspaceRef = useRef<HTMLElement>(null),
     companyListScrollTopRef = useRef(0),
     restoreCompanyListScrollRef = useRef(false);
@@ -1518,6 +1519,122 @@ export default function App() {
     else delete document.body.dataset.overlayOpen;
     return () => { delete document.body.dataset.overlayOpen; };
   }, [hasOpenOverlay]);
+  useEffect(() => {
+    if (!isMobile) return;
+    const header = mobileHeaderRef.current;
+    if (!header) return;
+
+    const threshold = 10;
+    const snapDelay = 180;
+    const state = {
+      lastScrollY: 0,
+      offset: 0,
+      height: header.getBoundingClientRect().height,
+      confirmedDirection: 0,
+      pendingDirection: 0,
+      pendingDistance: 0,
+      frame: 0,
+      snapTimer: 0,
+      resizeObserver: typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(() => {
+        state.height = header.getBoundingClientRect().height;
+        state.offset = Math.min(state.offset, state.height);
+        header.style.setProperty("--mobile-header-offset", `${state.offset}px`);
+      }),
+    };
+    const readScrollY = () => Math.max(
+      window.scrollY,
+      document.documentElement.scrollTop,
+      document.body.scrollTop,
+      workspaceRef.current?.scrollTop || 0,
+    );
+    const writeOffset = (offset: number, settling = false) => {
+      state.offset = Math.min(state.height, Math.max(0, offset));
+      header.dataset.scrollHidden = state.offset >= state.height - 0.5 ? "true" : "false";
+      if (settling) header.dataset.scrollSettling = "true";
+      else delete header.dataset.scrollSettling;
+      header.style.setProperty("--mobile-header-offset", `${state.offset}px`);
+    };
+    const reset = () => {
+      state.lastScrollY = readScrollY();
+      state.offset = 0;
+      state.confirmedDirection = 0;
+      state.pendingDirection = 0;
+      state.pendingDistance = 0;
+      writeOffset(0);
+    };
+    const scheduleSnap = () => {
+      window.clearTimeout(state.snapTimer);
+      state.snapTimer = window.setTimeout(() => {
+        if (settings) return;
+        const currentY = readScrollY();
+        if (currentY <= 4) {
+          reset();
+          return;
+        }
+        writeOffset(state.offset >= state.height / 2 ? state.height : 0, true);
+        window.setTimeout(() => delete header.dataset.scrollSettling, 220);
+      }, snapDelay);
+    };
+    const update = () => {
+      state.frame = 0;
+      state.height = header.getBoundingClientRect().height;
+      const currentY = readScrollY();
+      const delta = currentY - state.lastScrollY;
+      state.lastScrollY = currentY;
+
+      if (settings || currentY <= 4) {
+        reset();
+        return;
+      }
+      if (Math.abs(delta) < 0.1) return;
+
+      const direction = delta > 0 ? 1 : -1;
+      if (direction !== state.confirmedDirection) {
+        if (direction !== state.pendingDirection) {
+          state.pendingDirection = direction;
+          state.pendingDistance = 0;
+        }
+        state.pendingDistance += Math.abs(delta);
+        if (state.pendingDistance < threshold) {
+          scheduleSnap();
+          return;
+        }
+        state.confirmedDirection = direction;
+        state.pendingDirection = 0;
+        state.pendingDistance = 0;
+      }
+
+      writeOffset(state.offset + delta);
+      scheduleSnap();
+    };
+    const onScroll = () => {
+      delete header.dataset.scrollSettling;
+      if (!state.frame) state.frame = window.requestAnimationFrame(update);
+    };
+    const onResize = () => {
+      state.height = header.getBoundingClientRect().height;
+      reset();
+    };
+
+    header.style.setProperty("--mobile-header-offset", "0px");
+    header.dataset.scrollHidden = "false";
+    state.resizeObserver?.observe(header);
+    reset();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    workspaceRef.current?.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize, { passive: true });
+    return () => {
+      window.clearTimeout(state.snapTimer);
+      if (state.frame) window.cancelAnimationFrame(state.frame);
+      state.resizeObserver?.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      workspaceRef.current?.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+      delete header.dataset.scrollHidden;
+      delete header.dataset.scrollSettling;
+      header.style.removeProperty("--mobile-header-offset");
+    };
+  }, [isMobile, view, selected, settings]);
   useEffect(() => localStorage.setItem(KEY, JSON.stringify(data)), [data]);
   useEffect(() => {
     if (firstDataRender.current) {
@@ -2027,7 +2144,7 @@ export default function App() {
             {t.settings}
           </button>
         </aside>
-        <header className="mobile-header glass-lite">
+        <header ref={mobileHeaderRef} className="mobile-header glass-lite">
           <button className="mobile-menu-button" data-menu-open={settings ? "true" : "false"} onClick={() => {
             if (settings) {
               closeMobileSettings();
