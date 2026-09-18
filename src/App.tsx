@@ -59,7 +59,6 @@ import {
   Search,
   Sun,
   ClipboardCheck,
-  ClipboardList,
   PanelsTopLeft,
   SlidersHorizontal,
   Target,
@@ -2312,7 +2311,7 @@ function Nav({
     ["companies", Building2, "companies"],
     ["notifications", Bell, "notifications"],
     ["schedule", CalendarDays, "schedule"],
-    ["materials", ClipboardList, "materials"],
+    ["materials", ClipboardCheck, "materials"],
   ];
   return (
     <div className="nav-list">
@@ -2473,7 +2472,7 @@ function MobileNav({
         onPointerUp={(e) => { delete e.currentTarget.dataset.pressed; }}
         onPointerLeave={(e) => { delete e.currentTarget.dataset.pressed; }}
       >
-        <ClipboardList />
+        <ClipboardCheck />
         <span className="mobile-nav-label" aria-hidden="true">{t.materials}</span>
       </button>
     </nav>

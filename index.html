@@ -33,7 +33,9 @@
           const isDark = savedTheme === "dark" || (savedTheme !== "light" && prefersDark);
           const root = document.documentElement;
           const themeColor = isDark ? "#000000" : "#f7f7f8";
+          const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
           root.dataset.theme = isDark ? "dark" : "light";
+          root.dataset.displayMode = isStandalone ? "standalone" : "browser";
           root.style.colorScheme = isDark ? "dark" : "light";
           document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColor);
           document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')?.setAttribute("content", isDark ? "black" : "default");
