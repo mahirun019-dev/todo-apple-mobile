@@ -2862,7 +2862,7 @@ function Dashboard({
                 {homeSummaryOrder.filter((module: HomeSummaryModule) => homeSummaryVisibility[module]).map((module: HomeSummaryModule) => module === "active"
                   ? <Metric key={module} n={active.length} l={t.inProgress} i={BriefcaseBusiness} onClick={() => navigate("companies", "active")} />
                   : module === "deadlines"
-                    ? <Metric key={module} n={due.length} l={t.dueWeek} i={Clock3} tone={due.length ? getHighestDeadlineUrgency(due) : undefined} onClick={() => navigate("schedule", "this-week-deadline")} />
+                    ? <Metric key={module} n={due.length} l={t.dueWeek} i={Clock3} tone={due.length ? getHighestDeadlineUrgency(due) : undefined} iconTone="neutral" onClick={() => navigate("schedule", "this-week-deadline")} />
                     : <Metric key={module} n={waiting.length} l={t.waiting} i={Timer} onClick={() => navigate("companies", "waiting-result")} />)}
             </div>
             {(sectionVisible("progress") || nextAndDeadlineModule) && <div className={`dashboard-local-grid${nextAndDeadlineModule ? " has-supporting" : ""}`}>
@@ -2903,9 +2903,9 @@ function Dashboard({
     </>
   );
 }
-function Metric({ n, l, i: I, onClick, tone }: { n: number; l: string; i: any; onClick: () => void; tone?: string }) {
+function Metric({ n, l, i: I, onClick, tone, iconTone }: { n: number; l: string; i: any; onClick: () => void; tone?: string; iconTone?: "neutral" }) {
   return (
-    <button type="button" className={`metric metric-link entity-card${tone ? ` is-${tone}` : ""}`} onClick={onClick} aria-label={`${l}: ${n}`}>
+    <button type="button" className={`metric metric-link entity-card${tone ? ` is-${tone}` : ""}${iconTone ? ` icon-${iconTone}` : ""}`} onClick={onClick} aria-label={`${l}: ${n}`}>
       <I className="metric-icon" aria-hidden="true" />
       <div>
         <strong className="kpi-number">{n}</strong>
