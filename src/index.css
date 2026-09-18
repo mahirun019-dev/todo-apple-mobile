@@ -1291,8 +1291,8 @@ textarea:focus-visible {
 .career-app .metric:first-child > svg {
   color: #2477d9;
 }
-.career-app .metric:nth-child(2) > svg {
-  color: #d1832d;
+.career-app .metric.icon-neutral > svg {
+  color: var(--text-secondary);
 }
 .career-app .metric:nth-child(3) > svg {
   color: #6e7d91;
