@@ -36,6 +36,7 @@
           root.dataset.theme = isDark ? "dark" : "light";
           root.style.colorScheme = isDark ? "dark" : "light";
           document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColor);
+          document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')?.setAttribute("content", isDark ? "black" : "default");
         } catch {
           document.documentElement.dataset.theme = "light";
           document.documentElement.style.colorScheme = "light";
