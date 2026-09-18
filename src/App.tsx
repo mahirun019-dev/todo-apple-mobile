@@ -2417,57 +2417,62 @@ function MobileNav({
       <button
         className={view === "dashboard" ? "active" : ""}
         onClick={() => setView("dashboard")}
+        aria-label={t.dashboard}
         aria-current={view === "dashboard" ? "page" : undefined}
         onPointerDown={(e) => { e.currentTarget.dataset.pressed = "true"; }}
         onPointerUp={(e) => { delete e.currentTarget.dataset.pressed; }}
         onPointerLeave={(e) => { delete e.currentTarget.dataset.pressed; }}
       >
         <Home />
-        <span>{t.dashboard}</span>
+        <span className="mobile-nav-label" aria-hidden="true">{t.dashboard}</span>
       </button>
       <button
         className={view === "companies" ? "active" : ""}
         onClick={() => setView("companies")}
+        aria-label={t.companies}
         aria-current={view === "companies" ? "page" : undefined}
         onPointerDown={(e) => { e.currentTarget.dataset.pressed = "true"; }}
         onPointerUp={(e) => { delete e.currentTarget.dataset.pressed; }}
         onPointerLeave={(e) => { delete e.currentTarget.dataset.pressed; }}
       >
         <Building2 />
-        <span>{t.companies}</span>
+        <span className="mobile-nav-label" aria-hidden="true">{t.companies}</span>
       </button>
       <button
         className={view === "notifications" ? "active" : ""}
         onClick={() => setView("notifications")}
+        aria-label={t.notifications}
         aria-current={view === "notifications" ? "page" : undefined}
         onPointerDown={(e) => { e.currentTarget.dataset.pressed = "true"; }}
         onPointerUp={(e) => { delete e.currentTarget.dataset.pressed; }}
         onPointerLeave={(e) => { delete e.currentTarget.dataset.pressed; }}
       >
         <span className="mobile-nav-bell"><Bell />{unread > 0 && <i>{unread > 99 ? "99+" : unread}</i>}</span>
-        <span>{t.notifications}</span>
+        <span className="mobile-nav-label" aria-hidden="true">{t.notifications}</span>
       </button>
       <button
         className={view === "schedule" ? "active" : ""}
         onClick={() => setView("schedule")}
+        aria-label={t.schedule}
         aria-current={view === "schedule" ? "page" : undefined}
         onPointerDown={(e) => { e.currentTarget.dataset.pressed = "true"; }}
         onPointerUp={(e) => { delete e.currentTarget.dataset.pressed; }}
         onPointerLeave={(e) => { delete e.currentTarget.dataset.pressed; }}
       >
         <CalendarDays />
-        <span>{t.schedule}</span>
+        <span className="mobile-nav-label" aria-hidden="true">{t.schedule}</span>
       </button>
       <button
         className={view === "materials" ? "active" : ""}
         onClick={() => setView("materials")}
+        aria-label={t.materials}
         aria-current={view === "materials" ? "page" : undefined}
         onPointerDown={(e) => { e.currentTarget.dataset.pressed = "true"; }}
         onPointerUp={(e) => { delete e.currentTarget.dataset.pressed; }}
         onPointerLeave={(e) => { delete e.currentTarget.dataset.pressed; }}
       >
         <BriefcaseBusiness />
-        <span>{t.materials}</span>
+        <span className="mobile-nav-label" aria-hidden="true">{t.materials}</span>
       </button>
     </nav>
   );
