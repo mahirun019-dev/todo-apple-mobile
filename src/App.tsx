@@ -69,7 +69,7 @@ import {
   Star,
 } from "lucide-react";
 import { getDeadlineUrgency, getHighestDeadlineUrgency, getUpcomingDeadlines, parseTokyoCalendarDate, selectWeeklyDeadlines } from "./deadline-selector";
-import { isInterviewProgressStage, shouldOfferInterviewStageSync, type InterviewProgressStage } from "./interview-stage";
+import { isInterviewProgressStage, shouldOfferInterviewStageSync } from "./interview-stage";
 
 type View = "dashboard" | "companies" | "notifications" | "schedule" | "materials";
 type CompanyRouteFilter = "active" | "waiting-result";
@@ -588,10 +588,9 @@ const tr = {
     stage: "当前选考阶段",
     interviewStage: "面试阶段",
     interviewStageDetail: "输入其他面试阶段",
-    updateSelectionStage: "更新选考阶段？",
-    updateSelectionStageCopy: (company: string, stage: string) => `将 ${company} 的选考阶段更改为「${stage}」。`,
-    keepSelectionStage: "不更改",
-    updateStage: "更新",
+    syncCompanyStage: (stage: string) => `同时将企业选考阶段更新为「${stage}」`,
+    currentCompanyStage: (company: string, stage: string) => `${company}的当前选考阶段：${stage}`,
+    stageSyncFailed: "日程已保存，但企业选考阶段更新失败。",
     event: "下一项日程",
     place: "地点或线上方式",
     url: "招聘页面",
@@ -761,10 +760,9 @@ const tr = {
     stage: "選考段階",
     interviewStage: "面接段階",
     interviewStageDetail: "その他の面接段階を入力",
-    updateSelectionStage: "選考段階を更新しますか？",
-    updateSelectionStageCopy: (company: string, stage: string) => `${company}の選考段階を「${stage}」に変更します。`,
-    keepSelectionStage: "変更しない",
-    updateStage: "更新する",
+    syncCompanyStage: (stage: string) => `企業の選考段階も「${stage}」に更新する`,
+    currentCompanyStage: (company: string, stage: string) => `${company}の現在の選考段階：${stage}`,
+    stageSyncFailed: "日程は保存されましたが、企業の選考段階の更新に失敗しました。",
     event: "次の日程",
     place: "場所・オンライン",
     url: "採用ページ",
@@ -920,10 +918,9 @@ const tr = {
     stage: "Stage",
     interviewStage: "Interview stage",
     interviewStageDetail: "Enter another interview stage",
-    updateSelectionStage: "Update selection stage?",
-    updateSelectionStageCopy: (company: string, stage: string) => `Change ${company}'s selection stage to “${stage}”.`,
-    keepSelectionStage: "Keep current stage",
-    updateStage: "Update stage",
+    syncCompanyStage: (stage: string) => `Also update the company's selection stage to “${stage}”`,
+    currentCompanyStage: (company: string, stage: string) => `${company}'s current selection stage: ${stage}`,
+    stageSyncFailed: "The schedule was saved, but the company stage could not be updated.",
     event: "Next event",
     place: "Location or online",
     url: "Careers page",
@@ -1411,12 +1408,6 @@ export default function App() {
     [selected, setSelected] = useState<string | undefined>(initialRoute.selectedCompanyId || undefined),
     [companiesCollapsed, setCompaniesCollapsed] = useState(() => localStorage.getItem("careerflow-companies-collapsed") === "true"),
     [confirm, setConfirm] = useState<Company>(),
-    [stageSyncPrompt, setStageSyncPrompt] = useState<{
-      companyId: string;
-      companyName: string;
-      fromStage: Company["stage"];
-      toStage: InterviewProgressStage;
-    }>(),
     [deleteEvent, setDeleteEvent] = useState<Event>(),
     [filter, setFilter] = useState("all"),
     [companyFilterOpen, setCompanyFilterOpen] = useState(false),
@@ -1502,7 +1493,7 @@ export default function App() {
     });
     return () => cancelAnimationFrame(frame);
   }, [view, selected]);
-  const hasOpenOverlay = Boolean(form || settings || confirm || stageSyncPrompt || deleteEvent || recordPickerOpen || companyFilterOpen || companyRecordMenuOpen);
+  const hasOpenOverlay = Boolean(form || settings || confirm || deleteEvent || recordPickerOpen || companyFilterOpen || companyRecordMenuOpen);
   useEffect(() => {
     if (hasOpenOverlay) document.body.dataset.overlayOpen = "true";
     else delete document.body.dataset.overlayOpen;
@@ -1795,14 +1786,23 @@ export default function App() {
         ? d.events.map((x) => (x.id === v.id ? v : x))
         : [v, ...d.events],
     }));
-    const company = v.companyId ? data.companies.find((item) => item.id === v.companyId) : undefined;
-    if (company && v.type === "interview" && isInterviewProgressStage(v.interviewStage) && shouldOfferInterviewStageSync(company.stage, v.interviewStage)) {
-      setStageSyncPrompt({
-        companyId: company.id,
-        companyName: company.name,
-        fromStage: company.stage,
-        toStage: v.interviewStage,
-      });
+    const syncCompanyStage = f.get("syncCompanyStage") === "on";
+    const targetStage = v.interviewStage;
+    if (syncCompanyStage && v.companyId && v.type === "interview" && isInterviewProgressStage(targetStage)) {
+      try {
+        setData((current) => {
+          const company = current.companies.find((item) => item.id === v.companyId);
+          if (!company || !shouldOfferInterviewStageSync(company.stage, targetStage)) return current;
+          return {
+            ...current,
+            companies: current.companies.map((item) => item.id === company.id
+              ? { ...item, stage: targetStage, updatedAt: Date.now() }
+              : item),
+          };
+        });
+      } catch {
+        setToast({ text: t.stageSyncFailed, undo: () => undefined });
+      }
     }
     setEventFormPreset(undefined);
   };
@@ -2237,25 +2237,6 @@ export default function App() {
             company={confirm}
             close={() => setConfirm(undefined)}
             remove={deleteCompany}
-          />
-        )}{" "}
-        {stageSyncPrompt && (
-          <InterviewStageSyncConfirm
-            t={t}
-            prompt={stageSyncPrompt}
-            close={() => setStageSyncPrompt(undefined)}
-            apply={() => {
-              const prompt = stageSyncPrompt;
-              setData((current) => ({
-                ...current,
-                companies: current.companies.map((company) => company.id === prompt.companyId
-                  ? shouldOfferInterviewStageSync(company.stage, prompt.toStage)
-                    ? { ...company, stage: prompt.toStage, updatedAt: Date.now() }
-                    : company
-                  : company),
-              }));
-              setStageSyncPrompt(undefined);
-            }}
           />
         )}{" "}
         {deleteEvent && (
@@ -3950,12 +3931,24 @@ function EventForm({
     || (interviewStageOptions.includes(defaultStage as typeof interviewStageOptions[number]) ? defaultStage as typeof interviewStageOptions[number] : "first_interview");
   const [eventType, setEventType] = useState<ItemType>(initialType);
   const [interviewStage, setInterviewStage] = useState<typeof interviewStageOptions[number]>(legacyInterviewStage);
+  const [companyId, setCompanyId] = useState(initial?.companyId || defaultCompanyId || "");
   const [mode, setMode] = useState<Event["eventMode"]>(initial?.eventMode || "undecided");
   const [prefecture, setPrefecture] = useState(initial?.prefecture || "");
   const [city, setCity] = useState(initial?.city || "");
   const [isSaving, setIsSaving] = useState(false);
+  const selectedCompany = companies.find((company) => company.id === companyId);
+  const canSyncCompanyStage = Boolean(
+    eventType === "interview"
+    && selectedCompany
+    && isInterviewProgressStage(interviewStage)
+    && shouldOfferInterviewStageSync(selectedCompany.stage, interviewStage),
+  );
+  const [syncCompanyStage, setSyncCompanyStage] = useState(canSyncCompanyStage);
   const savingRef = useRef(false);
   const ja = t.language === "言語";
+  useEffect(() => {
+    setSyncCompanyStage(canSyncCompanyStage);
+  }, [canSyncCompanyStage, companyId, eventType, interviewStage, selectedCompany?.stage]);
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (isSaving || savingRef.current) return;
@@ -3974,7 +3967,7 @@ function EventForm({
       <form className="form-grid" onSubmit={handleSubmit}>
         <label>
           <span>{t.company}</span>
-          <select name="company" defaultValue={initial?.companyId || defaultCompanyId}>
+          <select name="company" value={companyId} onChange={(event) => setCompanyId(event.target.value)}>
             <option value="">—</option>
             {companies.map((x) => (
               <option key={x.id} value={x.id}>
@@ -4000,6 +3993,16 @@ function EventForm({
               {interviewStageOptions.map((stage) => <option key={stage} value={stage}>{t[stage]}</option>)}
             </select>
           </label>
+          {canSyncCompanyStage && selectedCompany && <label className="stage-sync-option wide">
+            <input
+              type="checkbox"
+              name="syncCompanyStage"
+              checked={syncCompanyStage}
+              onChange={(event) => setSyncCompanyStage(event.target.checked)}
+            />
+            <span>{t.syncCompanyStage(t[interviewStage])}</span>
+            <small>{t.currentCompanyStage(selectedCompany.name, t[selectedCompany.stage] || selectedCompany.stage)}</small>
+          </label>}
           {interviewStage === "other" && <label>
             <span>{t.interviewStageDetail}</span>
             <input name="interviewStageDetail" defaultValue={initial?.interviewStage === "other" ? initial.interviewStageDetail : ""} required />
@@ -4250,37 +4253,6 @@ function DeleteEventConfirm({
       <div className="confirm-actions">
         <button onClick={close}>{t.cancel}</button>
         <button className="danger-solid" onClick={remove}>{t.deleteAction}</button>
-      </div>
-    </Modal>
-  );
-}
-function InterviewStageSyncConfirm({
-  t,
-  prompt,
-  close,
-  apply,
-}: {
-  t: any;
-  prompt: { companyId: string; companyName: string; fromStage: Company["stage"]; toStage: InterviewProgressStage };
-  close: () => void;
-  apply: () => void;
-}) {
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        close();
-      }
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [close]);
-  return (
-    <Modal title={t.updateSelectionStage} close={close} className="stage-sync-confirm">
-      <p className="confirm-copy">{t.updateSelectionStageCopy(prompt.companyName, t[prompt.toStage])}</p>
-      <div className="stage-sync-actions">
-        <button type="button" onClick={close}>{t.keepSelectionStage}</button>
-        <button type="button" className="primary" onClick={apply}>{t.updateStage}</button>
       </div>
     </Modal>
   );

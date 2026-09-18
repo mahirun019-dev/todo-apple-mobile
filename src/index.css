@@ -7200,30 +7200,32 @@ html[data-theme="dark"] .app-shell > .student-app > .mobile-header { background:
 [data-theme="dark"] .calendar-event-dot.overdue,
 [data-theme="dark"] .calendar-item-dot.overdue { background: #ee7975; }
 
-.stage-sync-confirm .drawer { width: min(400px, calc(100vw - 48px)); padding: 20px; }
-.stage-sync-confirm .drawer > header { margin-bottom: 14px; }
-.stage-sync-confirm .drawer > header h2 { font-size: 20px; font-weight: 600; line-height: 1.35; }
-.stage-sync-confirm .confirm-copy { margin: 0 0 20px; color: var(--text-secondary); font-size: 16px; font-weight: 400; line-height: 1.55; }
-.stage-sync-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.stage-sync-actions button { min-height: 50px; border: 1px solid var(--border-default); border-radius: 10px; color: var(--button-secondary-text); background: var(--button-secondary-bg); font-size: 16px; font-weight: 600; line-height: 1.3; }
-.stage-sync-actions .primary { color: var(--button-primary-text); background: var(--button-primary-bg); border-color: var(--button-primary-bg); }
-@media (max-width: 767px) {
-  .stage-sync-confirm { display: grid !important; place-items: center; padding: 16px; }
-  .stage-sync-confirm > .drawer {
-    position: relative;
-    inset: auto;
-    width: min(92vw, 400px);
-    max-width: 400px;
-    max-height: min(82dvh, 420px);
-    padding: 20px;
-    border-radius: 16px;
-    animation: stage-confirm-dialog-in 180ms ease-out;
-  }
-  .stage-sync-confirm .drawer > header { margin-bottom: 14px; }
+.stage-sync-option {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 10px;
+  align-items: start;
+  margin-top: -2px;
+  padding: 2px 0;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
 }
-@keyframes stage-confirm-dialog-in {
-  from { opacity: 0; transform: scale(0.98); }
-  to { opacity: 1; transform: scale(1); }
+.stage-sync-option input {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+}
+.stage-sync-option span,
+.stage-sync-option small { min-width: 0; }
+.stage-sync-option small {
+  grid-column: 2;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
 }
 
 /* Home heading and section rhythm stay consistent when optional modules appear or disappear. */

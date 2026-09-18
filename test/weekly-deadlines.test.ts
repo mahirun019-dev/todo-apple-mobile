@@ -38,6 +38,9 @@ test("treats tomorrow's deadline as warning, not overdue", () => {
 test("offers only forward interview-stage synchronization", () => {
   assert.equal(shouldOfferInterviewStageSync("saved", "first_interview"), true);
   assert.equal(shouldOfferInterviewStageSync("first_interview", "second_interview"), true);
+  assert.equal(shouldOfferInterviewStageSync("second_interview", "second_interview"), false);
   assert.equal(shouldOfferInterviewStageSync("final_interview", "first_interview"), false);
   assert.equal(shouldOfferInterviewStageSync("offer", "final_interview"), false);
+  assert.equal(shouldOfferInterviewStageSync("rejected", "first_interview"), false);
+  assert.equal(shouldOfferInterviewStageSync("withdrawn", "first_interview"), false);
 });
