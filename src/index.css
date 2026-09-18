@@ -7063,15 +7063,7 @@ html[data-theme="dark"] #root {
 .selection-empty svg { grid-row: 1 / span 2; width: 20px; height: 20px; }
 .selection-empty p { grid-column: 2; }
 
-/* The header stays legible: only its own 56px surface has a very light blur. */
-:root { --careerflow-mobile-header-backdrop: saturate(105%) blur(2px); }
 @media (max-width: 767px) {
-  .app-shell > .student-app > .mobile-header {
-    background: rgba(255, 255, 255, 0.92) !important;
-    backdrop-filter: var(--careerflow-mobile-header-backdrop) !important;
-    -webkit-backdrop-filter: var(--careerflow-mobile-header-backdrop) !important;
-  }
-html[data-theme="dark"] .app-shell > .student-app > .mobile-header { background: rgba(0, 0, 0, 0.9) !important; }
   .dashboard-section > .section-title { margin-bottom: 12px; }
   .dashboard-progress-module,
   .home-month-module,
