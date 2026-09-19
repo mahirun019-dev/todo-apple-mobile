@@ -7682,9 +7682,8 @@ html[data-theme="dark"] #root {
   border: 1.5px solid var(--bg-surface);
 }
 .notification-page-product-detail {
-  display: grid;
-  gap: 8px;
-  padding: 0 18px 16px 26px;
+  display: block;
+  padding: 0 18px 14px 26px;
   color: var(--text-primary);
   font-size: 13px;
   line-height: 1.5;
@@ -7696,9 +7695,12 @@ html[data-theme="dark"] #root {
 }
 .notification-page-product-detail ul {
   display: grid;
-  gap: 5px;
-  margin: 0;
+  gap: 8px;
+  margin: 16px 0 0;
   padding-left: 1.2em;
+}
+.notification-page-product-detail li::marker {
+  color: var(--text-secondary);
 }
 .notification-page-connection-note {
   display: flex;
