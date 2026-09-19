@@ -8,7 +8,7 @@ export default defineConfig(({ command }) => ({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "yami-mark-v2.svg", "yami-mask-icon-v6.svg", "yami-wordmark-v7.svg", "yami-app-icon-v2.svg", "yami-favicon-32-v7.png", "yami-app-icon-180-v5.png", "yami-app-icon-192-v5.png", "yami-app-icon-512-v5.png", "yami-app-icon-maskable-512-v5.png"],
+      includeAssets: ["favicon.ico", "apple-touch-icon.png", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "yami-mark-v2.svg", "yami-mask-icon-v8.svg", "yami-wordmark-v8.svg", "yami-app-icon-v2.svg", "yami-favicon-v8.ico", "yami-favicon-32-v8.png", "yami-app-icon-180-v8.png", "yami-app-icon-192-v8.png", "yami-app-icon-512-v8.png", "yami-app-icon-maskable-512-v8.png"],
       manifest: {
         name: "Yami",
         short_name: "Yami",
@@ -22,13 +22,13 @@ export default defineConfig(({ command }) => ({
         start_url: "/todo-apple-mobile/",
         scope: "/todo-apple-mobile/",
         icons: [
-          { src: "yami-app-icon-192-v5.png", sizes: "192x192", type: "image/png", purpose: "any" },
-          { src: "yami-app-icon-512-v5.png", sizes: "512x512", type: "image/png", purpose: "any" },
-          { src: "yami-app-icon-maskable-512-v5.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+          { src: "yami-app-icon-192-v8.png", sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: "yami-app-icon-512-v8.png", sizes: "512x512", type: "image/png", purpose: "any" },
+          { src: "yami-app-icon-maskable-512-v8.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
         ],
       },
       workbox: {
-        cacheId: "yami-brand-v14",
+        cacheId: "yami-brand-v15",
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,

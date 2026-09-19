@@ -9,7 +9,7 @@ type YamiLogoLockupProps = {
 export function YamiWordmark({ className = '' }: { className?: string }) {
   return (
     <svg className={`yami-logo-wordmark ${className}`.trim()} viewBox={wordmark.viewBox} aria-hidden="true" focusable="false">
-      <g fill="none" stroke="currentColor" strokeLinecap="butt" strokeLinejoin="miter" strokeWidth={wordmark.strokeWidth}>
+      <g fill="none" stroke="currentColor" strokeLinecap={wordmark.strokeLinecap as 'butt' | 'round' | 'square'} strokeLinejoin={wordmark.strokeLinejoin as 'bevel' | 'miter' | 'round'} strokeWidth={wordmark.strokeWidth}>
         {wordmark.strokes.map((path) => <path key={path} d={path} />)}
       </g>
       <path d={mark.paths[wordmark.glint.sourceMarkPathIndex].d} transform={wordmark.glint.transform} fill="var(--brand-gold-highlight)" />
