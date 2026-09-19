@@ -4744,7 +4744,7 @@ html[data-theme="dark"] { --app-page-bg: var(--bg-app); }
 
 [data-theme="dark"] {
   --careerflow-glass-background: rgba(24, 27, 31, 0.72);
-  --careerflow-mobile-header-background: rgba(24, 35, 51, 0.7);
+  --careerflow-mobile-header-background: #000000;
   --careerflow-mobile-header-border: rgba(255, 255, 255, 0.13);
   --careerflow-mobile-header-backdrop: blur(18px) saturate(145%);
   --careerflow-mobile-header-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.13), 0 8px 22px rgba(0, 0, 0, 0.2);
@@ -7659,18 +7659,28 @@ html[data-theme="dark"] #root {
 
 .notification-page-row.has-product-brand,
 .notification-page-row.is-read.has-product-brand {
-  grid-template-columns: 22px minmax(0, 1fr) auto;
+  grid-template-columns: 76px minmax(0, 1fr) auto;
 }
 .notification-page-brand {
   position: relative;
-  display: block;
-  width: 22px;
-  height: 22px;
+  display: flex;
+  width: 73px;
+  height: 24px;
+  align-items: center;
   margin-top: 2px;
 }
-.notification-page-brand .yami-logo-mark {
-  width: 22px;
-  height: 22px;
+.notification-page-brand .yami-logo--notification {
+  gap: 3px;
+}
+.notification-page-brand .yami-logo--notification .yami-logo-mark {
+  width: 18px;
+  height: 18px;
+  flex-basis: 18px;
+}
+.notification-page-brand .yami-logo--notification .yami-logo-wordmark {
+  width: 52px;
+  height: 18.74px;
+  flex-basis: 52px;
 }
 .notification-page-brand .notification-page-dot {
   position: absolute;
@@ -7700,6 +7710,18 @@ html[data-theme="dark"] #root {
 
   html[data-theme="dark"] .app-shell > .student-app > .mobile-header:not(.mobile-navigation-header) .mobile-menu-button {
     background: transparent !important;
+  }
+
+  html[data-theme="dark"] .mobile-settings-layer .mobile-navigation-header.mobile-header {
+    background: #000000 !important;
+    background-color: #000000 !important;
+    background-image: none !important;
+  }
+
+  html[data-theme="dark"] .mobile-settings-layer .mobile-navigation-header.mobile-header .mobile-menu-button {
+    border-color: rgba(255, 255, 255, 0.06) !important;
+    background: transparent !important;
+    box-shadow: none !important;
   }
 }
 .notification-page-product-detail {

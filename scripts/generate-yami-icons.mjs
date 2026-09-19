@@ -1,5 +1,5 @@
 import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { deflateSync, inflateSync } from 'node:zlib';
+import { deflateSync } from 'node:zlib';
 
 const source = JSON.parse(await readFile(new URL('../src/brand/yami-mark.json', import.meta.url), 'utf8'));
 const wordmark = JSON.parse(await readFile(new URL('../src/brand/yami-wordmark.json', import.meta.url), 'utf8'));
@@ -33,81 +33,89 @@ const pngChunk = (type, data) => {
   chunk.writeUInt32BE(crc32(Buffer.concat([typeBytes, data])), data.length + 8);
   return chunk;
 };
-const paeth = (left, above, upperLeft) => {
-  const estimate = left + above - upperLeft;
-  const leftDistance = Math.abs(estimate - left);
-  const aboveDistance = Math.abs(estimate - above);
-  const upperLeftDistance = Math.abs(estimate - upperLeft);
-  if (leftDistance <= aboveDistance && leftDistance <= upperLeftDistance) return left;
-  return aboveDistance <= upperLeftDistance ? above : upperLeft;
-};
-const removeLightMatte = (png) => {
-  const signature = png.subarray(0, 8);
-  let offset = 8;
-  let header;
-  const compressed = [];
-  while (offset < png.length) {
-    const length = png.readUInt32BE(offset);
-    const type = png.toString('ascii', offset + 4, offset + 8);
-    const data = png.subarray(offset + 8, offset + 8 + length);
-    if (type === 'IHDR') header = data;
-    if (type === 'IDAT') compressed.push(data);
-    offset += length + 12;
-  }
-  if (!header || header[8] !== 8 || header[9] !== 6 || header[12] !== 0) {
-    throw new Error('Expected a non-interlaced 8-bit RGBA PNG');
+// Rasterize the shared polygon mark onto a full-bleed canvas to avoid matte halos.
+const renderMarkPng = (size, { scale = 1, offset = 0 } = {}) => {
+  const samples = 4;
+  const highSize = size * samples;
+  const highPixels = Buffer.alloc(highSize * highSize * 4);
+  for (let i = 0; i < highPixels.length; i += 4) {
+    highPixels[i] = 16;
+    highPixels[i + 1] = 17;
+    highPixels[i + 2] = 20;
+    highPixels[i + 3] = 255;
   }
 
-  const width = header.readUInt32BE(0);
-  const height = header.readUInt32BE(4);
-  const stride = width * 4;
-  const decoded = inflateSync(Buffer.concat(compressed));
-  const pixels = Buffer.alloc(height * stride);
-  for (let y = 0; y < height; y += 1) {
-    const sourceStart = y * (stride + 1);
-    const filter = decoded[sourceStart];
-    const rowStart = y * stride;
-    for (let i = 0; i < stride; i += 1) {
-      const raw = decoded[sourceStart + i + 1];
-      const left = i >= 4 ? pixels[rowStart + i - 4] : 0;
-      const above = y > 0 ? pixels[rowStart + i - stride] : 0;
-      const upperLeft = y > 0 && i >= 4 ? pixels[rowStart + i - stride - 4] : 0;
-      const predictor = filter === 1 ? left
-        : filter === 2 ? above
-          : filter === 3 ? Math.floor((left + above) / 2)
-            : filter === 4 ? paeth(left, above, upperLeft)
-              : 0;
-      pixels[rowStart + i] = (raw + predictor) & 0xff;
+  for (const path of source.paths) {
+    const values = [...path.d.matchAll(/-?\d*\.?\d+/g)].map((match) => Number(match[0]));
+    const points = [];
+    for (let i = 0; i < values.length; i += 2) {
+      points.push([(offset + values[i] * scale) * samples, (offset + values[i + 1] * scale) * samples]);
+    }
+    const color = path.fill.toLowerCase();
+    const rgb = [1, 3, 5].map((index) => Number.parseInt(color.slice(index, index + 2), 16));
+    const minY = Math.max(0, Math.floor(Math.min(...points.map((point) => point[1]))));
+    const maxY = Math.min(highSize, Math.ceil(Math.max(...points.map((point) => point[1]))));
+
+    for (let y = minY; y < maxY; y += 1) {
+      const scanY = y + 0.5;
+      const intersections = [];
+      for (let i = 0; i < points.length; i += 1) {
+        const [x1, y1] = points[i];
+        const [x2, y2] = points[(i + 1) % points.length];
+        if ((y1 <= scanY && y2 > scanY) || (y2 <= scanY && y1 > scanY)) {
+          intersections.push(x1 + ((scanY - y1) * (x2 - x1)) / (y2 - y1));
+        }
+      }
+      intersections.sort((a, b) => a - b);
+      for (let i = 0; i + 1 < intersections.length; i += 2) {
+        const startX = Math.max(0, Math.ceil(intersections[i] - 0.5));
+        const endX = Math.min(highSize, Math.ceil(intersections[i + 1] - 0.5));
+        for (let x = startX; x < endX; x += 1) {
+          const pixel = (y * highSize + x) * 4;
+          highPixels[pixel] = rgb[0];
+          highPixels[pixel + 1] = rgb[1];
+          highPixels[pixel + 2] = rgb[2];
+        }
+      }
     }
   }
 
-  for (let i = 0; i < pixels.length; i += 4) {
-    const alpha = pixels[i + 3] / 255;
-    const red = pixels[i] * alpha + 16 * (1 - alpha);
-    const green = pixels[i + 1] * alpha + 17 * (1 - alpha);
-    const blue = pixels[i + 2] * alpha + 20 * (1 - alpha);
-    const maximum = Math.max(red, green, blue);
-    const minimum = Math.min(red, green, blue);
-    if (maximum > 28 && maximum - minimum <= 18) {
-      pixels[i] = 16;
-      pixels[i + 1] = 17;
-      pixels[i + 2] = 20;
-    } else {
-      pixels[i] = Math.round(red);
-      pixels[i + 1] = Math.round(green);
-      pixels[i + 2] = Math.round(blue);
+  const pixels = Buffer.alloc(size * size * 4);
+  const sampleCount = samples * samples;
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const pixel = (y * size + x) * 4;
+      let red = 0;
+      let green = 0;
+      let blue = 0;
+      for (let sy = 0; sy < samples; sy += 1) {
+        for (let sx = 0; sx < samples; sx += 1) {
+          const sample = (((y * samples + sy) * highSize) + x * samples + sx) * 4;
+          red += highPixels[sample];
+          green += highPixels[sample + 1];
+          blue += highPixels[sample + 2];
+        }
+      }
+      pixels[pixel] = Math.round(red / sampleCount);
+      pixels[pixel + 1] = Math.round(green / sampleCount);
+      pixels[pixel + 2] = Math.round(blue / sampleCount);
+      pixels[pixel + 3] = 255;
     }
-    pixels[i + 3] = 255;
   }
 
-  const rows = Buffer.alloc(height * (stride + 1));
-  for (let y = 0; y < height; y += 1) {
-    const targetStart = y * (stride + 1);
-    rows[targetStart] = 0;
-    pixels.copy(rows, targetStart + 1, y * stride, (y + 1) * stride);
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(size, 0);
+  header.writeUInt32BE(size, 4);
+  header[8] = 8;
+  header[9] = 6;
+  const rows = Buffer.alloc(size * (size * 4 + 1));
+  for (let y = 0; y < size; y += 1) {
+    const row = y * (size * 4 + 1);
+    rows[row] = 0;
+    pixels.copy(rows, row + 1, y * size * 4, (y + 1) * size * 4);
   }
   return Buffer.concat([
-    signature,
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
     pngChunk('IHDR', header),
     pngChunk('IDAT', deflateSync(rows, { level: 9 })),
     pngChunk('IEND', Buffer.alloc(0)),
@@ -135,10 +143,6 @@ const stampPng = (png, version) => {
   }
   throw new Error('Invalid PNG source');
 };
-const writeStampedPng = async (sourceUrl, outputUrl, version) => {
-  const png = removeLightMatte(await readFile(sourceUrl));
-  await writeFile(outputUrl, stampPng(png, version));
-};
 const makeIco = (png) => {
   const header = Buffer.alloc(22);
   header.writeUInt16LE(0, 0);
@@ -161,23 +165,23 @@ await writeFile(new URL('../public/yami-app-icon-v3.svg', import.meta.url), appS
 await writeFile(new URL('../public/yami-favicon-v9.svg', import.meta.url), faviconSvg);
 
 const publicDir = new URL('../public/', import.meta.url);
-const faviconSourceUrl = new URL('../src/brand/yami-favicon-source.png', import.meta.url);
-const cleanFaviconSource = removeLightMatte(await readFile(faviconSourceUrl));
-const faviconPng = stampPng(cleanFaviconSource, 'v9');
-await writeFile(faviconSourceUrl, cleanFaviconSource);
+const faviconPng = stampPng(renderMarkPng(32), 'v9');
 const faviconIco = makeIco(faviconPng);
+await writeFile(new URL('../src/brand/yami-favicon-source.png', import.meta.url), faviconPng);
 await writeFile(new URL('yami-favicon-32-v9.png', publicDir), faviconPng);
 await writeFile(new URL('yami-favicon-v9.ico', publicDir), faviconIco);
 await writeFile(new URL('favicon.ico', publicDir), faviconIco);
 
-const appIconSources = [
-  ['yami-app-icon-180-v5.png', 'yami-app-icon-180-v9.png'],
-  ['yami-app-icon-192-v5.png', 'yami-app-icon-192-v9.png'],
-  ['yami-app-icon-512-v5.png', 'yami-app-icon-512-v9.png'],
-  ['yami-app-icon-maskable-512-v5.png', 'yami-app-icon-maskable-512-v9.png'],
+const appIcons = [
+  [180, 'yami-app-icon-180-v9.png'],
+  [192, 'yami-app-icon-192-v9.png'],
+  [512, 'yami-app-icon-512-v9.png'],
+  [512, 'yami-app-icon-maskable-512-v9.png'],
 ];
-for (const [sourceName, outputName] of appIconSources) {
-  await writeStampedPng(new URL(`../public/${sourceName}`, import.meta.url), new URL(outputName, publicDir), 'v9');
+for (const [size, outputName] of appIcons) {
+  const scale = (size * 12) / 512;
+  const offset = (size * 64) / 512;
+  await writeFile(new URL(outputName, publicDir), stampPng(renderMarkPng(size, { scale, offset }), 'v9'));
 }
 await copyFile(new URL('yami-app-icon-180-v9.png', publicDir), new URL('apple-touch-icon.png', publicDir));
 await copyFile(new URL('yami-app-icon-192-v9.png', publicDir), new URL('icon-192.png', publicDir));

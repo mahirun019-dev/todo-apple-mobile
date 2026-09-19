@@ -2,7 +2,7 @@ import mark from './yami-mark.json';
 import wordmark from './yami-wordmark.json';
 
 type YamiLogoLockupProps = {
-  variant: 'sidebar' | 'mobile';
+  variant: 'sidebar' | 'mobile' | 'notification';
   className?: string;
 };
 
