@@ -12,6 +12,44 @@
     <meta name="apple-mobile-web-app-title" content="Yami" />
     <meta name="application-name" content="Yami" />
     <meta property="og:site_name" content="Yami" />
+    <link rel="canonical" href="https://mahirun019-dev.github.io/yami/" />
+    <meta property="og:url" content="https://mahirun019-dev.github.io/yami/" />
+    <script>
+      (() => {
+        const legacyBase = "/todo-apple-mobile";
+        const path = window.location.pathname;
+        if (path !== legacyBase && !path.startsWith(`${legacyBase}/`)) return;
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("view") === "dashboard") {
+          params.delete("view");
+          params.delete("filter");
+          params.delete("company");
+        }
+        params.delete("fresh-safari-tab");
+
+        const target = new URL("/yami/", window.location.origin);
+        target.search = params.toString();
+        target.hash = window.location.hash;
+
+        const redirect = () => window.location.replace(target.href);
+        if (!("serviceWorker" in navigator)) {
+          redirect();
+          return;
+        }
+
+        const timeout = window.setTimeout(redirect, 400);
+        void navigator.serviceWorker.getRegistrations()
+          .then((registrations) => Promise.all(registrations
+            .filter((registration) => registration.scope.startsWith(`${window.location.origin}${legacyBase}/`))
+            .map((registration) => registration.unregister())))
+          .catch(() => {})
+          .finally(() => {
+            window.clearTimeout(timeout);
+            redirect();
+          });
+      })();
+    </script>
     <link rel="apple-touch-icon" sizes="180x180" href="%BASE_URL%yami-app-icon-180-v9.png" />
     <link rel="icon" type="image/svg+xml" href="%BASE_URL%yami-favicon-v9.svg" />
     <link rel="icon" type="image/x-icon" href="%BASE_URL%yami-favicon-v9.ico" />

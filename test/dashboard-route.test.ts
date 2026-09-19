@@ -9,6 +9,13 @@ test("legacy dashboard query canonicalizes to the base path", () => {
   );
 });
 
+test("the Yami dashboard canonicalizes to the official path without a dashboard query", () => {
+  assert.equal(
+    dashboardCanonicalHref("https://mahirun019-dev.github.io/yami/?view=dashboard"),
+    "/yami/",
+  );
+});
+
 test("dashboard route filters are removed while unrelated query and hash remain", () => {
   assert.equal(
     dashboardCanonicalHref("https://example.test/todo-apple-mobile/?view=dashboard&filter=old&company=123&src=bookmark#top"),
