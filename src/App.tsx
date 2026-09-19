@@ -1601,20 +1601,6 @@ export default function App() {
       header.style.removeProperty("--mobile-header-offset");
     };
   }, [isMobile, view, selected, settings]);
-  useEffect(() => {
-    if (isMobile) return;
-    const workspace = workspaceRef.current;
-    if (!workspace) return;
-    const updateHeaderState = () => {
-      workspace.dataset.headerScrolled = workspace.scrollTop > 8 ? "true" : "false";
-    };
-    updateHeaderState();
-    workspace.addEventListener("scroll", updateHeaderState, { passive: true });
-    return () => {
-      workspace.removeEventListener("scroll", updateHeaderState);
-      delete workspace.dataset.headerScrolled;
-    };
-  }, [isMobile]);
   useEffect(() => localStorage.setItem(KEY, JSON.stringify(data)), [data]);
   useEffect(() => {
     if (firstDataRender.current) {
@@ -2092,7 +2078,7 @@ export default function App() {
     <WatchProvider><div className="app-shell" data-app-shell="true">
       <div className="student-app career-app">
         <aside className="sidebar panel">
-          <Brand icon={icon} showIcon={false} />
+          <Brand icon={icon} />
           <StableNav view={view} setView={setView} t={t} />
           <div className={`course-nav ${companiesCollapsed ? "collapsed" : ""}`}>
             <div className="course-nav-heading" onClick={() => { const next = !companiesCollapsed; setCompaniesCollapsed(next); localStorage.setItem("careerflow-companies-collapsed", String(next)); }} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); const next = !companiesCollapsed; setCompaniesCollapsed(next); localStorage.setItem("careerflow-companies-collapsed", String(next)); } }}>
@@ -2133,7 +2119,7 @@ export default function App() {
           }} aria-label={settings ? t.cancel : t.settings}>
             {settings ? <X /> : <Menu />}
           </button>
-          <strong className="mobile-header-title">Yami</strong>
+          <strong className="mobile-header-title"><YamiSymbol className="mobile-header-brand-symbol" />Yami</strong>
           <span className="mobile-header-spacer" aria-hidden="true" />
         </header>
         <main ref={workspaceRef} className="workspace">
@@ -2374,14 +2360,21 @@ export default function App() {
   );
 }
 
-function Brand({ icon, showIcon = true }: { icon: string; showIcon?: boolean }) {
+function YamiSymbol({ className }: { className?: string }) {
+  return <svg className={className} viewBox="0 0 32 32" aria-hidden="true">
+    <path d="M5 27 20 5l-4 12 11-7L12 29l3-10z" fill="currentColor" />
+    <path d="M25 3v5M22.5 5.5h5" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" />
+  </svg>;
+}
+
+function Brand({ icon }: { icon: string }) {
   return (
     <div className="brand">
-      {showIcon && <div className="brand-mark">
-        {icon ? <img src={icon} alt="" /> : <img src={`${import.meta.env.BASE_URL}favicon-v4.svg`} alt="" />}
-      </div>}
+      <div className={`brand-mark${icon ? " has-custom-icon" : ""}`}>
+        {icon ? <img src={icon} alt="" /> : <YamiSymbol />}
+      </div>
       <div>
-        <strong>Yami</strong>
+        <strong className="brand-wordmark">Yami</strong>
       </div>
     </div>
   );

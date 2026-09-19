@@ -8,13 +8,13 @@ export default defineConfig(({ command }) => ({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon-v4.svg", "favicon-v4.ico", "apple-touch-icon.png", "icon-192.png", "icon-512.png", "icon-maskable-512.png"],
+      includeAssets: ["favicon-v4.svg", "apple-touch-icon.png", "icon-192.png", "icon-512.png", "icon-maskable-512.png"],
       manifest: {
         name: "Yami",
         short_name: "Yami",
         id: "/todo-apple-mobile/",
         lang: "zh-CN",
-        description: "A glass-inspired personal task manager.",
+        description: "A focused workspace for Japanese job hunting.",
         theme_color: "#f7f7f8",
         background_color: "#f7f7f8",
         display: "standalone",

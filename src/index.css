@@ -3,6 +3,8 @@
 @tailwind utilities;
 
 :root {
+  --yami-gold: #c8a85b;
+  --yami-gold-light: #dfc77e;
   --mobile-bottom-nav-height: 58px;
 }
 
@@ -6030,28 +6032,28 @@ html[data-theme="dark"] { --app-page-bg: var(--bg-app); }
   }
 }
 
-/* Keep the PC shell fixed while the workspace owns page scrolling. */
+/* Desktop uses document scrolling so Safari can observe normal page movement. */
 @media (min-width: 981px) {
   .app-shell {
-    height: 100dvh;
+    height: auto;
     min-height: 100dvh;
     box-sizing: border-box;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .app-shell > .student-app {
-    height: 100%;
-    min-height: 0;
-    overflow: hidden;
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
   }
 
   .app-shell > .student-app > .sidebar {
     position: sticky;
     top: 0;
     align-self: stretch;
-    height: 100%;
-    min-height: 0;
-    max-height: none;
+    height: 100dvh;
+    min-height: 100dvh;
+    max-height: 100dvh;
     overflow-y: auto;
     overscroll-behavior: contain;
   }
@@ -6059,33 +6061,8 @@ html[data-theme="dark"] { --app-page-bg: var(--bg-app); }
   .app-shell > .student-app > .workspace {
     min-height: 0;
     height: auto;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-
-  .career-app .workspace > .page-head {
-    position: sticky;
-    top: 0;
-    z-index: 30;
-    border-bottom: 1px solid transparent;
-    background: transparent;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    transition: background-color 160ms ease, border-color 160ms ease, backdrop-filter 160ms ease;
-  }
-
-  .career-app .workspace[data-header-scrolled="true"] > .page-head {
-    border-bottom-color: rgba(0, 0, 0, 0.06);
-    background: rgba(247, 249, 252, 0.82);
-    -webkit-backdrop-filter: saturate(135%) blur(14px);
-    backdrop-filter: saturate(135%) blur(14px);
-  }
-
-  html[data-theme="dark"] .career-app .workspace[data-header-scrolled="true"] > .page-head {
-    border-bottom-color: rgba(255, 255, 255, 0.08);
-    background: rgba(0, 0, 0, 0.78);
-    -webkit-backdrop-filter: saturate(125%) blur(14px);
-    backdrop-filter: saturate(125%) blur(14px);
+    overflow: visible;
+    overscroll-behavior: auto;
   }
 }
 
@@ -7631,4 +7608,45 @@ html[data-theme="dark"] #root {
   .notification-page-detail-actions .text-button { display: inline-flex; align-items: center; gap: 4px; }
   .notification-page-detail-actions svg { width: 14px; height: 14px; }
   html[data-theme="dark"] .notification-page-item.is-expanded { background: transparent; }
+}
+
+/* Yami wordmark: a restrained gold blade mark on a dark, compact field. */
+.brand-mark {
+  border: 1px solid rgba(200, 168, 91, 0.38);
+  color: var(--yami-gold-light);
+  background: #101114;
+}
+.brand-mark:not(.has-custom-icon) > svg {
+  width: 27px;
+  height: 27px;
+}
+.brand-mark.has-custom-icon {
+  border-color: transparent;
+  background: transparent;
+}
+.brand .brand-wordmark {
+  color: var(--text-primary);
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  font-size: 23px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+@media (max-width: 760px) {
+  .mobile-header-title {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1;
+  }
+  .mobile-header-brand-symbol {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    color: var(--yami-gold);
+  }
 }

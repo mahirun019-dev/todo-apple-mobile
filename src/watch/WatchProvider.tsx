@@ -50,6 +50,36 @@ export function WatchProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('pageshow', syncWhenVisible);
     };
   }, [refresh]);
+  const checkingTargetsKey = targets
+    .filter((target) => target.enabled && target.status === 'checking')
+    .map((target) => target.id)
+    .join('|');
+  useEffect(() => {
+    if (!token || !checkingTargetsKey) return;
+    let cancelled = false;
+    let timer = 0;
+    let attempts = 0;
+    const startedAt = Date.now();
+    const scheduleRefresh = () => {
+      if (cancelled || Date.now() - startedAt >= 90_000) return;
+      const delay = Math.min(1800 + attempts * 900, 6000);
+      timer = window.setTimeout(async () => {
+        try {
+          if (document.visibilityState === 'visible') await refresh();
+        } catch {
+          setError('LOAD_FAILED');
+        } finally {
+          attempts += 1;
+          scheduleRefresh();
+        }
+      }, delay);
+    };
+    scheduleRefresh();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [token, checkingTargetsKey, refresh]);
   useEffect(() => {
     if (!token) return;
     localStorage.setItem(TOKEN_KEY, token);
