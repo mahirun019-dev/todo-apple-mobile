@@ -18,6 +18,7 @@ import municipalityData from "./data/japan-municipalities.json";
 import { companyWatchKey, useWatch, WatchProvider } from "./watch/WatchProvider";
 import { CompanyWatchSection, CompanyWatchStatus, NotificationPage, WatchConnectionSettings } from "./watch/WatchUI";
 import { YamiLogoLockup } from "./brand/YamiLogo";
+import { normalizeDashboardUrl } from "./route";
 
 import {
   Database,
@@ -1419,7 +1420,10 @@ export default function App() {
     params.set("view", nextView);
     if (nextFilter) params.set("filter", nextFilter);
     if (nextView === "companies" && nextCompanyId) params.set("company", nextCompanyId);
-    window.history.pushState(null, "", `${window.location.pathname}?${params.toString()}`);
+    const nextUrl = nextView === "dashboard"
+      ? `${window.location.pathname}${window.location.hash}`
+      : `${window.location.pathname}?${params.toString()}${window.location.hash}`;
+    window.history.pushState(null, "", nextUrl);
     setViewState(nextView);
     setCompanyFilter(nextView === "companies" && (nextFilter === "active" || nextFilter === "waiting-result") ? nextFilter : null);
     setScheduleFilter(nextView === "schedule" && nextFilter === "this-week-deadline" ? nextFilter : null);
@@ -1449,6 +1453,7 @@ export default function App() {
   useEffect(() => {
     const onPopState = () => {
       const route = readRouteState();
+      if (route.view === "dashboard") normalizeDashboardUrl();
       if (route.view === "companies" && route.selectedCompanyId) {
         restoreCompanyListScrollRef.current = false;
       } else if (route.view === "companies") {
