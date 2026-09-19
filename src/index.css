@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --yami-gold: #c8a85b;
-  --yami-gold-light: #dfc77e;
+  --brand-gold: #c8a85b;
+  --brand-gold-highlight: #dfc77e;
   --mobile-bottom-nav-height: 58px;
 }
 
@@ -2954,7 +2954,6 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
 .career-app .sidebar { background: #f7f7f7; border-color: #dedede; }
 .panel { background: #fafafa; }
 .entity-card { border-color: #dedede; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.025); }
-.brand-mark { background: #2477d9; }
 .nav-list button, .settings-link { color: #666; }
 .nav-list button:hover, .settings-link:hover { color: #171717; background: #ededed; }
 .nav-list button.active { color: #171717; background: #e5e5e5; }
@@ -7610,43 +7609,57 @@ html[data-theme="dark"] #root {
   html[data-theme="dark"] .notification-page-item.is-expanded { background: transparent; }
 }
 
-/* Yami wordmark: a restrained gold blade mark on a dark, compact field. */
-.brand-mark {
-  border: 1px solid rgba(200, 168, 91, 0.38);
-  color: var(--yami-gold-light);
-  background: #101114;
-}
-.brand-mark:not(.has-custom-icon) > svg {
-  width: 27px;
-  height: 27px;
-}
-.brand-mark.has-custom-icon {
-  border-color: transparent;
-  background: transparent;
-}
-.brand .brand-wordmark {
+/* Yami's mark and wordmark are shared by the desktop and mobile lockups. */
+.yami-logo {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
   color: var(--text-primary);
-  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
-  font-size: 23px;
-  font-weight: 600;
-  letter-spacing: 0;
 }
-@media (max-width: 760px) {
-  .mobile-header-title {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
-    font-size: 19px;
-    font-weight: 600;
-    letter-spacing: 0;
-    line-height: 1;
-  }
-  .mobile-header-brand-symbol {
-    width: 18px;
-    height: 18px;
-    flex: 0 0 18px;
-    color: var(--yami-gold);
-  }
+.yami-logo-mark {
+  display: block;
+  width: 35px;
+  height: 35px;
+  flex: 0 0 35px;
+  object-fit: contain;
+}
+.yami-logo-wordmark {
+  color: var(--text-primary) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  font-size: 28px;
+  font-weight: 720;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+.yami-logo--sidebar .yami-logo-wordmark {
+  display: block;
+  margin: 0;
+  font-size: 28px;
+}
+.brand.yami-logo {
+  gap: 10px;
+}
+.mobile-header-title.yami-logo {
+  display: inline-flex;
+  justify-content: center;
+  gap: 7px;
+  font-family: inherit;
+  font-size: initial;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1;
+}
+.mobile-header-title.yami-logo .yami-logo-wordmark {
+  display: block;
+  margin: 0;
+}
+.yami-logo--mobile .yami-logo-mark {
+  width: 21px;
+  height: 21px;
+  flex-basis: 21px;
+}
+.yami-logo--mobile .yami-logo-wordmark {
+  font-size: 25px;
+  font-weight: 720;
 }

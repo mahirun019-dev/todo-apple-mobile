@@ -28,13 +28,20 @@ const titles: Record<string, string> = {
   entry_open: 'エントリー受付が開始された可能性があります', briefing_open: '説明会情報が更新されました', internship_open: 'インターン情報が更新されました', deadline_changed: '締切情報の更新を検出しました', selection_updated: '選考情報の更新を検出しました', job_info_updated: '募集要項の更新を検出しました', recruitment_closed: '募集終了に関する更新を検出しました', other_recruitment_update: '採用情報の更新を検出しました'
 };
 
-export async function checkTarget(env: Env, target: TargetRow) {
+const CHECK_LEASE_MS = 120_000;
+
+export async function checkTarget(env: Env, target: TargetRow, claimedLease?: string) {
   const now = new Date().toISOString();
-  const lease = new Date(Date.now() + 120_000).toISOString();
-  const lock = await env.DB.prepare("UPDATE watch_targets SET status='checking',lease_until=? WHERE id=? AND enabled=1 AND (lease_until IS NULL OR lease_until<?)").bind(lease, target.id, now).run();
-  if (!lock.meta.changes) return;
+  const lease = claimedLease || new Date(Date.now() + CHECK_LEASE_MS).toISOString();
+  if (!claimedLease) {
+    const lock = await env.DB.prepare("UPDATE watch_targets SET status='checking',last_error=NULL,last_http_status=NULL,lease_until=?,updated_at=? WHERE id=? AND enabled=1 AND (lease_until IS NULL OR lease_until<?)")
+      .bind(lease, now, target.id, now).run();
+    if (!lock.meta.changes) return;
+  }
+  let checkedHttpStatus: number | null = null;
   try {
     const fetched = await fetchPage(target.url);
+    checkedHttpStatus = fetched.status;
     const analysis = inspectRecruitmentContent(fetched.html, target.source_type);
     if (!analysis.valid) throw new Error('INSUFFICIENT_PUBLIC_CONTENT');
     const text = analysis.text;
@@ -45,21 +52,24 @@ export async function checkTarget(env: Env, target: TargetRow) {
       await env.DB.prepare(`INSERT OR IGNORE INTO watch_events(id,company_id,company_name,watch_target_id,event_type,title,summary,before_excerpt,after_excerpt,detected_at,source_url,source_type,read,content_hash) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,0,?)`)
         .bind(crypto.randomUUID(), target.company_id, target.company_name, target.id, type, titles[type], `「${change.added[0]}」という情報が追加または変更されました。`, change.beforeExcerpt, change.afterExcerpt, now, fetched.url, target.source_type, hash).run();
     }
-    await env.DB.prepare("UPDATE watch_targets SET status='active',last_checked_at=?,last_success_at=?,last_http_status=?,last_hash=?,last_error=NULL,snapshot=?,lease_until=NULL,updated_at=? WHERE id=? AND enabled=1").bind(now, now, fetched.status, hash, text, now, target.id).run();
+    await env.DB.prepare("UPDATE watch_targets SET status='active',last_checked_at=?,last_success_at=?,last_http_status=?,last_hash=?,last_error=NULL,snapshot=?,lease_until=NULL,updated_at=? WHERE id=? AND lease_until=? AND enabled=1")
+      .bind(now, now, fetched.status, hash, text, now, target.id, lease).run();
   } catch (error) {
     const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR';
-    await env.DB.prepare("UPDATE watch_targets SET status='error',last_checked_at=?,last_error=?,lease_until=NULL,updated_at=? WHERE id=? AND enabled=1").bind(now, message, now, target.id).run();
+    await env.DB.prepare("UPDATE watch_targets SET status='error',last_checked_at=?,last_http_status=?,last_error=?,lease_until=NULL,updated_at=? WHERE id=? AND lease_until=? AND enabled=1")
+      .bind(now, checkedHttpStatus, message, now, target.id, lease).run();
   }
 }
 
 async function queueTargetCheck(env: Env, ctx: ExecutionContext, target: TargetRow) {
   const now = new Date().toISOString();
-  const ready = await env.DB.prepare("UPDATE watch_targets SET status='checking',last_error=NULL,updated_at=? WHERE id=? AND enabled=1 AND (lease_until IS NULL OR lease_until<?)")
-    .bind(now, target.id, now).run();
+  const lease = new Date(Date.now() + CHECK_LEASE_MS).toISOString();
+  const ready = await env.DB.prepare("UPDATE watch_targets SET status='checking',last_error=NULL,last_http_status=NULL,lease_until=?,updated_at=? WHERE id=? AND enabled=1 AND (lease_until IS NULL OR lease_until<?)")
+    .bind(lease, now, target.id, now).run();
   if (!ready.meta.changes) return false;
   const current = await env.DB.prepare('SELECT * FROM watch_targets WHERE id=?').bind(target.id).first<TargetRow>();
   if (!current) return false;
-  ctx.waitUntil(checkTarget(env, current));
+  ctx.waitUntil(checkTarget(env, current, lease));
   return true;
 }
 
@@ -93,8 +103,9 @@ export default {
       const target = await env.DB.prepare('SELECT * FROM watch_targets WHERE company_id=? AND normalized_url=?').bind(body.companyId, normalized).first<TargetRow>();
       if (!target) return json({ error: 'TARGET_CREATE_FAILED' }, 500, origin);
       const duplicate = inserted.meta.changes === 0;
-      if (target.enabled) await queueTargetCheck(env, ctx, target);
-      return json({ id: target.id, duplicate, status: target.enabled ? 'checking' : 'paused' }, duplicate ? 200 : 201, origin);
+      const queued = target.enabled ? await queueTargetCheck(env, ctx, target) : false;
+      const latest = await env.DB.prepare('SELECT * FROM watch_targets WHERE id=?').bind(target.id).first<TargetRow>();
+      return json({ id: target.id, duplicate, queued, status: latest?.status || (target.enabled ? 'checking' : 'paused'), lastError: latest?.last_error || null }, duplicate ? 200 : 201, origin);
     }
     const match = url.pathname.match(/^\/api\/targets\/([^/]+)(?:\/(retry))?$/);
     if (match) {
@@ -106,14 +117,21 @@ export default {
         if (!current) return json({ error: 'NOT_FOUND' }, 404, origin);
         let normalized = current.normalized_url;
         try { if (body.url) normalized = normalizeUrl(body.url); } catch (error) { return json({ error: error instanceof Error ? error.message : 'INVALID_URL' }, 400, origin); }
-        await env.DB.prepare('UPDATE watch_targets SET enabled=?,status=?,label=?,url=?,normalized_url=?,source_type=?,updated_at=? WHERE id=?').bind(body.enabled === false ? 0 : 1, body.enabled === false ? 'paused' : 'checking', body.label ?? current.label, normalized, normalized, body.sourceType ?? current.source_type, new Date().toISOString(), id).run();
-        return json({}, 200, origin);
+        const enabled = body.enabled !== false;
+        await env.DB.prepare("UPDATE watch_targets SET enabled=?,status=?,last_error=NULL,last_http_status=NULL,lease_until=NULL,label=?,url=?,normalized_url=?,source_type=?,updated_at=? WHERE id=?")
+          .bind(enabled ? 1 : 0, enabled ? 'checking' : 'paused', body.label ?? current.label, normalized, normalized, body.sourceType ?? current.source_type, new Date().toISOString(), id).run();
+        const updated = await env.DB.prepare('SELECT * FROM watch_targets WHERE id=?').bind(id).first<TargetRow>();
+        if (!updated) return json({ error: 'NOT_FOUND' }, 404, origin);
+        const queued = enabled ? await queueTargetCheck(env, ctx, updated) : false;
+        const latest = await env.DB.prepare('SELECT * FROM watch_targets WHERE id=?').bind(id).first<TargetRow>();
+        return json({ status: latest?.status || (enabled ? 'checking' : 'paused'), queued, lastError: latest?.last_error || null }, 200, origin);
       }
       if (request.method === 'POST' && match[2] === 'retry') {
         const target = await env.DB.prepare('SELECT * FROM watch_targets WHERE id=?').bind(id).first<TargetRow>();
         if (!target) return json({ error: 'NOT_FOUND' }, 404, origin);
         const queued = target.enabled ? await queueTargetCheck(env, ctx, target) : false;
-        return json({ status: queued ? 'checking' : target.status }, 202, origin);
+        const latest = await env.DB.prepare('SELECT * FROM watch_targets WHERE id=?').bind(id).first<TargetRow>();
+        return json({ status: latest?.status || target.status, queued, lastError: latest?.last_error || null }, 202, origin);
       }
     }
     const eventMatch = url.pathname.match(/^\/api\/events\/([^/]+)\/read$/);

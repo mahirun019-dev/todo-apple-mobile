@@ -8,17 +8,25 @@ import type { WatchEvent, WatchSource } from './types';
 type Locale = 'ja' | 'zh';
 const formatDate = (value: string | null, locale: Locale) => value ? new Intl.DateTimeFormat(locale === 'ja' ? 'ja-JP' : 'zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value)) : '—';
 
-function targetStatus(target: import('./types').WatchTarget, text: typeof watchText.ja | typeof watchText.zh, locale: Locale) {
+function targetStatus(target: import('./types').WatchTarget, text: typeof watchText.ja | typeof watchText.zh, locale: Locale, checkingTimedOut = false) {
   if (!target.enabled) return { tone: 'paused', label: text.paused, detail: '' };
-  if (target.status === 'checking') return { tone: 'checking', label: text.checking, detail: target.last_success_at ? `${text.lastSuccess} ${formatDate(target.last_success_at, locale)}` : text.unchecked };
-  if (target.status === 'error' || target.last_error) return { tone: 'error', label: text.error, detail: target.last_success_at ? `${text.lastSuccess} ${formatDate(target.last_success_at, locale)}` : text.unchecked };
+  if (target.status === 'checking' && checkingTimedOut) return { tone: 'checking', label: text.checkingTimeout, detail: '' };
+  if (target.status === 'checking') return { tone: 'checking', label: text.checking, detail: target.last_success_at ? `${text.lastSuccess} ${formatDate(target.last_success_at, locale)}` : '' };
+  if (target.status === 'error' || target.last_error) return { tone: 'error', label: text.error, detail: target.last_success_at ? `${text.lastSuccess} ${formatDate(target.last_success_at, locale)}` : '' };
   if (target.last_success_at) return { tone: 'active', label: text.active, detail: `${text.lastCheck} ${formatDate(target.last_checked_at, locale)}` };
   return { tone: 'checking', label: text.checking, detail: text.unchecked };
 }
 
+function targetErrorText(error: string, text: typeof watchText.ja | typeof watchText.zh) {
+  if (error === 'ROBOTS_DISALLOWED') return text.robotsDisallowed;
+  if (error === 'ROBOTS_POLICY_UNVERIFIABLE') return text.robotsUnverifiable;
+  if (error === 'INSUFFICIENT_PUBLIC_CONTENT') return text.insufficientContent;
+  return error;
+}
+
 export function CompanyWatchSection({ company, locale, openSettings, highlightEventId }: { company: { id: string; name: string }; locale: Locale; openSettings(): void; highlightEventId?: string }) {
   const text = watchText[locale], watch = useWatch();
-  const [formOpen, setFormOpen] = useState(false), [editingId, setEditingId] = useState<string | null>(null), [sourceType, setSourceType] = useState<WatchSource>('official'), [url, setUrl] = useState(''), [label, setLabel] = useState(''), [message, setMessage] = useState(''), [notice, setNotice] = useState(''), [actionsFor, setActionsFor] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false), [editingId, setEditingId] = useState<string | null>(null), [sourceType, setSourceType] = useState<WatchSource>('official'), [url, setUrl] = useState(''), [label, setLabel] = useState(''), [message, setMessage] = useState(''), [notice, setNotice] = useState(''), [noticeTargetId, setNoticeTargetId] = useState<string | null>(null), [actionsFor, setActionsFor] = useState<string | null>(null);
   const companyKey = companyWatchKey(company.name);
   const targets = watch.targets.filter((target) => target.company_id === company.id || companyWatchKey(target.company_name) === companyKey);
   const updates = watch.events.filter((event) => event.company_id === company.id || companyWatchKey(event.company_name) === companyKey);
@@ -31,17 +39,35 @@ export function CompanyWatchSection({ company, locale, openSettings, highlightEv
     const timeout = window.setTimeout(() => element.classList.remove('is-highlighted'), 1800);
     return () => window.clearTimeout(timeout);
   }, [highlightEventId, updates]);
+  useEffect(() => {
+    if (!noticeTargetId) return;
+    const checked = watch.targets.find((target) => target.id === noticeTargetId);
+    if (checked && checked.status !== 'checking') {
+      setNotice('');
+      setNoticeTargetId(null);
+    }
+  }, [noticeTargetId, watch.targets]);
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setMessage('');
     try {
       const response = await watch.request(editingId ? `/api/targets/${editingId}` : '/api/targets', { method: editingId ? 'PATCH' : 'POST', body: JSON.stringify({ companyId: company.id, companyName: company.name, sourceType, url, label }) });
       const body = await response.json().catch(() => ({}));
       if (!response.ok) { setMessage(body.error === 'DUPLICATE_URL' ? text.duplicate : text.invalid); return; }
-      setNotice(editingId ? '' : body.status === 'paused' ? text.duplicatePaused : body.duplicate ? text.duplicateChecking : text.addedChecking);
+      const submittedTargetId = typeof body.id === 'string' ? body.id : null;
+      const checking = body.status === 'checking';
+      if (!editingId && checking && submittedTargetId) watch.trackCheck(submittedTargetId);
+      setNotice(editingId ? '' : body.status === 'paused' ? text.duplicatePaused : checking ? body.duplicate ? text.duplicateChecking : text.addedChecking : '');
+      setNoticeTargetId(!editingId && checking ? submittedTargetId : null);
       setFormOpen(false); setEditingId(null); setUrl(''); setLabel(''); await watch.refresh();
     } catch { setMessage(text.unavailable); }
   };
-  const changeEnabled = async (target: import('./types').WatchTarget) => { await watch.request(`/api/targets/${target.id}`, { method: 'PATCH', body: JSON.stringify({ enabled: !target.enabled }) }); await watch.refresh(); setActionsFor(null); };
+  const changeEnabled = async (target: import('./types').WatchTarget) => {
+    const response = await watch.request(`/api/targets/${target.id}`, { method: 'PATCH', body: JSON.stringify({ enabled: !target.enabled }) });
+    const body = await response.json().catch(() => ({}));
+    if (response.ok && body.status === 'checking') watch.trackCheck(target.id);
+    await watch.refresh();
+    setActionsFor(null);
+  };
   const remove = async (target: import('./types').WatchTarget) => { await watch.request(`/api/targets/${target.id}`, { method: 'DELETE' }); await watch.refresh(); setActionsFor(null); };
   const edit = (target: import('./types').WatchTarget) => { setEditingId(target.id); setSourceType(target.source_type); setUrl(target.url); setLabel(target.label); setFormOpen(true); setActionsFor(null); };
   const actionTarget = targets.find((target) => target.id === actionsFor);
@@ -49,13 +75,13 @@ export function CompanyWatchSection({ company, locale, openSettings, highlightEv
     <div className="company-watch-heading"><h2>{text.title}</h2>{watch.authenticated && <button type="button" className="text-button" onClick={() => { setEditingId(null); setSourceType('official'); setUrl(''); setLabel(''); setMessage(''); setNotice(''); setFormOpen(true); }}><Plus />{text.add}</button>}</div>
     {notice && <p className="company-watch-notice" role="status">{notice}</p>}
     {!watch.configured ? <p className="company-watch-muted">{text.unavailable}</p> : !watch.authenticated ? <div className="company-watch-connect"><p>{text.notConnected}</p><button type="button" className="text-button" onClick={openSettings}>{text.settings}<ExternalLink /></button></div> : targets.length ? <div className="watch-target-list">{targets.map((target) => {
-      const status = targetStatus(target, text, locale);
+      const status = targetStatus(target, text, locale, watch.checkingTimedOut.includes(target.id));
       return <article className="watch-target-item" key={target.id}>
-      <div className="watch-target-copy"><strong>{target.label || text[target.source_type]}</strong><a href={target.url} target="_blank" rel="noreferrer" title={target.url}>{new URL(target.url).host}{new URL(target.url).pathname}<ExternalLink /></a><small className={`watch-status ${status.tone}`}>{status.label}{status.detail ? ` · ${status.detail}` : ''}</small>{target.last_error && <small title={target.last_error}>{target.last_error}</small>}</div>
+      <div className="watch-target-copy"><strong>{target.label || text[target.source_type]}</strong><a href={target.url} target="_blank" rel="noreferrer" title={target.url}>{new URL(target.url).host}{new URL(target.url).pathname}<ExternalLink /></a><small className={`watch-status ${status.tone}`}>{status.label}{status.detail ? ` · ${status.detail}` : ''}</small>{target.last_error && <small title={target.last_error}>{targetErrorText(target.last_error, text)}</small>}</div>
       <div className="watch-target-actions">
         <button className="watch-target-actions-more" title={locale === 'ja' ? '操作' : '操作'} onClick={() => setActionsFor(target.id)}><MoreHorizontal /></button>
         <div className="watch-target-actions-desktop"><button title={text.edit} onClick={() => edit(target)}><Pencil /></button>
-        {target.status === 'error' && <button title={text.retry} onClick={async () => { await watch.request(`/api/targets/${target.id}/retry`, { method: 'POST' }); await watch.refresh(); }}><RefreshCw /></button>}
+        {target.status === 'error' && <button title={text.retry} onClick={async () => { const response = await watch.request(`/api/targets/${target.id}/retry`, { method: 'POST' }); const body = await response.json().catch(() => ({})); if (response.ok && body.status === 'checking') watch.trackCheck(target.id); await watch.refresh(); }}><RefreshCw /></button>}
         <button title={target.enabled ? text.pause : text.resume} onClick={() => void changeEnabled(target)}>{target.enabled ? <Pause /> : <Play />}</button>
         <button title={text.remove} className="danger-icon" onClick={() => void remove(target)}><Trash2 /></button></div>
       </div>

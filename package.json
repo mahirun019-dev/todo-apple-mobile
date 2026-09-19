@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "generate:yami-icons": "node scripts/generate-yami-icons.mjs",
     "test:deadlines": "node --experimental-strip-types --test test/weekly-deadlines.test.ts",
     "preview": "vite preview"
   },

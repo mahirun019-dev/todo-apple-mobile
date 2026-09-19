@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 import { classifyChange, detectMeaningfulChange, extractMeaningfulText, fetchPage, inspectRecruitmentContent, normalizeUrl, robotsDecision } from '../src/monitor';
 
 test('normalizes public URLs and strips tracking', () => assert.equal(normalizeUrl(' https://EXAMPLE.com/recruit/?utm_source=x#top '), 'https://example.com/recruit/'));
+test('keeps Mynavi recruitment query parameters stable through normalization', () => {
+  const input = 'https://job.mynavi.jp/28/pc/corpinfo/displayPrevEmployment/index/?corpId=292189&recruitingCourseId=27052359';
+  assert.equal(normalizeUrl(input), input);
+});
 test('rejects unsafe URLs', () => { for (const url of ['javascript:alert(1)', 'http://127.0.0.1/x', 'https://user:pass@example.com']) assert.throws(() => normalizeUrl(url)); });
 test('distinguishes explicit robots denial from an unverifiable URL', () => {
   const robotsUrl = 'https://example.com/robots.txt';
@@ -31,6 +35,29 @@ test('uses the same crawler identity for robots.txt and page requests', async ()
     await fetchPage('https://example.com/recruit');
     assert.equal(userAgents.length, 2);
     assert.equal(userAgents[0], userAgents[1]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+test('does not turn a transient robots response failure into permission to crawl', async () => {
+  const originalFetch = globalThis.fetch;
+  let robotsAttempt = 0;
+  globalThis.fetch = (async (input) => {
+    const url = String(input);
+    if (url.startsWith('https://cloudflare-dns.com/')) return new Response(JSON.stringify({ Answer: [{ data: '198.51.100.10' }] }), { headers: { 'content-type': 'application/json' } });
+    if (url.endsWith('/robots.txt')) {
+      robotsAttempt += 1;
+      return robotsAttempt === 1
+        ? new Response('User-agent: CareerFlowWatch\nDisallow: /28/pc/corpinfo/displayPrevEmployment/', { headers: { 'content-type': 'text/plain' } })
+        : new Response('unavailable', { status: 503 });
+    }
+    throw new Error('Page fetch must not run when robots could not be verified');
+  }) as typeof fetch;
+  const url = 'https://job.mynavi.jp/28/pc/corpinfo/displayPrevEmployment/index/?corpId=292189&recruitingCourseId=27052359';
+  try {
+    await assert.rejects(fetchPage(url), /ROBOTS_DISALLOWED/);
+    await assert.rejects(fetchPage(url), /ROBOTS_POLICY_UNVERIFIABLE/);
+    assert.equal(robotsAttempt, 2);
   } finally {
     globalThis.fetch = originalFetch;
   }

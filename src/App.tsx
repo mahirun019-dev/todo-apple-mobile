@@ -17,6 +17,7 @@ import prefectureData from "./data/japan-prefectures.json";
 import municipalityData from "./data/japan-municipalities.json";
 import { companyWatchKey, useWatch, WatchProvider } from "./watch/WatchProvider";
 import { CompanyWatchSection, CompanyWatchStatus, NotificationPage, WatchConnectionSettings } from "./watch/WatchUI";
+import { YamiLogoLockup } from "./brand/YamiLogo";
 
 import {
   Database,
@@ -2078,7 +2079,7 @@ export default function App() {
     <WatchProvider><div className="app-shell" data-app-shell="true">
       <div className="student-app career-app">
         <aside className="sidebar panel">
-          <Brand icon={icon} />
+          <Brand />
           <StableNav view={view} setView={setView} t={t} />
           <div className={`course-nav ${companiesCollapsed ? "collapsed" : ""}`}>
             <div className="course-nav-heading" onClick={() => { const next = !companiesCollapsed; setCompaniesCollapsed(next); localStorage.setItem("careerflow-companies-collapsed", String(next)); }} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); const next = !companiesCollapsed; setCompaniesCollapsed(next); localStorage.setItem("careerflow-companies-collapsed", String(next)); } }}>
@@ -2119,7 +2120,7 @@ export default function App() {
           }} aria-label={settings ? t.cancel : t.settings}>
             {settings ? <X /> : <Menu />}
           </button>
-          <strong className="mobile-header-title"><YamiSymbol className="mobile-header-brand-symbol" />Yami</strong>
+          <YamiLogoLockup variant="mobile" className="mobile-header-title" />
           <span className="mobile-header-spacer" aria-hidden="true" />
         </header>
         <main ref={workspaceRef} className="workspace">
@@ -2360,24 +2361,8 @@ export default function App() {
   );
 }
 
-function YamiSymbol({ className }: { className?: string }) {
-  return <svg className={className} viewBox="0 0 32 32" aria-hidden="true">
-    <path d="M5 27 20 5l-4 12 11-7L12 29l3-10z" fill="currentColor" />
-    <path d="M25 3v5M22.5 5.5h5" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" />
-  </svg>;
-}
-
-function Brand({ icon }: { icon: string }) {
-  return (
-    <div className="brand">
-      <div className={`brand-mark${icon ? " has-custom-icon" : ""}`}>
-        {icon ? <img src={icon} alt="" /> : <YamiSymbol />}
-      </div>
-      <div>
-        <strong className="brand-wordmark">Yami</strong>
-      </div>
-    </div>
-  );
+function Brand() {
+  return <YamiLogoLockup variant="sidebar" className="brand" />;
 }
 function Nav({
   view,
@@ -4700,7 +4685,7 @@ function MobileSettingsDrawer({
     <aside className="mobile-settings-drawer drawer-shell" role="dialog" aria-modal="true" aria-label={label}>
       <header className={`mobile-navigation-header mobile-header glass-lite${headerPage ? " mobile-settings-subheader" : ""}`}>
         {headerPage ? <button className="mobile-settings-back-button" type="button" onClick={() => changePage(null)} aria-label={locale === "ja" ? "戻る" : "返回"}><ArrowLeft aria-hidden="true" /></button> : <button className="mobile-menu-button" onClick={dismiss} aria-label={t.cancel}><X aria-hidden="true" /></button>}
-        <strong className="mobile-header-title">Yami</strong>
+        <YamiLogoLockup variant="mobile" className="mobile-header-title" />
         {headerPage ? <button className="mobile-settings-close-button" type="button" onClick={dismiss} aria-label={t.cancel}><X aria-hidden="true" /></button> : <span className="mobile-header-action-slot" aria-hidden="true" />}
       </header>
       <div className="drawer-main drawer-scroll"><div className={`mobile-settings-content-switch ${transitionPage !== undefined ? "is-transitioning" : ""}`}>
@@ -4721,8 +4706,8 @@ function SettingsPanel({ t, theme, setTheme, locale, setLocale, close, data, set
   const [tab, setTab] = useState("general");
   const ja = locale === "ja";
   const ui = locale === "ja"
-    ? { general: "一般", appearance: t.appearance, language: t.language, data: "データとバックアップ", about: "Yamiについて", storage: "このデバイスの保存状況", backup: "バックアップ", aboutTitle: "Yamiについて", version: "Yami バージョン 1.0", db: "データベースバージョン", pwa: "PWA ステータス: standalone 対応", icon: "アイコン: 現在のアプリアイコン", privacy: "プライバシー: データは主にこのデバイスに保存されます。", license: "オープンソースライセンス: MIT License" }
-    : { general: "常规", appearance: t.appearance, language: t.language, data: "数据与备份", about: "关于 Yami", storage: "当前设备存储", backup: "备份", aboutTitle: "关于 Yami", version: "Yami 版本 1.0", db: "数据库版本", pwa: "PWA 状态：支持 standalone", icon: "图标：当前应用图标", privacy: "隐私：数据主要保存在当前设备。", license: "开源许可：MIT License" };
+    ? { general: "一般", appearance: t.appearance, language: t.language, data: "データとバックアップ", about: "Yamiについて", storage: "このデバイスの保存状況", backup: "バックアップ", aboutTitle: "Yamiについて", version: "Yami バージョン 1.0", db: "データベースバージョン", pwa: "PWA ステータス: standalone 対応", icon: "アイコン: Yami ブランドマーク", privacy: "プライバシー: データは主にこのデバイスに保存されます。", license: "オープンソースライセンス: MIT License" }
+    : { general: "常规", appearance: t.appearance, language: t.language, data: "数据与备份", about: "关于 Yami", storage: "当前设备存储", backup: "备份", aboutTitle: "关于 Yami", version: "Yami 版本 1.0", db: "数据库版本", pwa: "PWA 状态：支持 standalone", icon: "图标：Yami 品牌标记", privacy: "隐私：数据主要保存在当前设备。", license: "开源许可：MIT License" };
   const tabs = [["general", ui.general, Settings], ["job-settings", t.jobSettings, ClipboardCheck], ["customize", t.customize, PanelsTopLeft], ["templates", t.templates, FileText], ["calendar", t.calendarIntegration, CalendarSync], ["watch", ja ? "企業ウォッチ接続" : "企业监控连接", Eye], ["appearance", ui.appearance, Palette], ["language", ui.language, Globe], ["data", ui.data, Database], ["about", ui.about, Info]] as const;
   return <SettingsDrawer title={t.settings} close={close}><div className="desktop-settings-layout"><nav className="desktop-settings-nav settings-sidebar"><div className="settings-nav-list">{tabs.map(([key, text, Icon]) => <SettingsNavItem key={key} label={text} icon={Icon} active={tab === key} onClick={() => setTab(key)} />)}</div></nav><div className="desktop-settings-content">
     {tab === "general" && <section className="settings-section"><h3>{ui.storage}</h3><div className="settings-stats">{[[ja ? "企業数" : "企业数", data.companies.length], [ja ? "日程数" : "日程数", data.events.length], [ja ? "資料数" : "资料数", data.materials.length], [ja ? "面接記録数" : "面试记录数", data.interviews.length], [ja ? "準備事項数" : "准备事项数", data.preparations.length], [ui.db, "v" + data.schemaVersion]].map(([label, value]) => <div key={String(label)}><span>{label}</span><strong>{value}</strong></div>)}</div></section>}

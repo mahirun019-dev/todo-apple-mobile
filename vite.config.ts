@@ -8,7 +8,7 @@ export default defineConfig(({ command }) => ({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon-v4.svg", "apple-touch-icon.png", "icon-192.png", "icon-512.png", "icon-maskable-512.png"],
+      includeAssets: ["yami-mark-v2.svg", "yami-app-icon-v2.svg", "yami-favicon-32-v2.png", "yami-favicon-v2.ico", "yami-app-icon-180-v2.png", "yami-app-icon-192-v2.png", "yami-app-icon-512-v2.png", "yami-app-icon-maskable-512-v2.png"],
       manifest: {
         name: "Yami",
         short_name: "Yami",
@@ -22,13 +22,13 @@ export default defineConfig(({ command }) => ({
         start_url: "/todo-apple-mobile/",
         scope: "/todo-apple-mobile/",
         icons: [
-          { src: "icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-          { src: "icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
-          { src: "icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+          { src: "yami-app-icon-192-v2.png", sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: "yami-app-icon-512-v2.png", sizes: "512x512", type: "image/png", purpose: "any" },
+          { src: "yami-app-icon-maskable-512-v2.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
         ],
       },
       workbox: {
-        cacheId: "careerflow-icons-v9",
+        cacheId: "careerflow-brand-v10",
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,

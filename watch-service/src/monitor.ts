@@ -92,12 +92,19 @@ export async function fetchPage(input: string): Promise<{ url: string; html: str
     const parsed = new URL(url);
     await assertPublicDns(parsed.hostname);
     const robotsUrl = `${parsed.protocol}//${parsed.host}/robots.txt`;
-    const robotsResponse = await fetch(robotsUrl, { signal: AbortSignal.timeout(8_000), headers: { 'user-agent': CRAWLER_USER_AGENT, accept: 'text/plain' } });
-    if (robotsResponse.ok) {
+    let robotsResponse: Response;
+    try {
+      robotsResponse = await fetch(robotsUrl, { signal: AbortSignal.timeout(8_000), headers: { 'user-agent': CRAWLER_USER_AGENT, accept: 'text/plain' } });
+    } catch {
+      throw new Error('ROBOTS_POLICY_UNVERIFIABLE');
+    }
+    if (robotsResponse.status === 404 || robotsResponse.status === 410) {
+      // An absent robots.txt has no disallow rules; transient and restricted responses fail closed below.
+    } else if (robotsResponse.ok) {
       const decision = robotsDecision(robotsUrl, await robotsResponse.text(), url);
       if (decision === false) throw new Error('ROBOTS_DISALLOWED');
       if (decision === undefined) throw new Error('ROBOTS_POLICY_UNVERIFIABLE');
-    }
+    } else throw new Error('ROBOTS_POLICY_UNVERIFIABLE');
     const response = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(15_000), headers: { 'user-agent': CRAWLER_USER_AGENT, accept: 'text/html,application/xhtml+xml' } });
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get('location');

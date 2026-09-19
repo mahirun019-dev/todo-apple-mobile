@@ -26,4 +26,5 @@ export interface TargetRow {
   last_hash: string | null;
   last_error: string | null;
   snapshot: string | null;
+  lease_until: string | null;
 }
