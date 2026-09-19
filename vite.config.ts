@@ -32,11 +32,12 @@ export default defineConfig(({ command }) => ({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
-        globIgnores: ["**/favicon-debug-20260919.html", "**/yami-debug-favicon-20260919.svg"],
+        globIgnores: ["**/favicon-debug-20260919.html", "**/yami-debug-favicon-20260919.svg", "**/favicon-debug-20260919-b.html", "**/yami-debug-favicon-20260919-b.svg"],
         navigateFallback: "index.html",
         navigateFallbackDenylist: [
           /^\/[^/]+\/404\.html$/,
           /^\/todo-apple-mobile\/favicon-debug-20260919\.html$/,
+          /^\/todo-apple-mobile\/favicon-debug-20260919-b\.html$/,
         ],
       },
     }),
