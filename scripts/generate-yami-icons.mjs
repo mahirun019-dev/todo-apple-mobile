@@ -4,6 +4,8 @@ import { deflateSync } from 'node:zlib';
 const source = JSON.parse(await readFile(new URL('../src/brand/yami-mark.json', import.meta.url), 'utf8'));
 const wordmark = JSON.parse(await readFile(new URL('../src/brand/yami-wordmark.json', import.meta.url), 'utf8'));
 const paths = source.paths.map((path) => `<path d="${path.d}" fill="${path.fill}"/>`).join('');
+const bladePaths = source.paths.slice(0, 2);
+const faviconMark = bladePaths.map((path) => `<path d="${path.d}" fill="${path.fill}"/>`).join('');
 const mark = `<g id="yami-mark">${paths}</g>`;
 const markSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${source.viewBox}" role="img" aria-label="Yami">${mark}</svg>`;
 const maskPaths = source.paths.map((path) => `<path d="${path.d}" fill="#000"/>`).join('');
@@ -12,7 +14,7 @@ const wordmarkPaths = wordmark.strokes.map((path) => `<path d="${path}"/>`).join
 const wordmarkGlint = source.paths[wordmark.glint.sourceMarkPathIndex];
 const wordmarkSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${wordmark.viewBox}" role="img" aria-label="Yami"><g fill="none" stroke="#101114" stroke-linecap="${wordmark.strokeLinecap}" stroke-linejoin="${wordmark.strokeLinejoin}" stroke-width="${wordmark.strokeWidth}">${wordmarkPaths}</g><path d="${wordmarkGlint.d}" transform="${wordmark.glint.transform}" fill="${source.highlight}"/></svg>\n`;
 const appSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#101114"/><g transform="translate(64 64) scale(12)">${paths}</g></svg>`;
-const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="#101114"/>${mark}</svg>`;
+const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">${faviconMark}</svg>`;
 
 const crcTable = Array.from({ length: 256 }, (_, value) => {
   let crc = value;
@@ -34,18 +36,20 @@ const pngChunk = (type, data) => {
   return chunk;
 };
 // Rasterize the shared polygon mark onto a full-bleed canvas to avoid matte halos.
-const renderMarkPng = (size, { scale = 1, offset = 0 } = {}) => {
+const renderMarkPng = (size, { scale = 1, offset = 0, transparent = false, markPaths = source.paths } = {}) => {
   const samples = 4;
   const highSize = size * samples;
   const highPixels = Buffer.alloc(highSize * highSize * 4);
-  for (let i = 0; i < highPixels.length; i += 4) {
-    highPixels[i] = 16;
-    highPixels[i + 1] = 17;
-    highPixels[i + 2] = 20;
-    highPixels[i + 3] = 255;
+  if (!transparent) {
+    for (let i = 0; i < highPixels.length; i += 4) {
+      highPixels[i] = 16;
+      highPixels[i + 1] = 17;
+      highPixels[i + 2] = 20;
+      highPixels[i + 3] = 255;
+    }
   }
 
-  for (const path of source.paths) {
+  for (const path of markPaths) {
     const values = [...path.d.matchAll(/-?\d*\.?\d+/g)].map((match) => Number(match[0]));
     const points = [];
     for (let i = 0; i < values.length; i += 2) {
@@ -75,6 +79,7 @@ const renderMarkPng = (size, { scale = 1, offset = 0 } = {}) => {
           highPixels[pixel] = rgb[0];
           highPixels[pixel + 1] = rgb[1];
           highPixels[pixel + 2] = rgb[2];
+          highPixels[pixel + 3] = 255;
         }
       }
     }
@@ -88,18 +93,21 @@ const renderMarkPng = (size, { scale = 1, offset = 0 } = {}) => {
       let red = 0;
       let green = 0;
       let blue = 0;
+      let alpha = 0;
       for (let sy = 0; sy < samples; sy += 1) {
         for (let sx = 0; sx < samples; sx += 1) {
           const sample = (((y * samples + sy) * highSize) + x * samples + sx) * 4;
-          red += highPixels[sample];
-          green += highPixels[sample + 1];
-          blue += highPixels[sample + 2];
+          const sampleAlpha = highPixels[sample + 3];
+          red += highPixels[sample] * sampleAlpha;
+          green += highPixels[sample + 1] * sampleAlpha;
+          blue += highPixels[sample + 2] * sampleAlpha;
+          alpha += sampleAlpha;
         }
       }
-      pixels[pixel] = Math.round(red / sampleCount);
-      pixels[pixel + 1] = Math.round(green / sampleCount);
-      pixels[pixel + 2] = Math.round(blue / sampleCount);
-      pixels[pixel + 3] = 255;
+      pixels[pixel] = alpha ? Math.round(red / alpha) : 0;
+      pixels[pixel + 1] = alpha ? Math.round(green / alpha) : 0;
+      pixels[pixel + 2] = alpha ? Math.round(blue / alpha) : 0;
+      pixels[pixel + 3] = Math.round(alpha / sampleCount);
     }
   }
 
@@ -162,14 +170,14 @@ await writeFile(new URL('../public/yami-mark-v2.svg', import.meta.url), markSvg)
 await writeFile(new URL('../public/yami-mask-icon-v8.svg', import.meta.url), maskSvg);
 await writeFile(new URL('../public/yami-wordmark-v8.svg', import.meta.url), wordmarkSvg);
 await writeFile(new URL('../public/yami-app-icon-v3.svg', import.meta.url), appSvg);
-await writeFile(new URL('../public/yami-favicon-v9.svg', import.meta.url), faviconSvg);
+await writeFile(new URL('../public/yami-favicon-v10.svg', import.meta.url), faviconSvg);
 
 const publicDir = new URL('../public/', import.meta.url);
-const faviconPng = stampPng(renderMarkPng(32), 'v9');
+const faviconPng = stampPng(renderMarkPng(32, { transparent: true, markPaths: bladePaths }), 'v10');
 const faviconIco = makeIco(faviconPng);
 await writeFile(new URL('../src/brand/yami-favicon-source.png', import.meta.url), faviconPng);
-await writeFile(new URL('yami-favicon-32-v9.png', publicDir), faviconPng);
-await writeFile(new URL('yami-favicon-v9.ico', publicDir), faviconIco);
+await writeFile(new URL('yami-favicon-32-v10.png', publicDir), faviconPng);
+await writeFile(new URL('yami-favicon-v10.ico', publicDir), faviconIco);
 await writeFile(new URL('favicon.ico', publicDir), faviconIco);
 
 const appIcons = [
