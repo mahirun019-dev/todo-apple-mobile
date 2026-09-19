@@ -5,6 +5,8 @@ import type { EventType, SourceType } from "./types";
 const RECRUITMENT = /(エントリー|プレエントリー|応募|募集|新卒|採用|説明会|セミナー|予約|インターン|オープン[・\s-]?カンパニー|ES|エントリーシート|提出|締切|適性検査|Web\s*テスト|面接|選考|受付開始|受付終了)/i;
 const HIGH_CONFIDENCE_RECRUITMENT = /(募集(?:を)?終了|受付終了|エントリー受付中|応募受付中|説明会受付中|予約受付中|採用予定|募集要項|新卒採用|採用情報|募集職種|採用スケジュール)/i;
 const PRIVATE_HOST = /(^localhost$|\.localhost$|\.local$|\.internal$|^0\.|^10\.|^127\.|^169\.254\.|^172\.(1[6-9]|2\d|3[01])\.|^192\.168\.|^::1$|^fc|^fd|^fe80)/i;
+const CRAWLER_PRODUCT_TOKEN = 'CareerFlowWatch';
+const CRAWLER_USER_AGENT = `${CRAWLER_PRODUCT_TOKEN}/1.0 (+public recruitment monitor)`;
 
 export function normalizeUrl(input: string): string {
   const url = new URL(input.trim());
@@ -73,6 +75,10 @@ export async function sha256(value: string): Promise<string> {
   return [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+export function robotsDecision(robotsUrl: string, contents: string, targetUrl: string): boolean | undefined {
+  return robotsParser(robotsUrl, contents).isAllowed(targetUrl, CRAWLER_PRODUCT_TOKEN);
+}
+
 async function assertPublicDns(hostname: string) {
   const response = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(hostname)}&type=A`, { headers: { accept: 'application/dns-json' } });
   if (!response.ok) throw new Error('DNS_CHECK_FAILED');
@@ -86,12 +92,13 @@ export async function fetchPage(input: string): Promise<{ url: string; html: str
     const parsed = new URL(url);
     await assertPublicDns(parsed.hostname);
     const robotsUrl = `${parsed.protocol}//${parsed.host}/robots.txt`;
-    const robotsResponse = await fetch(robotsUrl, { signal: AbortSignal.timeout(8_000) });
+    const robotsResponse = await fetch(robotsUrl, { signal: AbortSignal.timeout(8_000), headers: { 'user-agent': CRAWLER_USER_AGENT, accept: 'text/plain' } });
     if (robotsResponse.ok) {
-      const robots = robotsParser(robotsUrl, await robotsResponse.text());
-      if (!robots.isAllowed(url, 'CareerFlowWatch/1.0')) throw new Error('ROBOTS_DISALLOWED');
+      const decision = robotsDecision(robotsUrl, await robotsResponse.text(), url);
+      if (decision === false) throw new Error('ROBOTS_DISALLOWED');
+      if (decision === undefined) throw new Error('ROBOTS_POLICY_UNVERIFIABLE');
     }
-    const response = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(15_000), headers: { 'user-agent': 'CareerFlowWatch/1.0 (+public recruitment monitor)', accept: 'text/html,application/xhtml+xml' } });
+    const response = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(15_000), headers: { 'user-agent': CRAWLER_USER_AGENT, accept: 'text/html,application/xhtml+xml' } });
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get('location');
       if (!location) throw new Error('REDIRECT_WITHOUT_LOCATION');

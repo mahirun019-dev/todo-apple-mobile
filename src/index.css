@@ -13,6 +13,7 @@
 .company-watch-heading h2 { margin: 0; font-size: 17px; }
 .company-watch-heading .text-button { display: inline-flex; align-items: center; gap: 6px; }
 .company-watch-heading svg { width: 16px; height: 16px; }
+.company-watch-notice { margin: 10px 0 0; color: var(--text-secondary); font-size: 13px; }
 .company-watch-muted { margin: 16px 0 0; color: var(--text-secondary); line-height: 1.6; }
 .company-watch-empty { display: grid; justify-items: start; gap: 12px; padding-top: 18px; color: var(--text-secondary); }
 .company-watch-empty > svg { width: 24px; height: 24px; }
@@ -328,6 +329,9 @@ textarea:focus-visible {
 .brand strong {
   display: block;
   font-size: 15px;
+  font-weight: 750;
+  letter-spacing: -0.025em;
+  line-height: 1;
 }
 .brand span {
   display: block;
@@ -2937,7 +2941,7 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
 [data-theme="dark"] .document-advanced[open] { background: rgba(77,153,226,.08); }
 @media (max-width: 767px) { .document-advanced-fields { grid-template-columns: minmax(0, 1fr); } }
 
-/* CareerFlow monochrome theme. Blue remains reserved for brand and status cues. */
+/* Yami monochrome theme. Blue remains reserved for brand and status cues. */
 :root {
   color: #171717;
   background: #f2f2f2;
@@ -3433,7 +3437,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 @media (max-width: 760px) {
   .mobile-header { align-items: center; justify-content: center; }
-  .mobile-header-title { font-size: 17px; font-weight: 700; }
+  .mobile-header-title { font-size: 17px; font-weight: 750; letter-spacing: -0.025em; line-height: 1; }
   .mobile-menu-button,
   .mobile-header-action-slot { position: absolute; width: 40px; height: 40px; }
   .mobile-menu-button { left: 12px; display: grid; place-items: center; border: 0; border-radius: 10px; color: var(--text-primary); background: transparent; }
@@ -6057,6 +6061,31 @@ html[data-theme="dark"] { --app-page-bg: var(--bg-app); }
     height: auto;
     overflow-y: auto;
     overscroll-behavior: contain;
+  }
+
+  .career-app .workspace > .page-head {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    border-bottom: 1px solid transparent;
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    transition: background-color 160ms ease, border-color 160ms ease, backdrop-filter 160ms ease;
+  }
+
+  .career-app .workspace[data-header-scrolled="true"] > .page-head {
+    border-bottom-color: rgba(0, 0, 0, 0.06);
+    background: rgba(247, 249, 252, 0.82);
+    -webkit-backdrop-filter: saturate(135%) blur(14px);
+    backdrop-filter: saturate(135%) blur(14px);
+  }
+
+  html[data-theme="dark"] .career-app .workspace[data-header-scrolled="true"] > .page-head {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.78);
+    -webkit-backdrop-filter: saturate(125%) blur(14px);
+    backdrop-filter: saturate(125%) blur(14px);
   }
 }
 

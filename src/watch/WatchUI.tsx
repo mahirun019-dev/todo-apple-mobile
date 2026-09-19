@@ -10,6 +10,7 @@ const formatDate = (value: string | null, locale: Locale) => value ? new Intl.Da
 
 function targetStatus(target: import('./types').WatchTarget, text: typeof watchText.ja | typeof watchText.zh, locale: Locale) {
   if (!target.enabled) return { tone: 'paused', label: text.paused, detail: '' };
+  if (target.status === 'checking') return { tone: 'checking', label: text.checking, detail: target.last_success_at ? `${text.lastSuccess} ${formatDate(target.last_success_at, locale)}` : text.unchecked };
   if (target.status === 'error' || target.last_error) return { tone: 'error', label: text.error, detail: target.last_success_at ? `${text.lastSuccess} ${formatDate(target.last_success_at, locale)}` : text.unchecked };
   if (target.last_success_at) return { tone: 'active', label: text.active, detail: `${text.lastCheck} ${formatDate(target.last_checked_at, locale)}` };
   return { tone: 'checking', label: text.checking, detail: text.unchecked };
@@ -17,7 +18,7 @@ function targetStatus(target: import('./types').WatchTarget, text: typeof watchT
 
 export function CompanyWatchSection({ company, locale, openSettings, highlightEventId }: { company: { id: string; name: string }; locale: Locale; openSettings(): void; highlightEventId?: string }) {
   const text = watchText[locale], watch = useWatch();
-  const [formOpen, setFormOpen] = useState(false), [editingId, setEditingId] = useState<string | null>(null), [sourceType, setSourceType] = useState<WatchSource>('official'), [url, setUrl] = useState(''), [label, setLabel] = useState(''), [message, setMessage] = useState(''), [actionsFor, setActionsFor] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false), [editingId, setEditingId] = useState<string | null>(null), [sourceType, setSourceType] = useState<WatchSource>('official'), [url, setUrl] = useState(''), [label, setLabel] = useState(''), [message, setMessage] = useState(''), [notice, setNotice] = useState(''), [actionsFor, setActionsFor] = useState<string | null>(null);
   const companyKey = companyWatchKey(company.name);
   const targets = watch.targets.filter((target) => target.company_id === company.id || companyWatchKey(target.company_name) === companyKey);
   const updates = watch.events.filter((event) => event.company_id === company.id || companyWatchKey(event.company_name) === companyKey);
@@ -34,7 +35,9 @@ export function CompanyWatchSection({ company, locale, openSettings, highlightEv
     event.preventDefault(); setMessage('');
     try {
       const response = await watch.request(editingId ? `/api/targets/${editingId}` : '/api/targets', { method: editingId ? 'PATCH' : 'POST', body: JSON.stringify({ companyId: company.id, companyName: company.name, sourceType, url, label }) });
-      if (!response.ok) { const body = await response.json(); setMessage(body.error === 'DUPLICATE_URL' ? text.duplicate : text.invalid); return; }
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) { setMessage(body.error === 'DUPLICATE_URL' ? text.duplicate : text.invalid); return; }
+      setNotice(editingId ? '' : body.status === 'paused' ? text.duplicatePaused : body.duplicate ? text.duplicateChecking : text.addedChecking);
       setFormOpen(false); setEditingId(null); setUrl(''); setLabel(''); await watch.refresh();
     } catch { setMessage(text.unavailable); }
   };
@@ -43,7 +46,8 @@ export function CompanyWatchSection({ company, locale, openSettings, highlightEv
   const edit = (target: import('./types').WatchTarget) => { setEditingId(target.id); setSourceType(target.source_type); setUrl(target.url); setLabel(target.label); setFormOpen(true); setActionsFor(null); };
   const actionTarget = targets.find((target) => target.id === actionsFor);
   return <section id="company-watch" className="company-watch-section detail-section">
-    <div className="company-watch-heading"><h2>{text.title}</h2>{watch.authenticated && <button type="button" className="text-button" onClick={() => { setEditingId(null); setSourceType('official'); setUrl(''); setLabel(''); setFormOpen(true); }}><Plus />{text.add}</button>}</div>
+    <div className="company-watch-heading"><h2>{text.title}</h2>{watch.authenticated && <button type="button" className="text-button" onClick={() => { setEditingId(null); setSourceType('official'); setUrl(''); setLabel(''); setMessage(''); setNotice(''); setFormOpen(true); }}><Plus />{text.add}</button>}</div>
+    {notice && <p className="company-watch-notice" role="status">{notice}</p>}
     {!watch.configured ? <p className="company-watch-muted">{text.unavailable}</p> : !watch.authenticated ? <div className="company-watch-connect"><p>{text.notConnected}</p><button type="button" className="text-button" onClick={openSettings}>{text.settings}<ExternalLink /></button></div> : targets.length ? <div className="watch-target-list">{targets.map((target) => {
       const status = targetStatus(target, text, locale);
       return <article className="watch-target-item" key={target.id}>

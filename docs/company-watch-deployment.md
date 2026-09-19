@@ -1,6 +1,6 @@
 # Company Watch deployment
 
-CareerFlow is a static GitHub Pages app. Company Watch therefore runs in a separate Cloudflare Worker and stores only watch targets, the minimum company identity (`id` and display name), snapshots, and detected events in D1. Existing CareerFlow companies, schedules, documents, and preferences remain in browser storage.
+Yami is a static GitHub Pages app. Company Watch therefore runs in a separate Cloudflare Worker and stores only watch targets, the minimum company identity (`id` and display name), snapshots, and detected events in D1. Existing Yami companies, schedules, documents, and preferences remain in browser storage.
 
 The Worker is required. When `VITE_WATCH_API_URL` is absent, the UI says that monitoring is not configured and never claims that a URL is being monitored. There is no browser timer or Service Worker monitoring fallback.
 
@@ -44,7 +44,7 @@ The Worker is required. When `VITE_WATCH_API_URL` is absent, the UI says that mo
 
 ## Runtime
 
-`17 */6 * * *` invokes the Worker every six hours in UTC. It reads enabled targets from D1, so checks continue with CareerFlow and Safari closed. A manual retry uses the exact same server-side pipeline.
+`17 */6 * * *` invokes the Worker every six hours in UTC. It reads enabled targets from D1, so checks continue with Yami and Safari closed. A manual retry uses the exact same server-side pipeline.
 
 The fetcher accepts only public HTTP(S) pages, checks DNS and every redirect, rejects credentials and unusual ports, honors `robots.txt`, does not retain cookies, and stops on login/restriction pages. It extracts visible page text, removes navigation, scripts, analytics, banners, and labelled generated timestamps, then compares recruitment-relevant lines. A raw HTML hash change alone never creates an event.
 

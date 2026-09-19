@@ -10,8 +10,8 @@ export default defineConfig(({ command }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon-v4.svg", "favicon-v4.ico", "apple-touch-icon.png", "icon-192.png", "icon-512.png", "icon-maskable-512.png"],
       manifest: {
-        name: "CareerFlow",
-        short_name: "CareerFlow",
+        name: "Yami",
+        short_name: "Yami",
         id: "/todo-apple-mobile/",
         lang: "zh-CN",
         description: "A glass-inspired personal task manager.",

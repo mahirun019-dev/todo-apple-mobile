@@ -653,7 +653,7 @@ const tr = {
     sortUpdated: "最近更新", sortEvent: "下一日程", sortInterest: "志望度从高到低", sortName: "企业名称", moveUp: "上移", moveDown: "下移",
     templateNew: "新建模板", templateEdit: "编辑模板", templateDelete: "删除模板", templateDuplicate: "复制模板", templateCategory: "类别", templateTitle: "标题", templateContent: "内容", templateSave: "保存模板", templateEmpty: "还没有模板", templateInsert: "从模板插入", chooseTemplate: "选择模板", insertTemplate: "插入", noTemplates: "暂无可用模板",
     templateSelfPr: "自我PR", templateGakuchika: "学生时代经历", templateMotivation: "志望动机", templateInterviewQuestion: "面试问题", templateReverseQuestion: "反问问题", templatePreparation: "准备事项",
-    calendarAdd: "添加到日历", calendarExportFuture: "汇总导出今后的日程", calendarMethod: "添加到日历的方式", calendarMethodHint: "CareerFlow 使用标准 .ics 文件导出，不是实时同步或双向同步。", calendarDescription: "可以将 CareerFlow 中的日程导出为 .ics 文件，再添加到 Apple 日历。", calendarNoSync: "不是实时同步。修改日程后，需要重新导出。", calendarHowTo: "使用方法", calendarIphoneTitle: "iPhone / iPad", calendarIphone: "1. 点击“汇总导出今后的日程”。\n2. 在分享菜单中保存或分享 .ics 文件。\n3. 打开 .ics 文件，按 iOS 提示添加到日历。\n设备或 Safari 版本不同，显示方式可能不同。", calendarMacTitle: "Mac", calendarMac: "1. 点击“汇总导出今后的日程”。\n2. 下载 .ics 文件。\n3. 打开文件，或在 Calendar.app 中选择“文件 → 导入”并选择该文件。", calendarGoogleTitle: "Google Calendar", calendarGoogle: "", calendarWindowsTitle: "Windows / Outlook", calendarWindows: "", calendarImportant: "重要：这不是自动同步。CareerFlow 中的日程发生变化后，请按需要重新导出。", calendarPreferShare: "移动端优先使用分享", calendarExported: "日历文件已生成", calendarNoEvents: "没有可导出的后续日程",
+    calendarAdd: "添加到日历", calendarExportFuture: "汇总导出今后的日程", calendarMethod: "添加到日历的方式", calendarMethodHint: "Yami 使用标准 .ics 文件导出，不是实时同步或双向同步。", calendarDescription: "可以将 Yami 中的日程导出为 .ics 文件，再添加到 Apple 日历。", calendarNoSync: "不是实时同步。修改日程后，需要重新导出。", calendarHowTo: "使用方法", calendarIphoneTitle: "iPhone / iPad", calendarIphone: "1. 点击“汇总导出今后的日程”。\n2. 在分享菜单中保存或分享 .ics 文件。\n3. 打开 .ics 文件，按 iOS 提示添加到日历。\n设备或 Safari 版本不同，显示方式可能不同。", calendarMacTitle: "Mac", calendarMac: "1. 点击“汇总导出今后的日程”。\n2. 下载 .ics 文件。\n3. 打开文件，或在 Calendar.app 中选择“文件 → 导入”并选择该文件。", calendarGoogleTitle: "Google Calendar", calendarGoogle: "", calendarWindowsTitle: "Windows / Outlook", calendarWindows: "", calendarImportant: "重要：这不是自动同步。Yami 中的日程发生变化后，请按需要重新导出。", calendarPreferShare: "移动端优先使用分享", calendarExported: "日历文件已生成", calendarNoEvents: "没有可导出的后续日程",
   },
   ja: {
     dashboard: "ホーム",
@@ -825,7 +825,7 @@ const tr = {
     sortUpdated: "最近更新", sortEvent: "次の日程", sortInterest: "志望度の高い順", sortName: "企業名", moveUp: "上へ", moveDown: "下へ",
     templateNew: "新規作成", templateEdit: "編集", templateDelete: "削除", templateDuplicate: "複製", templateCategory: "カテゴリ", templateTitle: "タイトル", templateContent: "内容", templateSave: "テンプレートを保存", templateEmpty: "テンプレートはまだありません", templateInsert: "テンプレートから挿入", chooseTemplate: "テンプレートを選択", insertTemplate: "挿入", noTemplates: "使用できるテンプレートがありません",
     templateSelfPr: "自己PR", templateGakuchika: "ガクチカ", templateMotivation: "志望動機", templateInterviewQuestion: "面接質問", templateReverseQuestion: "逆質問", templatePreparation: "準備事項",
-    calendarAdd: "カレンダーに追加", calendarExportFuture: "今後の予定をまとめて書き出す", calendarMethod: "カレンダーへの追加方法", calendarMethodHint: "CareerFlow は標準の .ics ファイルを書き出します。リアルタイム同期や双方向同期ではありません。", calendarDescription: "CareerFlow の予定を .ics ファイルとして Apple カレンダーに追加できます。", calendarNoSync: "リアルタイム同期ではありません。日程を変更した場合は、必要に応じて再度書き出してください。", calendarHowTo: "使い方", calendarIphoneTitle: "iPhone / iPad", calendarIphone: "1. 「今後の予定をまとめて書き出す」をタップします。\n2. 表示された共有メニューから .ics ファイルを保存・共有します。\n3. .ics ファイルを開き、iOS に表示される案内に従ってカレンダーへ追加します。\n端末や Safari のバージョンによって表示方法が異なる場合があります。", calendarMacTitle: "Mac", calendarMac: "1. 「今後の予定をまとめて書き出す」をクリックします。\n2. .ics ファイルをダウンロードします。\n3. ファイルを開く、または Calendar.app の「ファイル → 読み込む」から .ics を選択します。\n4. 追加先のカレンダーを選択します。", calendarGoogleTitle: "Google Calendar", calendarGoogle: "", calendarWindowsTitle: "Windows / Outlook", calendarWindows: "", calendarImportant: "重要：自動同期ではありません。CareerFlow で日程を変更した場合は、必要に応じて再度書き出してください。", calendarPreferShare: "モバイルでは共有を優先", calendarExported: "カレンダーファイルを生成しました", calendarNoEvents: "書き出せる今後の予定はありません",
+    calendarAdd: "カレンダーに追加", calendarExportFuture: "今後の予定をまとめて書き出す", calendarMethod: "カレンダーへの追加方法", calendarMethodHint: "Yami は標準の .ics ファイルを書き出します。リアルタイム同期や双方向同期ではありません。", calendarDescription: "Yami の予定を .ics ファイルとして Apple カレンダーに追加できます。", calendarNoSync: "リアルタイム同期ではありません。日程を変更した場合は、必要に応じて再度書き出してください。", calendarHowTo: "使い方", calendarIphoneTitle: "iPhone / iPad", calendarIphone: "1. 「今後の予定をまとめて書き出す」をタップします。\n2. 表示された共有メニューから .ics ファイルを保存・共有します。\n3. .ics ファイルを開き、iOS に表示される案内に従ってカレンダーへ追加します。\n端末や Safari のバージョンによって表示方法が異なる場合があります。", calendarMacTitle: "Mac", calendarMac: "1. 「今後の予定をまとめて書き出す」をクリックします。\n2. .ics ファイルをダウンロードします。\n3. ファイルを開く、または Calendar.app の「ファイル → 読み込む」から .ics を選択します。\n4. 追加先のカレンダーを選択します。", calendarGoogleTitle: "Google Calendar", calendarGoogle: "", calendarWindowsTitle: "Windows / Outlook", calendarWindows: "", calendarImportant: "重要：自動同期ではありません。Yami で日程を変更した場合は、必要に応じて再度書き出してください。", calendarPreferShare: "モバイルでは共有を優先", calendarExported: "カレンダーファイルを生成しました", calendarNoEvents: "書き出せる今後の予定はありません",
   },
   en: {
     dashboard: "Home",
@@ -979,7 +979,7 @@ const tr = {
     sortUpdated: "Recently updated", sortEvent: "Next event", sortInterest: "Interest", sortName: "Company name", moveUp: "Move up", moveDown: "Move down",
     templateNew: "New template", templateEdit: "Edit", templateDelete: "Delete", templateDuplicate: "Duplicate", templateCategory: "Category", templateTitle: "Title", templateContent: "Content", templateSave: "Save template", templateEmpty: "No templates yet", templateInsert: "Insert from template", chooseTemplate: "Choose a template", insertTemplate: "Insert", noTemplates: "No templates available",
     templateSelfPr: "Self PR", templateGakuchika: "Student experience", templateMotivation: "Motivation", templateInterviewQuestion: "Interview question", templateReverseQuestion: "Reverse question", templatePreparation: "Preparation",
-    calendarAdd: "Add to calendar", calendarExportFuture: "Export upcoming events", calendarMethod: "How calendar entries are added", calendarMethodHint: "CareerFlow exports standard .ics files. This is not real-time or two-way sync.", calendarDescription: "Export CareerFlow events as .ics files and add them to Apple Calendar.", calendarNoSync: "This is not real-time sync. Export again after changing an event.", calendarHowTo: "How to use", calendarIphoneTitle: "iPhone / iPad", calendarIphone: "1. Select “Export upcoming events”.\n2. Save or share the .ics file from the share sheet.\n3. Open the .ics file and follow iOS instructions to add it to Calendar.", calendarMacTitle: "Mac", calendarMac: "1. Select “Export upcoming events”.\n2. Download the .ics file.\n3. Open it, or use Calendar.app’s “File → Import” command.", calendarGoogleTitle: "Google Calendar", calendarGoogle: "", calendarWindowsTitle: "Windows / Outlook", calendarWindows: "", calendarImportant: "Important: this is not automatic sync. Re-export when needed after changing an event in CareerFlow.", calendarPreferShare: "Prefer sharing on mobile", calendarExported: "Calendar file generated", calendarNoEvents: "No upcoming events to export",
+    calendarAdd: "Add to calendar", calendarExportFuture: "Export upcoming events", calendarMethod: "How calendar entries are added", calendarMethodHint: "Yami exports standard .ics files. This is not real-time or two-way sync.", calendarDescription: "Export Yami events as .ics files and add them to Apple Calendar.", calendarNoSync: "This is not real-time sync. Export again after changing an event.", calendarHowTo: "How to use", calendarIphoneTitle: "iPhone / iPad", calendarIphone: "1. Select “Export upcoming events”.\n2. Save or share the .ics file from the share sheet.\n3. Open the .ics file and follow iOS instructions to add it to Calendar.", calendarMacTitle: "Mac", calendarMac: "1. Select “Export upcoming events”.\n2. Download the .ics file.\n3. Open it, or use Calendar.app’s “File → Import” command.", calendarGoogleTitle: "Google Calendar", calendarGoogle: "", calendarWindowsTitle: "Windows / Outlook", calendarWindows: "", calendarImportant: "Important: this is not automatic sync. Re-export when needed after changing an event in Yami.", calendarPreferShare: "Prefer sharing on mobile", calendarExported: "Calendar file generated", calendarNoEvents: "No upcoming events to export",
   },
 };
 // Keep keyboard viewport changes out of React's render path. Safari can emit many
@@ -1151,7 +1151,7 @@ function makeIcs(events: Event[], byId: Record<string, Company>, t: any) {
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//CareerFlow//CareerFlow Calendar//JA",
+    "PRODID:-//Yami//Yami Calendar//JA",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     "X-WR-TIMEZONE:Asia/Tokyo",
@@ -1164,7 +1164,7 @@ async function shareOrDownloadCalendar(name: string, body: string) {
   const file = new File([body], name, { type: "text/calendar;charset=utf-8" });
   const canShare = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && !!navigator.share && !!navigator.canShare?.({ files: [file] });
   if (canShare) {
-    await navigator.share({ files: [file], title: "CareerFlow Calendar" });
+    await navigator.share({ files: [file], title: "Yami Calendar" });
     return "shared" as const;
   }
   const url = URL.createObjectURL(file);
@@ -1601,6 +1601,20 @@ export default function App() {
       header.style.removeProperty("--mobile-header-offset");
     };
   }, [isMobile, view, selected, settings]);
+  useEffect(() => {
+    if (isMobile) return;
+    const workspace = workspaceRef.current;
+    if (!workspace) return;
+    const updateHeaderState = () => {
+      workspace.dataset.headerScrolled = workspace.scrollTop > 8 ? "true" : "false";
+    };
+    updateHeaderState();
+    workspace.addEventListener("scroll", updateHeaderState, { passive: true });
+    return () => {
+      workspace.removeEventListener("scroll", updateHeaderState);
+      delete workspace.dataset.headerScrolled;
+    };
+  }, [isMobile]);
   useEffect(() => localStorage.setItem(KEY, JSON.stringify(data)), [data]);
   useEffect(() => {
     if (firstDataRender.current) {
@@ -2010,7 +2024,7 @@ export default function App() {
       setToast({ text: t.calendarNoEvents, undo: () => undefined });
       return;
     }
-    const name = requestedEvents?.length === 1 ? `careerflow-event-${events[0].id}.ics` : "careerflow-upcoming-events.ics";
+    const name = requestedEvents?.length === 1 ? `yami-event-${events[0].id}.ics` : "yami-upcoming-events.ics";
     try {
       await shareOrDownloadCalendar(name, makeIcs(events, byId, t));
       setToast({ text: t.calendarExported, undo: () => undefined });
@@ -2119,7 +2133,7 @@ export default function App() {
           }} aria-label={settings ? t.cancel : t.settings}>
             {settings ? <X /> : <Menu />}
           </button>
-          <strong className="mobile-header-title">CareerFlow</strong>
+          <strong className="mobile-header-title">Yami</strong>
           <span className="mobile-header-spacer" aria-hidden="true" />
         </header>
         <main ref={workspaceRef} className="workspace">
@@ -2367,8 +2381,7 @@ function Brand({ icon, showIcon = true }: { icon: string; showIcon?: boolean }) 
         {icon ? <img src={icon} alt="" /> : <img src={`${import.meta.env.BASE_URL}favicon-v4.svg`} alt="" />}
       </div>}
       <div>
-        <strong>CareerFlow</strong>
-        <span>日本就活管理</span>
+        <strong>Yami</strong>
       </div>
     </div>
   );
@@ -4398,7 +4411,7 @@ function BackupControls({ data, theme, locale, setData }: any) {
   const exportBackup = async () => {
     const now = new Date();
     const pad = (x: number) => String(x).padStart(2, "0");
-    const name = `careerflow-backup-${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.json`;
+    const name = `yami-backup-${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.json`;
     const contents = JSON.stringify({ ...snapshot(), exportedAt: Date.now() }, null, 2);
     const backupFile = new File([contents], name, { type: "application/json" });
     const userAgent = navigator.userAgent || "";
@@ -4408,7 +4421,7 @@ function BackupControls({ data, theme, locale, setData }: any) {
       (/Macintosh/.test(userAgent) && navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     try {
       if (isIOS && navigator.share && navigator.canShare?.({ files: [backupFile] })) {
-        await navigator.share({ files: [backupFile], title: "CareerFlow Backup" });
+        await navigator.share({ files: [backupFile], title: "Yami Backup" });
       } else {
         const blobUrl = URL.createObjectURL(new Blob([contents], { type: "application/json" }));
         const link = document.createElement("a");
@@ -4505,12 +4518,12 @@ function MobileSettingsDrawer({
   const [renderedPage, setRenderedPage] = useState<string | null>(null);
   const [transitionPage, setTransitionPage] = useState<string | null | undefined>(undefined);
   const [contentPhase, setContentPhase] = useState<"idle" | "out" | "in">("idle");
-  const label = "CareerFlow";
+  const label = "Yami";
   const about = locale === "ja"
-    ? { title: "CareerFlowについて", version: "CareerFlow バージョン 1.0", db: `データベースバージョン：v${data.schemaVersion}`, privacy: "プライバシー：データは主にこのデバイスに保存されます。", license: "オープンソースライセンス：MIT License" }
+    ? { title: "Yamiについて", version: "Yami バージョン 1.0", db: `データベースバージョン：v${data.schemaVersion}`, privacy: "プライバシー：データは主にこのデバイスに保存されます。", license: "オープンソースライセンス：MIT License" }
     : locale === "en"
-      ? { title: "About CareerFlow", version: "CareerFlow version 1.0", db: `Database version: v${data.schemaVersion}`, privacy: "Privacy: Data is mainly stored on this device.", license: "Open-source license: MIT License" }
-      : { title: "关于 CareerFlow", version: "CareerFlow 版本 1.0", db: `数据库版本：v${data.schemaVersion}`, privacy: "隐私说明：数据主要保存在当前设备。", license: "开源许可：MIT License" };
+      ? { title: "About Yami", version: "Yami version 1.0", db: `Database version: v${data.schemaVersion}`, privacy: "Privacy: Data is mainly stored on this device.", license: "Open-source license: MIT License" }
+      : { title: "关于 Yami", version: "Yami 版本 1.0", db: `数据库版本：v${data.schemaVersion}`, privacy: "隐私说明：数据主要保存在当前设备。", license: "开源许可：MIT License" };
   const dismiss = () => close();
   useEffect(() => {
     if (!open) return;
@@ -4676,7 +4689,7 @@ function MobileSettingsDrawer({
       <button type="button" onClick={() => changePage("about")}><Info aria-hidden="true" /><span>{about.title}</span><ChevronRight aria-hidden="true" /></button>
     </nav>;
     const subpageTitle = pageValue === "data" ? t.data : pageValue === "job-settings" ? t.jobSettings : pageValue === "customize" ? t.customize : pageValue === "templates" ? t.templates : pageValue === "calendar" ? t.calendarIntegration : pageValue === "watch" ? (locale === "ja" ? "企業ウォッチ接続" : "企业监控连接") : pageValue === "appearance" ? t.appearance : pageValue === "language" ? t.language : about.title;
-    if (pageValue === "data") return <section className="mobile-settings-subpage" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><div className="mobile-settings-subpage-list mobile-data-actions"><button type="button" onClick={() => download("careerflow-backup.json", JSON.stringify(makeBackupSnapshot(data, theme, locale), null, 2), "application/json")}><DatabaseArrowUp aria-hidden="true" /><span>{t.backup}</span></button><button type="button" onClick={() => json.current?.click()}><DatabaseArrowDown aria-hidden="true" /><span>{t.restore}</span></button></div></section>;
+    if (pageValue === "data") return <section className="mobile-settings-subpage" aria-labelledby="mobile-settings-subpage-title"><h2 id="mobile-settings-subpage-title">{subpageTitle}</h2><div className="mobile-settings-subpage-list mobile-data-actions"><button type="button" onClick={() => download("yami-backup.json", JSON.stringify(makeBackupSnapshot(data, theme, locale), null, 2), "application/json")}><DatabaseArrowUp aria-hidden="true" /><span>{t.backup}</span></button><button type="button" onClick={() => json.current?.click()}><DatabaseArrowDown aria-hidden="true" /><span>{t.restore}</span></button></div></section>;
     if (pageValue === "job-settings") return <JobHuntSettings t={t} data={data} updatePreferences={updatePreferences} />;
     if (pageValue === "customize") return <CustomizeSettings t={t} data={data} updatePreferences={updatePreferences} />;
     if (pageValue === "templates") return <section className="mobile-settings-subpage"><TemplateManager t={t} data={data} setData={setData} /></section>;
@@ -4694,7 +4707,7 @@ function MobileSettingsDrawer({
     <aside className="mobile-settings-drawer drawer-shell" role="dialog" aria-modal="true" aria-label={label}>
       <header className={`mobile-navigation-header mobile-header glass-lite${headerPage ? " mobile-settings-subheader" : ""}`}>
         {headerPage ? <button className="mobile-settings-back-button" type="button" onClick={() => changePage(null)} aria-label={locale === "ja" ? "戻る" : "返回"}><ArrowLeft aria-hidden="true" /></button> : <button className="mobile-menu-button" onClick={dismiss} aria-label={t.cancel}><X aria-hidden="true" /></button>}
-        <strong className="mobile-header-title">CareerFlow</strong>
+        <strong className="mobile-header-title">Yami</strong>
         {headerPage ? <button className="mobile-settings-close-button" type="button" onClick={dismiss} aria-label={t.cancel}><X aria-hidden="true" /></button> : <span className="mobile-header-action-slot" aria-hidden="true" />}
       </header>
       <div className="drawer-main drawer-scroll"><div className={`mobile-settings-content-switch ${transitionPage !== undefined ? "is-transitioning" : ""}`}>
@@ -4715,8 +4728,8 @@ function SettingsPanel({ t, theme, setTheme, locale, setLocale, close, data, set
   const [tab, setTab] = useState("general");
   const ja = locale === "ja";
   const ui = locale === "ja"
-    ? { general: "一般", appearance: t.appearance, language: t.language, data: "データとバックアップ", about: "CareerFlowについて", storage: "このデバイスの保存状況", backup: "バックアップ", aboutTitle: "CareerFlowについて", version: "CareerFlow バージョン 1.0", db: "データベースバージョン", pwa: "PWA ステータス: standalone 対応", icon: "アイコン: CareerFlow ブランドアイコン", privacy: "プライバシー: データは主にこのデバイスに保存されます。", license: "オープンソースライセンス: MIT License" }
-    : { general: "常规", appearance: t.appearance, language: t.language, data: "数据与备份", about: "关于 CareerFlow", storage: "当前设备存储", backup: "备份", aboutTitle: "关于 CareerFlow", version: "CareerFlow 版本 1.0", db: "数据库版本", pwa: "PWA 状态：支持 standalone", icon: "图标：CareerFlow 品牌图标", privacy: "隐私：数据主要保存在当前设备。", license: "开源许可：MIT License" };
+    ? { general: "一般", appearance: t.appearance, language: t.language, data: "データとバックアップ", about: "Yamiについて", storage: "このデバイスの保存状況", backup: "バックアップ", aboutTitle: "Yamiについて", version: "Yami バージョン 1.0", db: "データベースバージョン", pwa: "PWA ステータス: standalone 対応", icon: "アイコン: 現在のアプリアイコン", privacy: "プライバシー: データは主にこのデバイスに保存されます。", license: "オープンソースライセンス: MIT License" }
+    : { general: "常规", appearance: t.appearance, language: t.language, data: "数据与备份", about: "关于 Yami", storage: "当前设备存储", backup: "备份", aboutTitle: "关于 Yami", version: "Yami 版本 1.0", db: "数据库版本", pwa: "PWA 状态：支持 standalone", icon: "图标：当前应用图标", privacy: "隐私：数据主要保存在当前设备。", license: "开源许可：MIT License" };
   const tabs = [["general", ui.general, Settings], ["job-settings", t.jobSettings, ClipboardCheck], ["customize", t.customize, PanelsTopLeft], ["templates", t.templates, FileText], ["calendar", t.calendarIntegration, CalendarSync], ["watch", ja ? "企業ウォッチ接続" : "企业监控连接", Eye], ["appearance", ui.appearance, Palette], ["language", ui.language, Globe], ["data", ui.data, Database], ["about", ui.about, Info]] as const;
   return <SettingsDrawer title={t.settings} close={close}><div className="desktop-settings-layout"><nav className="desktop-settings-nav settings-sidebar"><div className="settings-nav-list">{tabs.map(([key, text, Icon]) => <SettingsNavItem key={key} label={text} icon={Icon} active={tab === key} onClick={() => setTab(key)} />)}</div></nav><div className="desktop-settings-content">
     {tab === "general" && <section className="settings-section"><h3>{ui.storage}</h3><div className="settings-stats">{[[ja ? "企業数" : "企业数", data.companies.length], [ja ? "日程数" : "日程数", data.events.length], [ja ? "資料数" : "资料数", data.materials.length], [ja ? "面接記録数" : "面试记录数", data.interviews.length], [ja ? "準備事項数" : "准备事项数", data.preparations.length], [ui.db, "v" + data.schemaVersion]].map(([label, value]) => <div key={String(label)}><span>{label}</span><strong>{value}</strong></div>)}</div></section>}

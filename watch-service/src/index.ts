@@ -52,6 +52,17 @@ export async function checkTarget(env: Env, target: TargetRow) {
   }
 }
 
+async function queueTargetCheck(env: Env, ctx: ExecutionContext, target: TargetRow) {
+  const now = new Date().toISOString();
+  const ready = await env.DB.prepare("UPDATE watch_targets SET status='checking',last_error=NULL,updated_at=? WHERE id=? AND enabled=1 AND (lease_until IS NULL OR lease_until<?)")
+    .bind(now, target.id, now).run();
+  if (!ready.meta.changes) return false;
+  const current = await env.DB.prepare('SELECT * FROM watch_targets WHERE id=?').bind(target.id).first<TargetRow>();
+  if (!current) return false;
+  ctx.waitUntil(checkTarget(env, current));
+  return true;
+}
+
 async function scheduled(env: Env) {
   const rows = await env.DB.prepare("SELECT * FROM watch_targets WHERE enabled=1 AND status!='paused' ORDER BY COALESCE(last_checked_at,'') ASC LIMIT 12").all<TargetRow>();
   for (const target of rows.results) await checkTarget(env, target);
@@ -77,11 +88,13 @@ export default {
       let normalized: string;
       try { normalized = normalizeUrl(body.url); } catch (error) { return json({ error: error instanceof Error ? error.message : 'INVALID_URL' }, 400, origin); }
       const id = crypto.randomUUID(), now = new Date().toISOString();
-      try { await env.DB.prepare("INSERT INTO watch_targets(id,company_id,company_name,source_type,label,url,normalized_url,enabled,created_at,updated_at,status) VALUES(?,?,?,?,?,?,?,1,?,?,'checking')").bind(id, body.companyId, body.companyName, body.sourceType, (body.label || '').trim(), normalized, normalized, now, now).run(); }
-      catch { return json({ error: 'DUPLICATE_URL' }, 409, origin); }
-      const target = await env.DB.prepare('SELECT * FROM watch_targets WHERE id=?').bind(id).first<TargetRow>();
-      if (target) ctx.waitUntil(checkTarget(env, target));
-      return json({ id }, 201, origin);
+      const inserted = await env.DB.prepare("INSERT OR IGNORE INTO watch_targets(id,company_id,company_name,source_type,label,url,normalized_url,enabled,created_at,updated_at,status) VALUES(?,?,?,?,?,?,?,1,?,?,'checking')")
+        .bind(id, body.companyId, body.companyName, body.sourceType, (body.label || '').trim(), normalized, normalized, now, now).run();
+      const target = await env.DB.prepare('SELECT * FROM watch_targets WHERE company_id=? AND normalized_url=?').bind(body.companyId, normalized).first<TargetRow>();
+      if (!target) return json({ error: 'TARGET_CREATE_FAILED' }, 500, origin);
+      const duplicate = inserted.meta.changes === 0;
+      if (target.enabled) await queueTargetCheck(env, ctx, target);
+      return json({ id: target.id, duplicate, status: target.enabled ? 'checking' : 'paused' }, duplicate ? 200 : 201, origin);
     }
     const match = url.pathname.match(/^\/api\/targets\/([^/]+)(?:\/(retry))?$/);
     if (match) {
@@ -96,7 +109,12 @@ export default {
         await env.DB.prepare('UPDATE watch_targets SET enabled=?,status=?,label=?,url=?,normalized_url=?,source_type=?,updated_at=? WHERE id=?').bind(body.enabled === false ? 0 : 1, body.enabled === false ? 'paused' : 'checking', body.label ?? current.label, normalized, normalized, body.sourceType ?? current.source_type, new Date().toISOString(), id).run();
         return json({}, 200, origin);
       }
-      if (request.method === 'POST' && match[2] === 'retry') { const target = await env.DB.prepare('SELECT * FROM watch_targets WHERE id=?').bind(id).first<TargetRow>(); if (target) ctx.waitUntil(checkTarget(env, target)); return json({}, 202, origin); }
+      if (request.method === 'POST' && match[2] === 'retry') {
+        const target = await env.DB.prepare('SELECT * FROM watch_targets WHERE id=?').bind(id).first<TargetRow>();
+        if (!target) return json({ error: 'NOT_FOUND' }, 404, origin);
+        const queued = target.enabled ? await queueTargetCheck(env, ctx, target) : false;
+        return json({ status: queued ? 'checking' : target.status }, 202, origin);
+      }
     }
     const eventMatch = url.pathname.match(/^\/api\/events\/([^/]+)\/read$/);
     if (eventMatch && request.method === 'POST') { await env.DB.prepare('UPDATE watch_events SET read=1 WHERE id=?').bind(eventMatch[1]).run(); return json({}, 200, origin); }
