@@ -4,6 +4,7 @@ import { Bell, ExternalLink, Eye, MoreHorizontal, Pause, Pencil, Play, Plus, Ref
 import { watchText } from './i18n';
 import { companyWatchKey, useWatch } from './WatchProvider';
 import type { WatchEvent, WatchSource } from './types';
+import { YamiBrandMark } from '../brand/YamiLogo';
 
 type Locale = 'ja' | 'zh';
 const formatDate = (value: string | null, locale: Locale) => value ? new Intl.DateTimeFormat(locale === 'ja' ? 'ja-JP' : 'zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value)) : '—';
@@ -102,6 +103,47 @@ export function WatchConnectionSettings({ locale }: { locale: Locale }) {
 
 type NotificationPageProps = { locale: Locale; openCompany(id: string, name?: string, eventId?: string): void; openSettings(): void };
 
+type ProductUpdate = {
+  id: string;
+  date: string;
+  title: Record<Locale, string>;
+  summary: Record<Locale, string>;
+  changes: Record<Locale, string[]>;
+};
+
+const PRODUCT_UPDATE_READ_KEY = 'yami-product-update-read-ids';
+const PRODUCT_UPDATES: ProductUpdate[] = [{
+  id: '2026-09-19-yami-brand-and-notification-update',
+  date: '2026-09-19T09:00:00+09:00',
+  title: { ja: 'Yamiがアップデートされました', zh: 'Yami 已更新' },
+  summary: { ja: 'デザインと使いやすさを改善しました。', zh: '我们改进了设计与易用性。' },
+  changes: {
+    ja: [
+      'ブランド名とロゴを「Yami」に刷新しました',
+      '通知画面をより見やすく改善しました',
+      'スマートフォンの操作性を調整しました',
+    ],
+    zh: [
+      '品牌名称和 Logo 已更新为「Yami」',
+      '优化了通知页面的阅读体验',
+      '改进了手机端的操作体验',
+    ],
+  },
+}];
+
+function loadReadProductUpdateIds() {
+  try {
+    const value: unknown = JSON.parse(localStorage.getItem(PRODUCT_UPDATE_READ_KEY) || '[]');
+    return Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+type NotificationFeedItem =
+  | { type: 'company'; id: string; detectedAt: string; read: boolean; companyName: string; title: string; summary: string; event: WatchEvent }
+  | { type: 'product-update'; id: string; detectedAt: string; read: boolean; companyName: 'Yami'; title: string; summary: string; changes: string[] };
+
 function dateGroup(value: string, locale: Locale, text: typeof watchText.ja | typeof watchText.zh) {
   const day = new Date(value); const today = new Date();
   const same = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
@@ -115,24 +157,52 @@ export function NotificationPage({ locale, openCompany, openSettings }: Notifica
   const text = watchText[locale], watch = useWatch();
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const [expandedNotificationId, setExpandedNotificationId] = useState<string | null>(null);
-  const events = useMemo(() => (filter === 'unread' ? watch.events.filter((event) => !event.read) : watch.events), [filter, watch.events]);
-  const groups = useMemo(() => events.reduce<Record<string, WatchEvent[]>>((all, event) => { const key = dateGroup(event.detected_at, locale, text); (all[key] ||= []).push(event); return all; }, {}), [events, locale, text]);
-  const choose = async (event: WatchEvent) => {
-    if (!event.read) await watch.markRead(event.id);
-    setExpandedNotificationId((current) => current === event.id ? null : event.id);
+  const [readProductUpdateIds, setReadProductUpdateIds] = useState(loadReadProductUpdateIds);
+  const feed = useMemo<NotificationFeedItem[]>(() => {
+    const companyItems: NotificationFeedItem[] = watch.authenticated ? watch.events.map((event) => ({
+      type: 'company', id: event.id, detectedAt: event.detected_at, read: Boolean(event.read),
+      companyName: event.company_name, title: event.title, summary: event.summary, event,
+    })) : [];
+    const uniqueUpdates = [...new Map(PRODUCT_UPDATES.map((update) => [update.id, update])).values()];
+    const productItems: NotificationFeedItem[] = uniqueUpdates.map((update) => ({
+      type: 'product-update', id: update.id, detectedAt: update.date,
+      read: readProductUpdateIds.includes(update.id), companyName: 'Yami',
+      title: update.title[locale], summary: update.summary[locale], changes: update.changes[locale],
+    }));
+    return [...companyItems, ...productItems].sort((a, b) => Date.parse(b.detectedAt) - Date.parse(a.detectedAt));
+  }, [locale, readProductUpdateIds, watch.authenticated, watch.events]);
+  const visibleItems = useMemo(() => filter === 'unread' ? feed.filter((item) => !item.read) : feed, [feed, filter]);
+  const groups = useMemo(() => visibleItems.reduce<Record<string, NotificationFeedItem[]>>((all, item) => { const key = dateGroup(item.detectedAt, locale, text); (all[key] ||= []).push(item); return all; }, {}), [visibleItems, locale, text]);
+  const choose = async (item: NotificationFeedItem) => {
+    if (!item.read && item.type === 'company') await watch.markRead(item.id);
+    if (!item.read && item.type === 'product-update') {
+      const next = [...new Set([...readProductUpdateIds, item.id])];
+      try { localStorage.setItem(PRODUCT_UPDATE_READ_KEY, JSON.stringify(next)); } catch { /* Keep the current session usable if storage is unavailable. */ }
+      setReadProductUpdateIds(next);
+    }
+    setExpandedNotificationId((current) => current === item.id ? null : item.id);
   };
+  const markAllRead = async () => {
+    const next = [...new Set([...readProductUpdateIds, ...PRODUCT_UPDATES.map((update) => update.id)])];
+    try { localStorage.setItem(PRODUCT_UPDATE_READ_KEY, JSON.stringify(next)); } catch { /* Keep the current session usable if storage is unavailable. */ }
+    setReadProductUpdateIds(next);
+    if (watch.authenticated && watch.events.some((event) => !event.read)) await watch.markAllRead();
+  };
+  const hasUnread = feed.some((item) => !item.read);
   return <section className="notification-page">
-    <header className="notification-page-head"><div><h1>{text.updates}</h1><p>{locale === 'ja' ? '採用情報ページの重要な更新を確認できます。' : '集中查看招聘页面的重要更新。'}</p></div>{watch.authenticated && <button type="button" className="text-button" onClick={() => void watch.markAllRead()} disabled={!watch.events.some((event) => !event.read)}>{text.markAllRead}</button>}</header>
-    {!watch.configured ? <p className="notification-page-empty">{text.unavailable}</p> : !watch.authenticated ? <div className="notification-page-empty"><p>{text.notConnected}</p><button type="button" className="text-button" onClick={openSettings}>{text.goToSettings}<ExternalLink /></button></div> : <>
-      <div className="notification-page-filters" role="tablist"><button className={filter === 'all' ? 'active' : ''} onClick={() => setFilter('all')}>{text.all}</button><button className={filter === 'unread' ? 'active' : ''} onClick={() => setFilter('unread')}>{text.unread}</button></div>
-      {events.length ? <div className="notification-day-groups">{Object.entries(groups).map(([day, group]) => <section key={day}><h2>{day}</h2><div>{group.map((event) => {
-        const expanded = expandedNotificationId === event.id;
-        return <article className={`notification-page-item${event.read ? ' is-read' : ''}${expanded ? ' is-expanded' : ''}`} key={event.id}>
-          <button type="button" className={`notification-page-row${event.read ? " is-read" : ""}`} aria-expanded={expanded} onClick={() => void choose(event)}>{!event.read && <span className="notification-page-dot" aria-hidden="true" />}<span className="notification-page-copy"><strong>{event.company_name}</strong><b>{event.title}</b><small>{event.summary}</small></span><time>{formatDate(event.detected_at, locale)}</time></button>
-          <div className="notification-page-detail" aria-hidden={!expanded}><dl><div><dt>{text.changes}</dt><dd>{event.summary}</dd></div><div><dt>{text.sourcePage}</dt><dd>{text[event.source_type]}</dd></div><div><dt>{text.detected}</dt><dd>{formatDate(event.detected_at, locale)}</dd></div>{event.before_excerpt && <div><dt>{text.before}</dt><dd>{event.before_excerpt}</dd></div>}{event.after_excerpt && <div><dt>{text.after}</dt><dd>{event.after_excerpt}</dd></div>}</dl><div className="notification-page-detail-actions"><button type="button" className="text-button" onClick={() => openCompany(event.company_id, event.company_name, event.id)}>{text.viewCompany}</button>{event.source_url && <a className="text-button" href={event.source_url} target="_blank" rel="noreferrer">{text.openSource}<ExternalLink /></a>}</div></div>
+    <header className="notification-page-head"><div><h1>{text.notifications}</h1><p>{locale === 'ja' ? 'Yamiと企業の重要なお知らせを確認できます。' : '查看 Yami 和企业的重要更新。'}</p></div><button type="button" className="text-button" onClick={() => void markAllRead()} disabled={!hasUnread}>{text.markAllRead}</button></header>
+    <div className="notification-page-filters" role="tablist"><button className={filter === 'all' ? 'active' : ''} onClick={() => setFilter('all')}>{text.all}</button><button className={filter === 'unread' ? 'active' : ''} onClick={() => setFilter('unread')}>{text.unread}</button></div>
+    {visibleItems.length ? <div className="notification-day-groups">{Object.entries(groups).map(([day, group]) => <section key={day}><h2>{day}</h2><div>{group.map((item) => {
+        const expanded = expandedNotificationId === item.id;
+        const productUpdate = item.type === 'product-update';
+        const event = productUpdate ? null : item.event;
+        return <article className={`notification-page-item${item.read ? ' is-read' : ''}${expanded ? ' is-expanded' : ''}${productUpdate ? ' is-product-update' : ''}`} key={item.id}>
+          <button type="button" className={`notification-page-row${item.read ? ' is-read' : ''}${productUpdate ? ' has-product-brand' : ''}`} aria-expanded={expanded} onClick={() => void choose(item)}>{productUpdate ? <span className="notification-page-brand" aria-hidden="true"><YamiBrandMark />{!item.read && <span className="notification-page-dot" />}</span> : !item.read && <span className="notification-page-dot" aria-hidden="true" />}<span className="notification-page-copy"><strong>{item.companyName}</strong><b>{item.title}</b><small>{item.summary}</small></span><time>{formatDate(item.detectedAt, locale)}</time></button>
+          <div className="notification-page-detail" aria-hidden={!expanded}>{productUpdate ? <div className="notification-page-product-detail"><strong>{locale === 'ja' ? '今回のアップデート' : '本次更新'}</strong><ul>{item.changes.map((change) => <li key={change}>{change}</li>)}</ul></div> : event && <><dl><div><dt>{text.changes}</dt><dd>{event.summary}</dd></div><div><dt>{text.sourcePage}</dt><dd>{text[event.source_type]}</dd></div><div><dt>{text.detected}</dt><dd>{formatDate(event.detected_at, locale)}</dd></div>{event.before_excerpt && <div><dt>{text.before}</dt><dd>{event.before_excerpt}</dd></div>}{event.after_excerpt && <div><dt>{text.after}</dt><dd>{event.after_excerpt}</dd></div>}</dl><div className="notification-page-detail-actions"><button type="button" className="text-button" onClick={() => openCompany(event.company_id, event.company_name, event.id)}>{text.viewCompany}</button>{event.source_url && <a className="text-button" href={event.source_url} target="_blank" rel="noreferrer">{text.openSource}<ExternalLink /></a>}</div></>}</div>
         </article>;
       })}</div></section>)}</div> : <p className="notification-page-empty">{text.noUpdates}</p>}
-    </>}
+    {!watch.configured && <p className="notification-page-connection-note">{text.unavailable}</p>}
+    {watch.configured && !watch.authenticated && <div className="notification-page-connection-note"><span>{text.notConnected}</span><button type="button" className="text-button" onClick={openSettings}>{text.goToSettings}<ExternalLink /></button></div>}
   </section>;
 }
 

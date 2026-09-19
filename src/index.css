@@ -7627,15 +7627,15 @@ html[data-theme="dark"] #root {
 .yami-logo-wordmark {
   color: var(--text-primary) !important;
   display: block;
-  width: 118px;
-  height: 41px;
-  flex: 0 0 118px;
+  width: 111px;
+  height: 40px;
+  flex: 0 0 111px;
   overflow: visible;
 }
 .yami-logo--sidebar .yami-logo-wordmark {
-  width: 118px;
-  height: 41px;
-  flex-basis: 118px;
+  width: 111px;
+  height: 40px;
+  flex-basis: 111px;
 }
 .brand.yami-logo {
   gap: 10px;
@@ -7652,7 +7652,67 @@ html[data-theme="dark"] #root {
   flex-basis: 21px;
 }
 .yami-logo--mobile .yami-logo-wordmark {
-  width: 105px;
-  height: 37px;
-  flex-basis: 105px;
+  width: 99px;
+  height: 35.68px;
+  flex-basis: 99px;
 }
+
+.notification-page-row.has-product-brand,
+.notification-page-row.is-read.has-product-brand {
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+}
+.notification-page-brand {
+  position: relative;
+  display: block;
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+}
+.notification-page-brand .yami-logo-mark {
+  width: 22px;
+  height: 22px;
+}
+.notification-page-brand .notification-page-dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 7px;
+  height: 7px;
+  margin: 0;
+  border: 1.5px solid var(--bg-surface);
+}
+.notification-page-product-detail {
+  display: grid;
+  gap: 8px;
+  padding: 0 18px 16px 26px;
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.notification-page-product-detail strong {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+.notification-page-product-detail ul {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding-left: 1.2em;
+}
+.notification-page-connection-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 18px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.notification-page-connection-note .text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+}
+.notification-page-connection-note svg { width: 14px; height: 14px; }

@@ -17,12 +17,18 @@ export function YamiWordmark({ className = '' }: { className?: string }) {
   );
 }
 
+export function YamiBrandMark({ className = '' }: { className?: string }) {
+  return (
+    <svg className={`yami-logo-mark ${className}`.trim()} viewBox={mark.viewBox} aria-hidden="true" focusable="false">
+      {mark.paths.map((path) => <path key={path.d} d={path.d} fill={path.fill === mark.gold ? 'var(--brand-gold)' : 'var(--brand-gold-highlight)'} />)}
+    </svg>
+  );
+}
+
 export function YamiLogoLockup({ variant, className = '' }: YamiLogoLockupProps) {
   return (
     <div className={`yami-logo yami-logo--${variant} ${className}`.trim()} role="img" aria-label="Yami">
-      <svg className="yami-logo-mark" viewBox={mark.viewBox} aria-hidden="true" focusable="false">
-        {mark.paths.map((path) => <path key={path.d} d={path.d} fill={path.fill === mark.gold ? 'var(--brand-gold)' : 'var(--brand-gold-highlight)'} />)}
-      </svg>
+      <YamiBrandMark />
       <YamiWordmark />
     </div>
   );
