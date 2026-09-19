@@ -16,12 +16,12 @@ const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
 await mkdir(new URL('../public', import.meta.url), { recursive: true });
 await writeFile(new URL('../public/yami-mark-v2.svg', import.meta.url), markSvg);
 await writeFile(new URL('../public/yami-mask-icon-v3.svg', import.meta.url), maskSvg);
-await writeFile(new URL('../public/yami-wordmark-v6.svg', import.meta.url), wordmarkSvg);
+await writeFile(new URL('../public/yami-wordmark-v7.svg', import.meta.url), wordmarkSvg);
 await writeFile(new URL('../public/yami-app-icon-v2.svg', import.meta.url), appSvg);
-await writeFile(new URL('../public/yami-favicon-v6.svg', import.meta.url), faviconSvg);
+await writeFile(new URL('../public/yami-favicon-v7.svg', import.meta.url), faviconSvg);
 await writeFile(new URL('../public/yami-mask-icon-v6.svg', import.meta.url), maskSvg);
-await copyFile(new URL('../public/yami-favicon-v2.ico', import.meta.url), new URL('../public/yami-favicon-v6.ico', import.meta.url));
-await copyFile(new URL('../public/yami-favicon-32-v2.png', import.meta.url), new URL('../public/yami-favicon-32-v6.png', import.meta.url));
+await copyFile(new URL('../public/yami-favicon-v2.ico', import.meta.url), new URL('../public/yami-favicon-v7.ico', import.meta.url));
+await copyFile(new URL('../public/yami-favicon-32-v2.png', import.meta.url), new URL('../public/yami-favicon-32-v7.png', import.meta.url));
 await copyFile(new URL('../public/yami-favicon-v2.ico', import.meta.url), new URL('../public/favicon.ico', import.meta.url));
 await copyFile(new URL('../public/yami-app-icon-180-v4.png', import.meta.url), new URL('../public/yami-app-icon-180-v5.png', import.meta.url));
 await copyFile(new URL('../public/yami-app-icon-192-v4.png', import.meta.url), new URL('../public/yami-app-icon-192-v5.png', import.meta.url));
