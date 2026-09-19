@@ -7627,15 +7627,15 @@ html[data-theme="dark"] #root {
 .yami-logo-wordmark {
   color: var(--text-primary) !important;
   display: block;
-  width: 132px;
-  height: 36px;
-  flex: 0 0 132px;
+  width: 118px;
+  height: 41px;
+  flex: 0 0 118px;
   overflow: visible;
 }
 .yami-logo--sidebar .yami-logo-wordmark {
-  width: 139px;
-  height: 38px;
-  flex-basis: 139px;
+  width: 118px;
+  height: 41px;
+  flex-basis: 118px;
 }
 .brand.yami-logo {
   gap: 10px;
@@ -7652,7 +7652,7 @@ html[data-theme="dark"] #root {
   flex-basis: 21px;
 }
 .yami-logo--mobile .yami-logo-wordmark {
-  width: 123px;
-  height: 34px;
-  flex-basis: 123px;
+  width: 105px;
+  height: 37px;
+  flex-basis: 105px;
 }
