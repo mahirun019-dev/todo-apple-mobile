@@ -7626,16 +7626,16 @@ html[data-theme="dark"] #root {
 }
 .yami-logo-wordmark {
   color: var(--text-primary) !important;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-  font-size: 28px;
-  font-weight: 720;
-  letter-spacing: -0.035em;
-  line-height: 1;
+  display: block;
+  width: 132px;
+  height: 36px;
+  flex: 0 0 132px;
+  overflow: visible;
 }
 .yami-logo--sidebar .yami-logo-wordmark {
-  display: block;
-  margin: 0;
-  font-size: 28px;
+  width: 139px;
+  height: 38px;
+  flex-basis: 139px;
 }
 .brand.yami-logo {
   gap: 10px;
@@ -7644,15 +7644,7 @@ html[data-theme="dark"] #root {
   display: inline-flex;
   justify-content: center;
   gap: 7px;
-  font-family: inherit;
-  font-size: initial;
-  font-weight: 400;
-  letter-spacing: 0;
   line-height: 1;
-}
-.mobile-header-title.yami-logo .yami-logo-wordmark {
-  display: block;
-  margin: 0;
 }
 .yami-logo--mobile .yami-logo-mark {
   width: 21px;
@@ -7660,6 +7652,7 @@ html[data-theme="dark"] #root {
   flex-basis: 21px;
 }
 .yami-logo--mobile .yami-logo-wordmark {
-  font-size: 25px;
-  font-weight: 720;
+  width: 123px;
+  height: 34px;
+  flex-basis: 123px;
 }

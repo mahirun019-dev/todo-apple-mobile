@@ -8,7 +8,7 @@ export default defineConfig(({ command }) => ({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["yami-mark-v2.svg", "yami-app-icon-v2.svg", "yami-favicon-32-v2.png", "yami-favicon-v2.ico", "yami-app-icon-180-v2.png", "yami-app-icon-192-v2.png", "yami-app-icon-512-v2.png", "yami-app-icon-maskable-512-v2.png"],
+      includeAssets: ["favicon.ico", "yami-mark-v2.svg", "yami-mask-icon-v3.svg", "yami-wordmark-v3.svg", "yami-app-icon-v2.svg", "yami-favicon-32-v3.png", "yami-favicon-v3.ico", "yami-app-icon-180-v2.png", "yami-app-icon-192-v2.png", "yami-app-icon-512-v2.png", "yami-app-icon-maskable-512-v2.png"],
       manifest: {
         name: "Yami",
         short_name: "Yami",
