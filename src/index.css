@@ -7572,6 +7572,9 @@ html[data-theme="dark"] #root {
   }
   .app-shell > .student-app > .mobile-header .mobile-menu-button { position: static !important; width: 44px !important; height: 44px !important; }
   .mobile-header-title { min-width: 0; text-align: center !important; }
+  .app-shell > .student-app > .mobile-header:not(.mobile-navigation-header) > .mobile-header-title {
+    justify-self: center !important;
+  }
   .mobile-header-spacer { display: block !important; width: 44px !important; height: 44px !important; pointer-events: none; }
   [data-testid="mobile-bottom-nav"] { position: fixed !important; inset: auto 0 0 !important; display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)) !important; width: 100% !important; height: calc(60px + env(safe-area-inset-bottom)) !important; min-height: calc(60px + env(safe-area-inset-bottom)) !important; padding: 0 0 env(safe-area-inset-bottom) !important; overflow: visible !important; }
   [data-testid="mobile-bottom-nav"] > button, [data-testid="mobile-bottom-nav"] > button.active { min-width: 0 !important; width: 100% !important; height: 60px !important; padding: 3px 1px !important; border-radius: 0 !important; }
@@ -7725,6 +7728,17 @@ html[data-theme="dark"] #root {
 
 /* Keep the mobile brand row centered within its safe-area-adjusted header band. */
 @media (max-width: 767px) {
+  .mobile-settings-layer .mobile-navigation-header.mobile-header {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    align-items: center;
+  }
+
+  .mobile-settings-layer .mobile-navigation-header.mobile-header > .mobile-header-title {
+    grid-column: 2;
+    justify-self: center;
+  }
+
   .app-shell > .student-app > .mobile-header:not(.mobile-navigation-header) {
     align-items: center !important;
     padding-bottom: 0 !important;
@@ -7753,6 +7767,18 @@ html[data-theme="dark"] #root {
     border-color: rgba(255, 255, 255, 0.06) !important;
     background: transparent !important;
     box-shadow: none !important;
+  }
+}
+
+@media (min-width: 981px) {
+  .career-app .sidebar {
+    gap: 16px;
+    padding-top: 22px;
+  }
+
+  .career-app .sidebar > .yami-logo--sidebar {
+    height: 128px;
+    flex-basis: 128px;
   }
 }
 .notification-page-product-detail {

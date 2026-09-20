@@ -75,6 +75,7 @@ let svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 128 128\"><im
 try write(Data(svg.utf8), "yami-favicon-avatar-v1.svg")
 
 let appBackground = CGColor(red: 0, green: 0, blue: 0, alpha: 1)
+let lightAppBackground = CGColor(red: 247 / 255, green: 247 / 255, blue: 245 / 255, alpha: 1)
 let appIcons = [
   (180, "yami-app-icon-avatar-180-v1.png", 0.10),
   (192, "yami-app-icon-avatar-192-v1.png", 0.10),
@@ -85,9 +86,19 @@ for (size, name, inset) in appIcons {
   try write(pngData(size: size, background: appBackground, insetFraction: inset), name)
 }
 
-try write(pngData(size: 180, background: appBackground, insetFraction: 0.10), "apple-touch-icon.png")
-try write(pngData(size: 192, background: appBackground, insetFraction: 0.10), "icon-192.png")
-try write(pngData(size: 512, background: appBackground, insetFraction: 0.10), "icon-512.png")
-try write(pngData(size: 512, background: appBackground, insetFraction: 0.16), "icon-maskable-512.png")
+let lightAppIcons = [
+  (180, "yami-app-icon-avatar-180-light-v1.png", 0.10),
+  (192, "yami-app-icon-avatar-192-light-v1.png", 0.10),
+  (512, "yami-app-icon-avatar-512-light-v1.png", 0.10),
+  (512, "yami-app-icon-avatar-maskable-512-light-v1.png", 0.16),
+]
+for (size, name, inset) in lightAppIcons {
+  try write(pngData(size: size, background: lightAppBackground, insetFraction: inset), name)
+}
 
-print("Generated transparent Yami avatar favicons, multi-size ICO, and black-background app icons from the approved head illustration crop.")
+try write(pngData(size: 180, background: lightAppBackground, insetFraction: 0.10), "apple-touch-icon.png")
+try write(pngData(size: 192, background: lightAppBackground, insetFraction: 0.10), "icon-192.png")
+try write(pngData(size: 512, background: lightAppBackground, insetFraction: 0.10), "icon-512.png")
+try write(pngData(size: 512, background: lightAppBackground, insetFraction: 0.16), "icon-maskable-512.png")
+
+print("Generated transparent Yami avatar favicons, black app icons, and light-background app icons from the approved head illustration crop.")
