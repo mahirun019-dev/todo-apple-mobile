@@ -7698,7 +7698,7 @@ html[data-theme="dark"] #root {
   border-radius: 12px;
   background: var(--bg-muted);
 }
-.yami-about-brand > .yami-brand-avatar {
+.yami-about-brand > .yami-brand-illustration {
   display: block;
   width: min(100%, 340px);
   height: 150px;
@@ -7719,7 +7719,7 @@ html[data-theme="dark"] #root {
 }
 
 @media (max-width: 767px) {
-  .mobile-settings-subpage.mobile-about .yami-about-brand > .yami-brand-avatar { height: 126px; }
+  .mobile-settings-subpage.mobile-about .yami-about-brand > .yami-brand-illustration { height: 126px; }
   .mobile-settings-subpage.mobile-about .yami-about-brand > .yami-wordmark-assets { width: 112px; height: 54px; }
 }
 

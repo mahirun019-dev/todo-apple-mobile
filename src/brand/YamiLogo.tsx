@@ -1,4 +1,5 @@
 import brandIllustration from '../assets/brand/yami-brand-illustration.png';
+import brandAvatar from '../assets/brand/yami-brand-avatar-core-512-v1.png';
 import wordmarkDark from '../assets/brand/yami-primary-wordmark-dark.png';
 import wordmarkLight from '../assets/brand/yami-primary-wordmark-light.png';
 
@@ -17,13 +18,17 @@ export function YamiWordmark({ className = '', label }: { className?: string; la
 }
 
 export function YamiBrandAvatar({ className = '', alt = 'Yami brand illustration' }: { className?: string; alt?: string }) {
-  return <img className={`yami-brand-avatar ${className}`.trim()} src={brandIllustration} alt={alt} />;
+  return <img className={`yami-brand-avatar ${className}`.trim()} src={brandAvatar} alt={alt} />;
+}
+
+function YamiBrandIllustration() {
+  return <img className="yami-brand-illustration" src={brandIllustration} alt="" />;
 }
 
 export function YamiAboutBrand() {
   return (
     <div className="yami-about-brand" role="img" aria-label="Yami">
-      <YamiBrandAvatar alt="" />
+      <YamiBrandIllustration />
       <YamiWordmark />
     </div>
   );

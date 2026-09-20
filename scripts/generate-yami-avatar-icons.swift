@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 
 let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
 let sourceURL = root.appendingPathComponent("src/assets/brand/yami-brand-illustration.png")
+let brandURL = root.appendingPathComponent("src/assets/brand", isDirectory: true)
 let publicURL = root.appendingPathComponent("public", isDirectory: true)
 try FileManager.default.createDirectory(at: publicURL, withIntermediateDirectories: true)
 
@@ -45,6 +46,7 @@ func write(_ data: Data, _ name: String) throws {
 let favicon16 = pngData(size: 16)
 let favicon32 = pngData(size: 32)
 let favicon128 = pngData(size: 128)
+try pngData(size: 512).write(to: brandURL.appendingPathComponent("yami-brand-avatar-core-512-v1.png"), options: .atomic)
 try write(favicon16, "yami-favicon-avatar-16-v1.png")
 try write(favicon32, "yami-favicon-avatar-32-v1.png")
 try write(favicon128, "yami-favicon-avatar-128-v1.png")
